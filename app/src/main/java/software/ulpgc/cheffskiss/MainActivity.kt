@@ -17,6 +17,9 @@ import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import software.ulpgc.cheffskiss.ui.screen.CreateRecipeScreen
+import software.ulpgc.cheffskiss.ui.screen.HomeScreen
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,14 +33,43 @@ class MainActivity : ComponentActivity() {
                 ) {
                     composable("login") {
                         LoginScreen(
-                            onLoginSuccess = { navController.navigate("home") },
+                            onLoginSuccess = {
+                                navController.navigate("home") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            },
                             onGoToRegister = { navController.navigate("register") }
                         )
                     }
                     composable("register") {
                         RegisterScreen(
-                            onRegisterSuccess = { navController.navigate("home") },
+                            onRegisterSuccess = {
+                                navController.navigate("home") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            },
                             onGoToLogin = { navController.popBackStack() }
+                        )
+                    }
+                    composable("home") {
+                        HomeScreen(
+                            onCreateRecipe = { navController.navigate("create_recipe") },
+                            onLogout = {
+                                navController.navigate("login") {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+                    composable("create_recipe") {
+                        CreateRecipeScreen(
+                            onBack = { navController.popBackStack() },
+                            onPublishSuccess = { // Antes decía solo "onPublish"
+                                navController.navigate("home") {
+                                    popUpTo("home") { inclusive = false }
+                                }
+                            },
+                            onSaveDraft = { navController.popBackStack() }
                         )
                     }
                 }

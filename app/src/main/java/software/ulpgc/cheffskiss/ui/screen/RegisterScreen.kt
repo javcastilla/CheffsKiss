@@ -118,7 +118,7 @@ fun RegisterScreen(
             Text(
                 text = "Join our digital heirloom kitchen",
                 style = MaterialTheme.typography.bodyMedium,
-                color = OnSurfaceVariant,
+                color = CKOnSurfaceVariant,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
             )
@@ -265,7 +265,7 @@ fun RegisterScreen(
             // Footer link
             Row {
                 Text("Already have an account?",
-                    color = OnSurfaceVariant,
+                    color = CKOnSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.width(4.dp))
@@ -302,7 +302,7 @@ private fun RegisterField(
         Text(label,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
-            color = OnSurfaceVariant)
+            color = CKOnSurfaceVariant)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -364,7 +364,7 @@ private fun PasswordStrengthIndicator(strength: Int, label: String, color: Color
             Text(
                 text = "Strength: ",
                 fontSize = 11.sp,
-                color = OnSurfaceVariant,
+                color = CKOnSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
         }

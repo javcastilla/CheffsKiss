@@ -6,18 +6,19 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
 private val CheffsColorScheme = lightColorScheme(
-    primary          = Primary,
-    onPrimary        = OnPrimary,
-    secondary        = Secondary,
-    onSecondary      = OnSecondary,
-    background       = Background,
-    onBackground     = OnBackground,
-    surface          = Surface,
-    onSurface        = OnSurface,
-    surfaceVariant   = SurfaceVariant,
-    onSurfaceVariant = OnSurfaceVariant,
-    outline          = Outline,
-    outlineVariant   = OutlineVariant
+    primary          = CKPrimary,
+    onPrimary        = CKOnPrimary,
+    secondary        = CKSecondary,
+    onSecondary      = CKOnSecondary,
+    background       = CKBackground,
+    onBackground     = CKOnBackground,
+    surface          = CKSurface,
+    onSurface        = CKOnSurface,
+    surfaceVariant   = CKSurfaceVariant,
+    onSurfaceVariant = CKOnSurfaceVariant,
+    outline          = CKOutline,
+    outlineVariant   = CKOutlineVariant
+
 )
 
 @Composable

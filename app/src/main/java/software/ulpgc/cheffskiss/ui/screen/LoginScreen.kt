@@ -61,7 +61,7 @@ fun LoginScreen(
                 .offset(x = 100.dp, y = (-80).dp)
                 .align(Alignment.TopEnd)
                 .background(
-                    Brush.radialGradient(listOf(Secondary.copy(alpha = 0.2f), Color.Transparent)),
+                    Brush.radialGradient(listOf(CKSecondary.copy(alpha = 0.2f), Color.Transparent)),
                     CircleShape
                 )
                 .blur(60.dp)
@@ -96,17 +96,17 @@ fun LoginScreen(
                     .background(Primary, RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Restaurant, null, tint = Secondary,
+                Icon(Icons.Default.Restaurant, null, tint = CKSecondary,
                     modifier = Modifier.size(40.dp))
             }
             Spacer(modifier = Modifier.height(20.dp))
-            Text("CheffsKiss", fontWeight = FontWeight.ExtraBold,
+            Text("Cheffs Kiss", fontWeight = FontWeight.ExtraBold,
                 fontSize = 32.sp, color = Primary, letterSpacing = (-0.5).sp)
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Reclaiming the warmth of\nyour digital kitchen.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = OnSurfaceVariant, textAlign = TextAlign.Center
+                color = CKOnSurfaceVariant, textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -122,13 +122,13 @@ fun LoginScreen(
 
                     // Email field
                     Text("Email or Username", style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold, color = OnSurfaceVariant)
+                        fontWeight = FontWeight.Bold, color = CKOnSurfaceVariant)
                     Spacer(modifier = Modifier.height(8.dp))
                     CheffsTextField(
                         value = email,
                         onValueChange = { email = it },
                         placeholder = "chef@cheffskiss.com",
-                        trailingIcon = { Icon(Icons.Default.Mail, null, tint = OutlineVariant) },
+                        trailingIcon = { Icon(Icons.Default.Mail, null, tint = CKOutlineVariant) },
                         keyboardType = KeyboardType.Email
                     )
 
@@ -136,7 +136,7 @@ fun LoginScreen(
 
                     // Password field
                     Text("Password", style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold, color = OnSurfaceVariant)
+                        fontWeight = FontWeight.Bold, color = CKOnSurfaceVariant)
                     Spacer(modifier = Modifier.height(8.dp))
                     CheffsTextField(
                         value = password,
@@ -147,7 +147,7 @@ fun LoginScreen(
                                 Icon(
                                     if (passwordVisible) Icons.Default.VisibilityOff
                                     else Icons.Default.Visibility,
-                                    null, tint = OutlineVariant
+                                    null, tint = CKOutlineVariant
                                 )
                             }
                         },
@@ -212,7 +212,7 @@ fun LoginScreen(
 
             // Sign up link
             Row {
-                Text("Don't have an account?", color = OnSurfaceVariant,
+                Text("Don't have an account?", color = CKOnSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("Sign up", color = Primary, fontWeight = FontWeight.ExtraBold,
@@ -225,7 +225,7 @@ fun LoginScreen(
             // Footer accent bar
             Row(modifier = Modifier.fillMaxWidth().height(6.dp)) {
                 Box(Modifier.weight(1f).fillMaxHeight().background(Primary))
-                Box(Modifier.weight(1f).fillMaxHeight().background(Secondary))
+                Box(Modifier.run { weight(1f).fillMaxHeight().background(CKSecondary) })
                 Box(Modifier.weight(1f).fillMaxHeight().background(Outline))
                 Box(Modifier.weight(1f).fillMaxHeight().background(Primary.copy(alpha = 0.8f)))
             }
@@ -246,7 +246,7 @@ fun CheffsTextField(
     TextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(placeholder, color = OutlineVariant.copy(alpha = 0.7f)) },
+        placeholder = { Text(placeholder, color = CKOutlineVariant.copy(alpha = 0.7f)) },
         trailingIcon = trailingIcon,
         visualTransformation = visualTransformation,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
@@ -256,7 +256,7 @@ fun CheffsTextField(
             unfocusedContainerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent,
             focusedIndicatorColor = Primary,
-            unfocusedIndicatorColor = OutlineVariant.copy(alpha = 0.5f),
+            unfocusedIndicatorColor = CKSurface.copy(alpha = 0.5f),
             cursorColor = Primary
         ),
         singleLine = true

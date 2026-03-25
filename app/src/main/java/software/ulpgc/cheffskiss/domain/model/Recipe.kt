@@ -1,9 +1,15 @@
 package software.ulpgc.cheffskiss.domain.model
 
+import java.util.UUID
+import kotlin.time.Duration
+
 data class Recipe(
-    val id: String,
-    val name: String,
+    val id: UUID,
+    val author: UUID,
+    val title: String,
+    val duration: Duration,
     val ingredients: List<String>,
-    val steps: List<String>,
-    val author: String
+    val steps: List<Step>,
+    val tags: List<String>,
+    val image: String
 )
