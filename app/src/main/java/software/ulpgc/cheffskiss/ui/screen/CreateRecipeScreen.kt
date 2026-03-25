@@ -176,6 +176,7 @@ fun CreateRecipeScreen(
                     val idx = steps.indexOfFirst { it.id == id }
                     if (idx != -1) steps[idx] = updated
                 },
+                onStepRemove = { id -> steps.removeAll { it.id == id } },  // ← nuevo
                 onAddStep = { steps.add(StepRow(nextStepId++)) }
             )
         }
@@ -636,6 +637,7 @@ private fun IngredientRowItem(
 private fun StepsSection(
     steps: List<StepRow>,
     onStepChange: (Int, StepRow) -> Unit,
+    onStepRemove: (Int) -> Unit,      // ← nuevo
     onAddStep: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -643,54 +645,99 @@ private fun StepsSection(
             StepRowItem(
                 index = index + 1,
                 step = step,
-                onChange = { onStepChange(step.id, it) }
+                onChange = { onStepChange(step.id, it) },
+                onRemove = { onStepRemove(step.id) }   // ← nuevo
             )
         }
         DashedAddButton(label = "Add Step", onClick = onAddStep)
     }
 }
 
-@Composable
-private fun StepRowItem(index: Int, step: StepRow, onChange: (StepRow) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .background(Primary, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(index.toString(), color = OnPrimary,
-                fontWeight = FontWeight.Bold, fontSize = 14.sp)
-        }
 
-        Column(modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextField(
-                value = step.description,
-                onValueChange = { onChange(step.copy(description = it)) },
-                placeholder = { Text("Describe this step...",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), fontSize = 13.sp) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = containerFieldColors(),
-                minLines = 2
-            )
-            Row(verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.Timer, null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
-                TextField(
-                    value = step.duration,
-                    onValueChange = { onChange(step.copy(duration = it)) },
-                    placeholder = { Text("Duration (optional)", fontSize = 12.sp) },
-                    modifier = Modifier.width(140.dp).height(40.dp),
-                    colors = transparentFieldColors(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+@Composable
+private fun StepRowItem(
+    index: Int,
+    step: StepRow,
+    onChange: (StepRow) -> Unit,
+    onRemove: () -> Unit              // ← nuevo
+) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        // Contenido del step
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, end = 8.dp) // espacio para la X
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .background(Primary, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    index.toString(), color = OnPrimary,
+                    fontWeight = FontWeight.Bold, fontSize = 14.sp
                 )
             }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TextField(
+                    value = step.description,
+                    onValueChange = { onChange(step.copy(description = it)) },
+                    placeholder = {
+                        Text(
+                            "Describe this step...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            fontSize = 13.sp
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = containerFieldColors(),
+                    minLines = 2
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Timer, null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    TextField(
+                        value = step.duration,
+                        onValueChange = { onChange(step.copy(duration = it)) },
+                        placeholder = { Text("Duration (optional)", fontSize = 12.sp) },
+                        modifier = Modifier.width(140.dp).height(40.dp),
+                        colors = transparentFieldColors(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
+            }
+        }
+
+        // ✕ Botón eliminar — esquina superior derecha
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(20.dp)
+                .background(Color(0xFFBA1A1A), CircleShape)
+                .clickable { onRemove() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Close, null,
+                tint = Color.White,
+                modifier = Modifier.size(12.dp)
+            )
         }
     }
 }
+
 
 // ── Components Reutilizables ──────────────────────────────────────────────────
 
