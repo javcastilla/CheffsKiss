@@ -1,10 +1,10 @@
-package software.ulpgc.cheffskiss.application.port.output
+package software.ulpgc.cheffskiss.domain.port.output
 
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.RecipeLine
 import software.ulpgc.cheffskiss.domain.model.Step
 
-interface RecipePort {
+interface RecipeWriter {
     suspend fun createRecipe(
         recipe: Recipe,
         steps: List<Step>,

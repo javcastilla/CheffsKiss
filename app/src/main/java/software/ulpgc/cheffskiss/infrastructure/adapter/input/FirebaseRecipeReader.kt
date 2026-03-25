@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.User
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 
 class FirebaseRecipeReader : RecipeReader {
@@ -37,5 +38,9 @@ class FirebaseRecipeReader : RecipeReader {
                 trySend(snapshot?.documents?.mapNotNull { it.toObject<Recipe>() } ?: emptyList())
             }
         awaitClose { listener.remove() }
+    }
+
+    override suspend fun from(user: User): Flow<Recipe> {
+        TODO("Not yet implemented")
     }
 }

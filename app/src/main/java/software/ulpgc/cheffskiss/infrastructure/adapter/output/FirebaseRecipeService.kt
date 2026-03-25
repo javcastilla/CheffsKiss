@@ -4,7 +4,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
-import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.domain.port.output.RecipeWriter
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.RecipeLine
 import software.ulpgc.cheffskiss.domain.model.RecipeState
@@ -17,7 +17,7 @@ class FirebaseRecipeService(
     private val recipeStore: RecipeStore,
     private val stepStore: StepStore,
     private val recipeLineStore: RecipeLineStore
-) : RecipePort {
+) : RecipeWriter {
 
     private val db get() = Firebase.firestore
 

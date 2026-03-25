@@ -1,6 +1,6 @@
 package software.ulpgc.cheffskiss.application
 
-import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.domain.port.output.RecipeWriter
 import software.ulpgc.cheffskiss.domain.control.Command
 import software.ulpgc.cheffskiss.domain.model.*
 import java.time.Instant
@@ -8,7 +8,7 @@ import java.util.UUID
 import kotlin.time.Duration
 
 class CreateRecipeCommand(
-    private val recipePort: RecipePort,
+    private val recipeWriter: RecipeWriter,
     private val recipeInput: RecipeInput
 ) : Command {
 
@@ -56,7 +56,7 @@ class CreateRecipeCommand(
             )
         }
 
-        recipePort.createRecipe(recipe, steps, recipeLines)
+        recipeWriter.createRecipe(recipe, steps, recipeLines)
     }
 }
 

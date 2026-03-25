@@ -10,4 +10,5 @@ data class Recipe(
     val tags: List<String>,
     val image: String,
     val user: User
-)
+) {
+}
