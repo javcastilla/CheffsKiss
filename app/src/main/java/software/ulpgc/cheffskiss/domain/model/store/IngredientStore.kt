@@ -1,16 +1,16 @@
 package software.ulpgc.cheffskiss.domain.model.store
 
 import software.ulpgc.cheffskiss.domain.model.Ingredient
+import java.util.UUID
 
 class IngredientStore {
-    private val ingredients: MutableSet<Ingredient> = HashSet();
+    private val ingredients: MutableMap<UUID, Ingredient> = HashMap();
 
     fun save(ingredient: Ingredient) {
-        ingredients.add(ingredient);
+        ingredients[ingredient.id] = (ingredient);
     }
 
-    fun of(recipeLineStore: RecipeLineStore) {
-        ingredients.stream()
-            .
+    fun get(id: UUID): Ingredient? {
+        return ingredients[id];
     }
 }

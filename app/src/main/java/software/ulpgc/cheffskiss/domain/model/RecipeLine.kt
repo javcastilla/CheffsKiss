@@ -6,7 +6,7 @@ data class RecipeLine(
     val id: UUID,
     val amount: Int,
     val measurement:Measurement,
-    val ingredients: Ingredient,
+    val ingredient: Ingredient,
     val recipeState: RecipeState
 )
 

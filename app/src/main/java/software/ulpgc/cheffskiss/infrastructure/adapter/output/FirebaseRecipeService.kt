@@ -1,11 +1,13 @@
 package software.ulpgc.cheffskiss.infrastructure.adapter.output
 
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 import software.ulpgc.cheffskiss.application.port.output.RecipePort
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.RecipeState
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.store.RecipeLineStore
 import software.ulpgc.cheffskiss.domain.model.store.RecipeStore
@@ -17,58 +19,55 @@ class FirebaseRecipeService(
     private val recipeLineStore: RecipeLineStore
 ) : RecipePort {
 
-    override suspend fun createRecipe(
-        recipe: Recipe,
-        steps: List<Step>,
-        recipeLines: List<RecipeLine>
-    ) {
-        // 1. Persistimos en Firebase
-        Firebase.firestore.collection("recipes")
-            .document(recipe.id.toString())
-            .set(recipe.toMap(steps, recipeLines))
-            .await()
+    private val db get() = Firebase.firestore
 
-        // 2. El RecipeState ya viene construido dentro de los Steps/RecipeLines
-        //    (lo creó CreateRecipeCommand). Lo recuperamos para guardarlo en el store.
-        val recipeState = steps.firstOrNull()?.recipeState
-            ?: recipeLines.firstOrNull()?.recipeState
-
-        recipeState?.let { recipeStore.save(it) }
+    override suspend fun createRecipe(recipe: Recipe, steps: List<Step>, lines: List<RecipeLine>) {
+        // 1. DOMINIO (inmutable, solo memoria)
+        val state = steps.firstOrNull()?.recipeState ?: return
+        recipeStore.save(state)
         steps.forEach { stepStore.save(it) }
-        recipeLines.forEach { recipeLineStore.save(it) }
+        lines.forEach { recipeLineStore.save(it) }
+
+        // 2. FIRESTORE (solo estado actual, simple)
+        db.collection("recipes")
+            .document(recipe.id.toString())
+            .set(currentRecipeMap(recipe, state, steps, lines))
+            .await()
     }
 
-    // ── Mappers a Firestore ────────────────────────────────────────────────────
+    // ── Mappers ────────────────────────────────────────────────────────────────
 
-    private fun Recipe.toMap(
+    private fun currentRecipeMap(
+        recipe: Recipe,
+        state: RecipeState,
         steps: List<Step>,
-        recipeLines: List<RecipeLine>
+        lines: List<RecipeLine>
     ): Map<String, Any?> = mapOf(
-        "id"          to id.toString(),
-        "title"       to title,
-        "duration"    to duration.inWholeSeconds,
-        "tags"        to tags,
-        "image"       to image,
-        "userId"      to user.id.toString(),
-        "ingredients" to recipeLines.map { it.toMap() },
-        "steps"       to steps.map { step ->
+        "title" to recipe.title,
+        "durationMs" to recipe.duration.inWholeMilliseconds,
+        "tags" to recipe.tags,
+        "image" to recipe.image,
+        "userId" to recipe.user.id.toString(),
+        "status" to state.recipeStatus.name,
+        "updatedAt" to Timestamp.now(),
+        // Arrays planos para el estado actual
+        "steps" to steps.map { step ->
             mapOf(
-                "id"          to step.id.toString(),
+                "id" to step.id.toString(),
                 "description" to step.description,
-                "duration"    to step.duration.inWholeSeconds,
-                "cardinal"    to step.cardinal
+                "durationMs" to step.duration.inWholeMilliseconds,
+                "cardinal" to step.cardinal
+            )
+        },
+        "ingredients" to lines.map { line ->
+            mapOf(
+                "id" to line.id.toString(),
+                "amount" to line.amount,
+                "measurement" to line.measurement.name,
+                "ingredientId" to line.ingredient.id.toString(),
+                "ingredientName" to line.ingredient.name,  // denormalizado para UX
+                "ingredientImage" to line.ingredient.image
             )
         }
-    )
-
-    private fun RecipeLine.toMap(): Map<String, Any?> = mapOf(
-        "id"          to id.toString(),
-        "amount"      to amount,
-        "measurement" to measurement.name,
-        "ingredient"  to mapOf(
-            "id"    to ingredient.id.toString(),
-            "name"  to ingredient.name,
-            "image" to ingredient.image
-        )
     )
 }
