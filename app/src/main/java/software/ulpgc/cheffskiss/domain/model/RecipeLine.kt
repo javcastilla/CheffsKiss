@@ -5,7 +5,9 @@ import java.util.UUID
 data class RecipeLine(
     val id: UUID,
     val amount: Int,
-    val measurement:Measurement
+    val measurement:Measurement,
+    val ingredients: Ingredient,
+    val recipeState: RecipeState
 )
 
 enum class Measurement {

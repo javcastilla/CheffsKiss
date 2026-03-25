@@ -33,6 +33,7 @@ import software.ulpgc.cheffskiss.ui.theme.*
 // 🔌 Nuevas importaciones necesarias para conectar con tu ViewModel y Dominio
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import software.ulpgc.cheffskiss.application.StepInputRow
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.RecipeUiState
 import software.ulpgc.cheffskiss.domain.model.Step
@@ -89,28 +90,34 @@ fun CreateRecipeScreen(
         }
     }
 
+    if (uiState is RecipeUiState.Error) {
+        val message = (uiState as RecipeUiState.Error).message
+        LaunchedEffect(message) {
+            println("ERROR al publicar: $message") // lo verás en Logcat
+        }
+    }
+
     // 🔌 5. Función que empaqueta todo y se lo manda al ViewModel
     val handlePublish = {
-        val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
-
-        val mappedSteps = steps.mapIndexed { index, stepRow ->
-            Step(
-                id = UUID.randomUUID(),
+        // Convertimos los StepRow de la UI a StepInputRow del dominio
+        // (StepInputRow no necesita RecipeState — lo crea el Command internamente)
+        val mappedSteps = steps.map { stepRow ->
+            StepInputRow(
                 description = stepRow.description,
-                duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
-                cardinal = index + 1
+                duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes
             )
         }
 
         viewModel.createRecipe(
-            authorId = UUID.randomUUID(), // Por ahora es random, luego lo cambiaremos por el real
-            title = title,
-            hours = hours,
-            minutes = minutes,
-            ingredients = mappedIngredients,
-            steps = mappedSteps,
-            tags = tags.toList(),
-            image = ""
+            title         = title,
+            hours         = hours,
+            minutes       = minutes,
+            steps         = mappedSteps,
+            // ingredientRows se deja vacío por ahora — los ingredientes del nuevo
+            // modelo (RecipeLine + Ingredient) se integrarán en una siguiente iteración
+            ingredientRows = emptyList(),
+            tags          = tags.toList(),
+            image         = ""
         )
     }
 

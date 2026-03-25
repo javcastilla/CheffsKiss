@@ -5,11 +5,9 @@ import kotlin.time.Duration
 
 data class Recipe(
     val id: UUID,
-    val author: UUID,
     val title: String,
     val duration: Duration,
-    val ingredients: List<String>,
-    val steps: List<Step>,
     val tags: List<String>,
-    val image: String
+    val image: String,
+    val user: User
 )
