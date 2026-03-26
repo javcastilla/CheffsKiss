@@ -7,6 +7,7 @@ data class Recipe(
     val id: UUID,
     val author: UUID,
     val title: String,
+    val description: String,
     val duration: Duration,
     val ingredients: List<String>,
     val steps: List<Step>,

@@ -6,10 +6,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.Input
-import software.ulpgc.cheffskiss.application.LoginInput
 import software.ulpgc.cheffskiss.application.RegisterUserCommand
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+import java.util.UUID
 
 sealed class AuthUiState {
     object Idle    : AuthUiState()
@@ -67,6 +67,10 @@ class AuthenticantionViewModel : ViewModel() {
                 )
         }
     }
+    fun getCurrentUser(): UUID? {
+        return firebaseService.getCurrentUser()
+    }
+
 
     private fun friendlyError(msg: String?) = when {
         msg == null                    -> "Unknown error"

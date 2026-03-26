@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.RecipeUiState
 import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
@@ -61,9 +62,10 @@ val unitOptions = listOf("UNIT", "GRAM", "KG", "ML", "LITRE",
 
 @Composable
 fun CreateRecipeScreen(
-    viewModel: RecipeViewModel = viewModel(), // 🔌 1. Inyectamos tu ViewModel
+    viewModel: RecipeViewModel = viewModel(),
+    authViewModel: AuthenticantionViewModel = viewModel(),
     onBack: () -> Unit,
-    onPublishSuccess: () -> Unit, // 🔌 2. Cambiamos el nombre para que quede más claro
+    onPublishSuccess: () -> Unit,
     onSaveDraft: () -> Unit
 ) {
     // 🔌 3. Observamos lo que nos dice Firebase (Cargando, Éxito, Error)
@@ -91,27 +93,32 @@ fun CreateRecipeScreen(
 
     // 🔌 5. Función que empaqueta todo y se lo manda al ViewModel
     val handlePublish = {
-        val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
+        val authorId = authViewModel.getCurrentUser()
 
-        val mappedSteps = steps.mapIndexed { index, stepRow ->
-            Step(
-                id = UUID.randomUUID(),
-                description = stepRow.description,
-                duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
-                cardinal = index + 1
+        if (authorId == null) {
+            // Opcional: mostrar error si no hay sesión
+        } else {
+            val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
+            val mappedSteps = steps.mapIndexed { index, stepRow ->
+                Step(
+                    id = UUID.randomUUID(),
+                    description = stepRow.description,
+                    duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
+                    cardinal = index + 1
+                )
+            }
+            viewModel.createRecipe(
+                authorId = authorId, // ← ya no es random
+                title = title,
+                description = description,
+                hours = hours,
+                minutes = minutes,
+                ingredients = mappedIngredients,
+                steps = mappedSteps,
+                tags = tags.toList(),
+                image = ""
             )
         }
-
-        viewModel.createRecipe(
-            authorId = UUID.randomUUID(), // Por ahora es random, luego lo cambiaremos por el real
-            title = title,
-            hours = hours,
-            minutes = minutes,
-            ingredients = mappedIngredients,
-            steps = mappedSteps,
-            tags = tags.toList(),
-            image = ""
-        )
     }
 
     Scaffold(
