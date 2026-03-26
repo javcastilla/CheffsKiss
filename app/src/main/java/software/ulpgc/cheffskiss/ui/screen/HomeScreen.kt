@@ -1,5 +1,5 @@
 package software.ulpgc.cheffskiss.ui.screen
-
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,13 +18,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import software.ulpgc.cheffskiss.ui.theme.*
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import software.ulpgc.cheffskiss.R
 
-// ──────────────────── Datos de ejemplo ────────────────────
 private data class RecipeCard(
     val title: String,
     val subtitle: String,
@@ -32,6 +35,7 @@ private data class RecipeCard(
     val servings: Int,
     val tag: String
 )
+
 
 private val sampleRecipes = listOf(
     RecipeCard("Risotto de Limón", "Parmesano & albahaca fresca", "35m", 2, "Vegan"),
@@ -156,13 +160,9 @@ private fun HomeHeader(onLogout: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text("CheffsKiss", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = Primary, letterSpacing = (-0.5).sp)
-            Text("Good evening, Chef 👋", fontSize = 13.sp, color = CKOnSurfaceVariant)
+            Text("Cheffs Kiss", fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, color = Primary, letterSpacing = (-0.5).sp)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            IconButton(onClick = { }) {
-                Icon(Icons.Default.Search, contentDescription = null, tint = OnBackground)
-            }
             IconButton(onClick = onLogout) {
                 Icon(Icons.Default.Logout, contentDescription = "Logout", tint = OnBackground)
             }
@@ -170,7 +170,7 @@ private fun HomeHeader(onLogout: () -> Unit) {
     }
 }
 
-// ──────────────────── Search Bar ────────────────────
+
 @Composable
 private fun HomeSearchBar(query: String, onQueryChange: (String) -> Unit, modifier: Modifier = Modifier) {
     OutlinedTextField(
@@ -299,8 +299,12 @@ private fun RecipeItemCard(recipe: RecipeCard, modifier: Modifier = Modifier) {
                     .background(CKSurfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Restaurant, null, tint = Outline, modifier = Modifier.size(28.dp))
-            }
+                Image(
+                    painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(48.dp)
+                )            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(recipe.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(recipe.subtitle, fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -392,7 +396,6 @@ private fun CtaBanner(onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-// ──────────────────── Bottom Bar ────────────────────
 @Composable
 private fun HomeBottomBar(onCreateRecipe: () -> Unit) {
     NavigationBar(containerColor = Surface, tonalElevation = 8.dp) {
