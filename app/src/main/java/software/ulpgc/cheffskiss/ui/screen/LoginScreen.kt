@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mail
-import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -34,7 +33,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.ui.AuthUiState
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
-
+import androidx.compose.foundation.Image
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import software.ulpgc.cheffskiss.R
 @Composable
 fun LoginScreen(
     viewModel: AuthenticantionViewModel = viewModel(),
@@ -90,21 +93,31 @@ fun LoginScreen(
             // ── Logo ─────────────────────────────────────────
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(100.dp)
                     .rotate(-2f)
                     .shadow(12.dp, RoundedCornerShape(16.dp))
                     .background(Primary, RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Restaurant, null, tint = CKSecondary,
-                    modifier = Modifier.size(40.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.cheffkiss_icon),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Primary),
+                    modifier = Modifier
+                        .size(400.dp)
+                        .rotate(-2f)
+                        .shadow(14.dp, RoundedCornerShape(28.dp))
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Background) // ← fondo verde oscuro detrás del pato
+                )
             }
             Spacer(modifier = Modifier.height(20.dp))
             Text("Cheffs Kiss", fontWeight = FontWeight.ExtraBold,
                 fontSize = 32.sp, color = Primary, letterSpacing = (-0.5).sp)
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Reclaiming the warmth of\nyour digital kitchen.",
+                text = "Reclaiming the warmth of\nyour digital kitchen",
                 style = MaterialTheme.typography.bodyMedium,
                 color = CKOnSurfaceVariant, textAlign = TextAlign.Center
             )

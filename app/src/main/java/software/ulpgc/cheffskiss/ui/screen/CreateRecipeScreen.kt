@@ -1,5 +1,5 @@
 package software.ulpgc.cheffskiss.ui.screen
-
+import coil.compose.AsyncImage
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -29,13 +29,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import software.ulpgc.cheffskiss.ui.theme.*
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import software.ulpgc.cheffskiss.R
 
-// 🔌 Nuevas importaciones necesarias para conectar con tu ViewModel y Dominio
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.RecipeUiState
 import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
@@ -61,14 +68,15 @@ val unitOptions = listOf("UNIT", "GRAM", "KG", "ML", "LITRE",
 
 @Composable
 fun CreateRecipeScreen(
-    viewModel: RecipeViewModel = viewModel(), // 🔌 1. Inyectamos tu ViewModel
+    viewModel: RecipeViewModel = viewModel(),
+    authViewModel: AuthenticantionViewModel = viewModel(),
     onBack: () -> Unit,
-    onPublishSuccess: () -> Unit, // 🔌 2. Cambiamos el nombre para que quede más claro
+    onPublishSuccess: () -> Unit,
     onSaveDraft: () -> Unit
 ) {
-    // 🔌 3. Observamos lo que nos dice Firebase (Cargando, Éxito, Error)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
+    var coverImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showImageOptions by remember { mutableStateOf(false) }
     var title          by remember { mutableStateOf("") }
     var description    by remember { mutableStateOf("") }
     var servings       by remember { mutableIntStateOf(4) }
@@ -80,8 +88,14 @@ fun CreateRecipeScreen(
     val steps          = remember { mutableStateListOf(StepRow(0)) }
     var nextIngredId   by remember { mutableIntStateOf(2) }
     var nextStepId     by remember { mutableIntStateOf(1) }
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri -> uri?.let { coverImageUri = it } }
+    val cameraUri = remember { mutableStateOf<Uri?>(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success -> if (success) coverImageUri = cameraUri.value }
 
-    // 🔌 4. Si Firebase dice "Éxito", reseteamos el estado y volvemos al Home
     LaunchedEffect(uiState) {
         if (uiState is RecipeUiState.Success) {
             viewModel.resetState()
@@ -89,34 +103,37 @@ fun CreateRecipeScreen(
         }
     }
 
-    // 🔌 5. Función que empaqueta todo y se lo manda al ViewModel
     val handlePublish = {
-        val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
+        val authorId = authViewModel.getCurrentUser()
 
-        val mappedSteps = steps.mapIndexed { index, stepRow ->
-            Step(
-                id = UUID.randomUUID(),
-                description = stepRow.description,
-                duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
-                cardinal = index + 1
+        if (authorId == null) {
+            // Opcional: mostrar error si no hay sesión
+        } else {
+            val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
+            val mappedSteps = steps.mapIndexed { index, stepRow ->
+                Step(
+                    id = UUID.randomUUID(),
+                    description = stepRow.description,
+                    duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
+                    cardinal = index + 1
+                )
+            }
+            viewModel.createRecipe(
+                authorId = authorId, // ← ya no es random
+                title = title,
+                description = description,
+                hours = hours,
+                minutes = minutes,
+                ingredients = mappedIngredients,
+                steps = mappedSteps,
+                tags = tags.toList(),
+                image = ""
             )
         }
-
-        viewModel.createRecipe(
-            authorId = UUID.randomUUID(), // Por ahora es random, luego lo cambiaremos por el real
-            title = title,
-            hours = hours,
-            minutes = minutes,
-            ingredients = mappedIngredients,
-            steps = mappedSteps,
-            tags = tags.toList(),
-            image = ""
-        )
     }
 
     Scaffold(
         topBar = { CreateRecipeTopBar(onBack, onSaveDraft) },
-        // 🔌 6. Pasamos nuestra nueva función handlePublish al botón
         bottomBar = { CreateRecipeBottomBar(onSaveDraft, onPublish = handlePublish) },
         containerColor = Background
     ) { padding ->
@@ -131,9 +148,11 @@ fun CreateRecipeScreen(
         ) {
             Spacer(Modifier.height(4.dp))
 
-            CoverPhotoPlaceholder()
+            CoverPhotoPlaceholder(
+                imageUri = coverImageUri,
+                onClick = { showImageOptions = true }
+            )
 
-            // ── Basic Info ────────────────────────────────────────────────
             SectionHeader(icon = Icons.Default.Info, title = "Basic Info")
             BasicInfoSection(
                 title = title, onTitleChange = { title = it },
@@ -154,7 +173,6 @@ fun CreateRecipeScreen(
                 onTagRemove = { tags.remove(it) }
             )
 
-            // ── Ingredients ───────────────────────────────────────────────
             SectionHeader(icon = Icons.Default.Restaurant, title = "Ingredients")
             IngredientsSection(
                 ingredients = ingredients,
@@ -168,7 +186,6 @@ fun CreateRecipeScreen(
                 }
             )
 
-            // ── Steps ─────────────────────────────────────────────────────
             SectionHeader(icon = Icons.Default.FormatListNumbered, title = "Steps")
             StepsSection(
                 steps = steps,
@@ -176,9 +193,50 @@ fun CreateRecipeScreen(
                     val idx = steps.indexOfFirst { it.id == id }
                     if (idx != -1) steps[idx] = updated
                 },
+                onStepRemove = { id -> steps.removeAll { it.id == id } },  // ← nuevo
                 onAddStep = { steps.add(StepRow(nextStepId++)) }
             )
         }
+    }
+    if (showImageOptions) {
+        AlertDialog(
+            onDismissRequest = { showImageOptions = false },
+            title = { Text("Add Cover Photo", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(
+                        onClick = {
+                            galleryLauncher.launch("image/*")
+                            showImageOptions = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.PhotoLibrary, null, tint = Primary)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Choose from Gallery", color = Primary)
+                    }
+                    TextButton(
+                        onClick = {
+                            galleryLauncher.launch("image/*")
+                            showImageOptions = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.CameraAlt, null, tint = Primary)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Take Photo", color = Primary)
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showImageOptions = false }) {
+                    Text("Cancel", color = CKOnSurfaceVariant)
+                }
+            },
+            containerColor = Surface,
+            shape = RoundedCornerShape(20.dp)
+        )
     }
 }
 
@@ -271,33 +329,55 @@ private fun CreateRecipeBottomBar(onSaveDraft: () -> Unit, onPublish: () -> Unit
 
 
 @Composable
-private fun CoverPhotoPlaceholder() {
+private fun CoverPhotoPlaceholder(
+    imageUri: Uri? = null,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(16f / 9f)
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            .border(2.dp, CKOutlineVariant.copy(alpha = 0.5f),
-                RoundedCornerShape(24.dp))
-            .clickable { },
+            .border(2.dp, CKOutlineVariant.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+            .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (imageUri != null) {
+            AsyncImage(
+                model = imageUri,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
             Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .background(Primary.copy(alpha = 0.1f), CircleShape),
+                    .align(Alignment.BottomEnd)
+                    .padding(12.dp)
+                    .size(36.dp)
+                    .background(Primary, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.CameraAlt, null,
-                    tint = Primary, modifier = Modifier.size(36.dp))
+                Icon(Icons.Default.Edit, null, tint = OnPrimary, modifier = Modifier.size(18.dp))
             }
-            Text("Add Cover Photo", fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Upload high-quality food photography",
-                fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .background(Primary.copy(alpha = 0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.CameraAlt, null, tint = Primary, modifier = Modifier.size(36.dp))
+                }
+                Text("Add Cover Photo", fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Tap to upload or take a photo", fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+            }
         }
     }
 }
@@ -636,6 +716,7 @@ private fun IngredientRowItem(
 private fun StepsSection(
     steps: List<StepRow>,
     onStepChange: (Int, StepRow) -> Unit,
+    onStepRemove: (Int) -> Unit,      // ← nuevo
     onAddStep: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -643,54 +724,99 @@ private fun StepsSection(
             StepRowItem(
                 index = index + 1,
                 step = step,
-                onChange = { onStepChange(step.id, it) }
+                onChange = { onStepChange(step.id, it) },
+                onRemove = { onStepRemove(step.id) }   // ← nuevo
             )
         }
         DashedAddButton(label = "Add Step", onClick = onAddStep)
     }
 }
 
-@Composable
-private fun StepRowItem(index: Int, step: StepRow, onChange: (StepRow) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .background(Primary, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(index.toString(), color = OnPrimary,
-                fontWeight = FontWeight.Bold, fontSize = 14.sp)
-        }
 
-        Column(modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextField(
-                value = step.description,
-                onValueChange = { onChange(step.copy(description = it)) },
-                placeholder = { Text("Describe this step...",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), fontSize = 13.sp) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = containerFieldColors(),
-                minLines = 2
-            )
-            Row(verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.Timer, null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
-                TextField(
-                    value = step.duration,
-                    onValueChange = { onChange(step.copy(duration = it)) },
-                    placeholder = { Text("Duration (optional)", fontSize = 12.sp) },
-                    modifier = Modifier.width(140.dp).height(40.dp),
-                    colors = transparentFieldColors(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+@Composable
+private fun StepRowItem(
+    index: Int,
+    step: StepRow,
+    onChange: (StepRow) -> Unit,
+    onRemove: () -> Unit              // ← nuevo
+) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        // Contenido del step
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, end = 8.dp) // espacio para la X
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .background(Primary, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    index.toString(), color = OnPrimary,
+                    fontWeight = FontWeight.Bold, fontSize = 14.sp
                 )
             }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TextField(
+                    value = step.description,
+                    onValueChange = { onChange(step.copy(description = it)) },
+                    placeholder = {
+                        Text(
+                            "Describe this step...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            fontSize = 13.sp
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = containerFieldColors(),
+                    minLines = 2
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Timer, null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    TextField(
+                        value = step.duration,
+                        onValueChange = { onChange(step.copy(duration = it)) },
+                        placeholder = { Text("Duration (optional)", fontSize = 12.sp) },
+                        modifier = Modifier.width(140.dp).height(40.dp),
+                        colors = transparentFieldColors(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
+            }
+        }
+
+        // ✕ Botón eliminar — esquina superior derecha
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(20.dp)
+                .background(Color(0xFFBA1A1A), CircleShape)
+                .clickable { onRemove() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Close, null,
+                tint = Color.White,
+                modifier = Modifier.size(12.dp)
+            )
         }
     }
 }
+
 
 // ── Components Reutilizables ──────────────────────────────────────────────────
 

@@ -31,6 +31,7 @@ class RecipeViewModel : ViewModel() {
     fun createRecipe(
         authorId: UUID,
         title: String,
+        description: String,
         hours: String,
         minutes: String,
         ingredients: List<String>,
@@ -38,6 +39,33 @@ class RecipeViewModel : ViewModel() {
         tags: List<String>,
         image: String
     ) {
+        when{
+            title.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("The title have to be filled")
+                return
+            }
+            description.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("The description have to be filled")
+                return
+            }
+            (hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0") -> {
+                _uiState.value = RecipeUiState.Error("Indicate the recipe duration")
+                return
+            }            ingredients.isEmpty() -> {
+                _uiState.value = RecipeUiState.Error("The ingredients have to be filled with at least one ingredient")
+                return
+            }
+            steps.isEmpty() -> {
+                _uiState.value = RecipeUiState.Error("The steps have to be filled with at least one step")
+                return
+            }
+            hours.isBlank() && minutes.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("Indica la duración de la receta")
+                return
+            }
+
+
+        }
         viewModelScope.launch {
             _uiState.value = RecipeUiState.Loading
 
@@ -45,8 +73,10 @@ class RecipeViewModel : ViewModel() {
                     (minutes.toIntOrNull() ?: 0)).toLong()
 
             val input = object : RecipeInput {
+                override fun id() = UUID.randomUUID()
                 override fun author() = authorId
                 override fun title() = title
+                override fun description() = description
                 override fun duration() = totalMinutes.minutes
                 override fun ingredients() = ingredients
                 override fun steps() = steps

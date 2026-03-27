@@ -1,5 +1,6 @@
 package software.ulpgc.cheffskiss.ui.screen
-
+import software.ulpgc.cheffskiss.R
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,10 +13,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -102,8 +108,18 @@ fun RegisterScreen(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Filled.Restaurant, null,
-                    tint = Color.White, modifier = Modifier.size(36.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.cheffkiss_icon),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(Primary),
+                    modifier = Modifier
+                        .size(400.dp)
+                        .rotate(-2f)
+                        .shadow(14.dp, RoundedCornerShape(28.dp))
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Background) // ← fondo verde oscuro detrás del pato
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))

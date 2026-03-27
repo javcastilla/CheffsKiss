@@ -6,10 +6,13 @@ import com.google.firebase.firestore.firestore
 import software.ulpgc.cheffskiss.application.port.output.LoginPort
 import software.ulpgc.cheffskiss.application.port.output.LogoutPort
 import software.ulpgc.cheffskiss.application.port.output.RegisterPort
+import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
+
 import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.domain.model.User
 import java.util.UUID
 
-class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort {
+class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , CurrentUserPort {
 
     override suspend fun register(
         email: String,
@@ -55,6 +58,14 @@ class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort {
         return Firebase.auth.signInWithEmailAndPassword(email, password).await().user != null
     }
 
+    override fun getCurrentUser(): UUID? {
+        val uid = Firebase.auth.currentUser?.uid ?: return null
+        return firebaseUidToUUID(uid)
+    }
+
+    fun firebaseUidToUUID(firebaseUid: String): UUID {
+        return UUID.nameUUIDFromBytes(firebaseUid.toByteArray(Charsets.UTF_8))
+    }
 
 }
 interface RegisterUserInput{
