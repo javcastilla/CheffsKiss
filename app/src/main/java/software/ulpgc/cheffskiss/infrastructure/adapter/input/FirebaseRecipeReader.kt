@@ -47,7 +47,9 @@ class FirebaseRecipeReader : RecipeReader {
         return try {
             Recipe(
                 id = UUID.fromString(id),
-                author = UUID.fromString(author),
+                author = author,
+                description = getString("description") ?: "",
+                serving = getLong("servings")?.toInt() ?: 0,
                 title = getString("title") ?: "",
                 duration = (getLong("duration") ?: 0L).seconds,
                 ingredients = (get("ingredients") as? List<*>)

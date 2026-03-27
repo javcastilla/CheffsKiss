@@ -58,9 +58,9 @@ class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , Curre
         return Firebase.auth.signInWithEmailAndPassword(email, password).await().user != null
     }
 
-    override fun getCurrentUser(): UUID? {
+    override fun getCurrentUser(): String? {
         val uid = Firebase.auth.currentUser?.uid ?: return null
-        return firebaseUidToUUID(uid)
+        return uid
     }
 
     fun firebaseUidToUUID(firebaseUid: String): UUID {

@@ -10,28 +10,33 @@ import kotlin.time.Duration
 class CreateRecipeCommand( private val recipePort: RecipePort, private val recipeInput: RecipeInput) : Command {
     override suspend fun execute() {
         require(recipeInput.title().isNotBlank()){ "Title cannot be empty" }
-        require(recipeInput.author() != UUID(0, 0)){ "Author is not valid" }
+        require(recipeInput.description().isNotBlank()){ "Description cannot be empty" }
+        require(recipeInput.serving() > 0){ "Serving cannot be empty" }
+        require(recipeInput.author().isNotBlank()){ "Author cannot be empty" }
         require(recipeInput.duration() >= Duration.ZERO) { "Duration is not valid" }
         require(recipeInput.ingredients().isNotEmpty()){ "Ingredients cannot be empty" }
         require(recipeInput.steps().isNotEmpty()){ "Steps cannot be empty" }
         recipePort.createRecipe(Recipe(
-            author = recipeInput.author(),
             id = recipeInput.id(),
+            author = recipeInput.author(),
             title = recipeInput.title(),
             description = recipeInput.description(),
             duration = recipeInput.duration(),
             ingredients = recipeInput.ingredients(),
             steps = recipeInput.steps(),
             tags = recipeInput.tags(),
-            image = recipeInput.image()))
+            image = recipeInput.image(),
+            serving = recipeInput.serving(),
+        ))
     }
 }
 
 interface RecipeInput {
     fun id() : UUID
-    fun author() : UUID
+    fun author() : String
     fun title(): String
     fun description(): String
+    fun serving(): Int
     fun duration(): Duration
     fun ingredients(): List<String>
     fun steps(): List<Step>

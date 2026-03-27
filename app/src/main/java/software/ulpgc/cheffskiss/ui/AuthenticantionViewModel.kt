@@ -20,7 +20,7 @@ sealed class AuthUiState {
 
 class AuthenticantionViewModel : ViewModel() {
 
-    private val firebaseService = FirebaseAuthenticationService()  // ← una sola instancia
+    private val firebaseService = FirebaseAuthenticationService()
     private val userNameReader  = FirebaseUserNameReader()
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
@@ -67,7 +67,7 @@ class AuthenticantionViewModel : ViewModel() {
                 )
         }
     }
-
+    fun getCurrentUid(): String? = firebaseService.getCurrentUser()
     private fun friendlyError(msg: String?) = when {
         msg == null                    -> "Unknown error"
         "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"

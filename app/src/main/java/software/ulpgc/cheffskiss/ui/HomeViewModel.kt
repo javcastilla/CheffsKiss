@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 
 data class HomeUiState(
     val isLoading: Boolean = true,
@@ -14,7 +15,7 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
-    private val getAllRecipesQuery: GetAllRecipesQuery
+    private val getAllRecipesQuery: GetAllRecipesQuery = GetAllRecipesQuery(FirebaseRecipeReader())
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())

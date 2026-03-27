@@ -18,7 +18,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import software.ulpgc.cheffskiss.ui.screen.CreateRecipeScreen
-import software.ulpgc.cheffskiss.ui.screen.HomeScreen
+import software.ulpgc.cheffskiss.ui.screen.HomeRoute
+import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.ui.HomeViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,7 +54,8 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("home") {
-                        HomeScreen(
+                        HomeRoute(
+                            viewModel = viewModel(),
                             onCreateRecipe = { navController.navigate("create_recipe") },
                             onLogout = {
                                 navController.navigate("login") {

@@ -1,5 +1,4 @@
 package software.ulpgc.cheffskiss.ui.screen
-import coil.compose.AsyncImage
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -32,11 +31,8 @@ import software.ulpgc.cheffskiss.ui.theme.*
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
-import software.ulpgc.cheffskiss.R
-
+import androidx.compose.foundation.layout.Box
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
@@ -45,8 +41,8 @@ import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
+import coil.compose.AsyncImage
 
-// ── Data classes locales ──────────────────────────────────────────────────────
 
 data class IngredientRow(
     val id: Int,
@@ -104,10 +100,9 @@ fun CreateRecipeScreen(
     }
 
     val handlePublish = {
-        val authorId = authViewModel.getCurrentUser()
+        val authorId = authViewModel.getCurrentUid()
 
         if (authorId == null) {
-            // Opcional: mostrar error si no hay sesión
         } else {
             val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
             val mappedSteps = steps.mapIndexed { index, stepRow ->
@@ -122,6 +117,7 @@ fun CreateRecipeScreen(
                 authorId = authorId, // ← ya no es random
                 title = title,
                 description = description,
+                serving = servings,
                 hours = hours,
                 minutes = minutes,
                 ingredients = mappedIngredients,
@@ -555,7 +551,6 @@ private fun BasicInfoSection(
             }
         }
 
-        // Tags
         RecipeField(label = "Tags") {
             Row(
                 modifier = Modifier

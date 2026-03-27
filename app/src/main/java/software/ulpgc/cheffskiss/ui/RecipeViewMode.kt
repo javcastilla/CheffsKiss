@@ -29,9 +29,10 @@ class RecipeViewModel : ViewModel() {
     fun resetState() { _uiState.value = RecipeUiState.Idle }
 
     fun createRecipe(
-        authorId: UUID,
+        authorId: String,
         title: String,
         description: String,
+        serving: Int,
         hours: String,
         minutes: String,
         ingredients: List<String>,
@@ -77,6 +78,7 @@ class RecipeViewModel : ViewModel() {
                 override fun author() = authorId
                 override fun title() = title
                 override fun description() = description
+                override fun serving() = serving
                 override fun duration() = totalMinutes.minutes
                 override fun ingredients() = ingredients
                 override fun steps() = steps

@@ -340,7 +340,6 @@ private fun RecipeItemCard(recipe: Recipe,
     var authorName by remember(recipe.author) { mutableStateOf("...") }
 
     LaunchedEffect(recipe.author) {
-        authorName = authViewModel.getUsernameByUid(recipe.author.toString())
     }
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -365,7 +364,7 @@ private fun RecipeItemCard(recipe: Recipe,
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(recipe.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("Por ${authorName.toString()}", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("Por ${recipe.author}", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {

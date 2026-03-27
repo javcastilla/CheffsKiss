@@ -15,9 +15,10 @@ class FirebaseRecipeService : RecipePort {
 
     private fun Recipe.toMap(): Map<String, Any?> = mapOf(
         "id"          to id.toString(),
-        "author"      to author.toString(),
+        "author"      to author,
         "title"       to title,
         "description" to description,
+        "serving"     to serving,
         "duration"    to duration.inWholeSeconds,   // Long
         "ingredients" to ingredients,               // List<String> — Firestore lo soporta
         "steps"       to steps.map { step ->
