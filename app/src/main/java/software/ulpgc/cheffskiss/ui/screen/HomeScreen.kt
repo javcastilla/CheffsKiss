@@ -32,6 +32,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 
 private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisanal")
 
@@ -330,9 +332,16 @@ private fun FeaturedBanner(modifier: Modifier = Modifier) {
     }
 }
 
-// ──────────────────── Recipe Item Card ────────────────────
+
 @Composable
-private fun RecipeItemCard(recipe: Recipe, modifier: Modifier = Modifier) {
+private fun RecipeItemCard(recipe: Recipe,
+                           authViewModel: AuthenticantionViewModel = viewModel(),
+                           modifier: Modifier = Modifier) {
+    var authorName by remember(recipe.author) { mutableStateOf("...") }
+
+    LaunchedEffect(recipe.author) {
+        authorName = authViewModel.getUsernameByUid(recipe.author.toString())
+    }
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -356,7 +365,7 @@ private fun RecipeItemCard(recipe: Recipe, modifier: Modifier = Modifier) {
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(recipe.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("Por ${recipe.author}", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("Por ${authorName.toString()}", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {

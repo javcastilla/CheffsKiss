@@ -67,7 +67,9 @@ class AuthenticantionViewModel : ViewModel() {
                 )
         }
     }
-
+    suspend fun getUsernameByUid(uid: String): String {
+        return userNameReader.getUsernameByUid(uid) ?: uid
+    }
     private fun friendlyError(msg: String?) = when {
         msg == null                    -> "Unknown error"
         "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"
