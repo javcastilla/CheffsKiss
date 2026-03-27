@@ -22,28 +22,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import software.ulpgc.cheffskiss.ui.HomeUiState
+import software.ulpgc.cheffskiss.ui.HomeViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
-
-// ──────────────────── Datos de ejemplo ────────────────────
-private data class RecipeCard(
-    val title: String,
-    val subtitle: String,
-    val duration: String,
-    val servings: Int,
-    val tag: String
-)
-
-private val sampleRecipes = listOf(
-    RecipeCard("Risotto de Limón", "Parmesano & albahaca fresca", "35m", 2, "Vegan"),
-    RecipeCard("Pollo al Miso", "Jengibre, sake y sésamo tostado", "25m", 4, "Protein"),
-    RecipeCard("Tarta de Manzana", "Canela & mantequilla dorada", "50m", 6, "Dessert"),
-)
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 
 private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisanal")
 
 // ──────────────────── Screen principal ────────────────────
 @Composable
+fun HomeRoute(
+    viewModel: HomeViewModel,
+    onCreateRecipe: () -> Unit,
+    onLogout: () -> Unit
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    HomeScreen(
+        state = state,
+        onCreateRecipe = onCreateRecipe,
+        onLogout = onLogout
+    )
+}
+
+@Composable
 fun HomeScreen(
+    state: HomeUiState,
     onCreateRecipe: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -68,6 +78,39 @@ fun HomeScreen(
         },
         floatingActionButtonPosition = FabPosition.Center
     ) { padding ->
+
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
+        if (state.error != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = state.error, style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { /* TODO: retry button */ }) {
+                        Text("Reintentar")
+                    }
+                }
+            }
+            return@Scaffold
+        }
+
+        val recipes = state.recipes
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -126,8 +169,18 @@ fun HomeScreen(
             }
 
             // ── Recipe cards ──
-            val filtered = if (selectedTag == "All") sampleRecipes
-            else sampleRecipes.filter { it.tag == selectedTag }
+            val filtered = recipes.filter { recipe ->
+                // Filtro por nombre (search)
+                val matchesSearch = searchQuery.isBlank() ||
+                        recipe.title.contains(searchQuery, ignoreCase = true)
+
+                // Filtro por tag (simplificado, ya que tu Recipe no tiene 'tag')
+                val matchesTag = selectedTag == "All" ||
+                        // TODO: si más adelante añades campo 'tag' a Recipe, aquí lo usas
+                        true // por ahora muestra todas
+
+                matchesSearch && matchesTag
+            }
 
             items(filtered) { recipe ->
                 RecipeItemCard(
@@ -279,7 +332,7 @@ private fun FeaturedBanner(modifier: Modifier = Modifier) {
 
 // ──────────────────── Recipe Item Card ────────────────────
 @Composable
-private fun RecipeItemCard(recipe: RecipeCard, modifier: Modifier = Modifier) {
+private fun RecipeItemCard(recipe: Recipe, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -303,16 +356,16 @@ private fun RecipeItemCard(recipe: RecipeCard, modifier: Modifier = Modifier) {
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(recipe.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(recipe.subtitle, fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("Por ${recipe.author}", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                         Icon(Icons.Default.Timer, null, tint = Outline, modifier = Modifier.size(12.dp))
-                        Text(recipe.duration, fontSize = 11.sp, color = Outline)
+                        Text("${recipe.duration.inWholeMinutes}m", fontSize = 11.sp, color = Outline)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                         Icon(Icons.Default.People, null, tint = Outline, modifier = Modifier.size(12.dp))
-                        Text("${recipe.servings} servings", fontSize = 11.sp, color = Outline)
+                        Text("4 servings", fontSize = 11.sp, color = Outline)
                     }
                 }
             }
