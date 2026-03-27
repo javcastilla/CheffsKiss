@@ -1,0 +1,4033 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.gitignore
+app/.gitignore
+app/build.gradle.kts
+app/proguard-rules.pro
+app/src/androidTest/java/software/ulpgc/cheffskiss/ExampleInstrumentedTest.kt
+app/src/main/AndroidManifest.xml
+app/src/main/ic_launcher-playstore.png
+app/src/main/java/software/ulpgc/cheffskiss/application/CreateAStepCommand.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/CreateRecipeCommand.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/LoginUserCommand.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/LogoutUserCommand.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/port/output/CurrentUserPort.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/port/output/LoginPort.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/port/output/LogoutPort.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/port/output/RecipePort.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/port/output/RegisterPort.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/port/output/StepPort.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/RegisterUserCommand.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/services/AuthenticationService.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/services/GetAllRecipesQuery.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/control/Command.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/model/Ingredient.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/model/Recipe.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/model/RecipeLine.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/model/Step.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/model/User.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/model/UserName.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/RecipeReader.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/UserNameReader.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/port/output/UserRepository.kt
+app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseRecipeReader.kt
+app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseUserNameReader.kt
+app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseAuthenticationService.kt
+app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseRecipeService.kt
+app/src/main/java/software/ulpgc/cheffskiss/MainActivity.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/components/CKTextField.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/HomeViewModel.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/RecipeViewMode.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/screen/CreateRecipeScreen.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/screen/HomeScreen.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/screen/LoginScreen.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/screen/RegisterScreen.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Color.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Theme.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Type.kt
+app/src/main/res/drawable/cheffkiss_icon.xml
+app/src/main/res/drawable/ic_launcher_background.xml
+app/src/main/res/drawable/ic_launcher_foreground.xml
+app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp
+app/src/main/res/mipmap-hdpi/ic_launcher_round.webp
+app/src/main/res/mipmap-hdpi/ic_launcher.webp
+app/src/main/res/mipmap-mdpi/ic_launcher_foreground.webp
+app/src/main/res/mipmap-mdpi/ic_launcher_round.webp
+app/src/main/res/mipmap-mdpi/ic_launcher.webp
+app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.webp
+app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp
+app/src/main/res/mipmap-xhdpi/ic_launcher.webp
+app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.webp
+app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp
+app/src/main/res/mipmap-xxhdpi/ic_launcher.webp
+app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.webp
+app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp
+app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp
+app/src/main/res/values/colors.xml
+app/src/main/res/values/ic_launcher_background.xml
+app/src/main/res/values/strings.xml
+app/src/main/res/values/themes.xml
+app/src/main/res/xml/backup_rules.xml
+app/src/main/res/xml/data_extraction_rules.xml
+app/src/test/java/software/ulpgc/cheffskiss/ExampleUnitTest.kt
+build.gradle.kts
+gradle.properties
+gradle/libs.versions.toml
+gradle/wrapper/gradle-wrapper.jar
+gradle/wrapper/gradle-wrapper.properties
+gradlew
+gradlew.bat
+settings.gradle.kts
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".gitignore">
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+google-services.json
+.idea
+.idea/**
+</file>
+
+<file path="app/.gitignore">
+/build
+</file>
+
+<file path="app/proguard-rules.pro">
+# Add project specific ProGuard rules here.
+# You can control the set of applied configuration files using the
+# proguardFiles setting in build.gradle.
+#
+# For more details, see
+#   http://developer.android.com/guide/developing/tools/proguard.html
+
+# If your project uses WebView with JS, uncomment the following
+# and specify the fully qualified class name to the JavaScript interface
+# class:
+#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
+#   public *;
+#}
+
+# Uncomment this to preserve the line number information for
+# debugging stack traces.
+#-keepattributes SourceFile,LineNumberTable
+
+# If you keep the line number information, uncomment this to
+# hide the original source file name.
+#-renamesourcefileattribute SourceFile
+</file>
+
+<file path="app/src/androidTest/java/software/ulpgc/cheffskiss/ExampleInstrumentedTest.kt">
+package software.ulpgc.cheffskiss
+
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
+
+import org.junit.Test
+import org.junit.runner.RunWith
+
+import org.junit.Assert.*
+
+/**
+ * Instrumented test, which will execute on an Android device.
+ *
+ * See [testing documentation](http://d.android.com/tools/testing).
+ */
+@RunWith(AndroidJUnit4::class)
+class ExampleInstrumentedTest {
+    @Test
+    fun useAppContext() {
+        // Context of the app under test.
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        assertEquals("software.ulpgc.cheffskiss", appContext.packageName)
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/CreateAStepCommand.kt">
+package software.ulpgc.cheffskiss.application
+
+import software.ulpgc.cheffskiss.domain.control.Command
+import software.ulpgc.cheffskiss.domain.model.Step
+import java.util.UUID
+import kotlin.time.Duration
+
+class CreateAStepCommand(val description: String,
+                         val duration: Duration,
+                         val cardinal: Int): Command {
+    override suspend fun execute() {
+        require(description.isNotBlank())
+        require(cardinal>0)
+        Step(UUID.randomUUID(), description, duration, cardinal)
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/LoginUserCommand.kt">
+package software.ulpgc.cheffskiss.application
+
+import software.ulpgc.cheffskiss.application.port.output.LoginPort
+import software.ulpgc.cheffskiss.domain.control.Command
+import java.util.UUID
+
+class LoginUserCommand(private val loginPort: LoginPort, private val loginInput: LoginInput) : Command {
+    override suspend fun execute() {
+         loginPort.login(loginInput.email(), loginInput.password())
+    }
+}
+interface LoginInput{
+    fun email(): String
+    fun password(): String
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/LogoutUserCommand.kt">
+package software.ulpgc.cheffskiss.application
+
+import software.ulpgc.cheffskiss.application.port.output.LogoutPort
+import software.ulpgc.cheffskiss.domain.control.Command
+
+class LogoutUserCommand(private val logOutPort: LogoutPort): Command {
+
+
+    override suspend fun execute() {
+         logOutPort.logout()
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/CurrentUserPort.kt">
+package software.ulpgc.cheffskiss.application.port.output
+
+import java.util.UUID
+
+interface CurrentUserPort {
+    fun getCurrentUser(): String?
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/LoginPort.kt">
+package software.ulpgc.cheffskiss.application.port.output
+
+interface LoginPort {
+    suspend fun login(email: String, password: String): Boolean
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/LogoutPort.kt">
+package software.ulpgc.cheffskiss.application.port.output
+
+interface LogoutPort {
+    suspend fun logout()
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/RecipePort.kt">
+package software.ulpgc.cheffskiss.application.port.output
+
+import software.ulpgc.cheffskiss.domain.model.Recipe
+
+interface RecipePort {
+    suspend fun createRecipe(recipe: Recipe)
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/RegisterPort.kt">
+package software.ulpgc.cheffskiss.application.port.output
+
+import java.util.UUID
+
+interface RegisterPort {
+    suspend fun register(email: String, password: String, username: String, description: String?, image: String): UUID?
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/StepPort.kt">
+package software.ulpgc.cheffskiss.application.port.output
+
+interface StepPort {
+    fun createAStep()
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/RegisterUserCommand.kt">
+package software.ulpgc.cheffskiss.application
+
+import software.ulpgc.cheffskiss.application.port.output.RegisterPort
+import software.ulpgc.cheffskiss.domain.control.Command
+import software.ulpgc.cheffskiss.domain.model.UserName
+import software.ulpgc.cheffskiss.domain.port.input.UserNameReader
+import java.util.UUID
+
+class RegisterUserCommand(
+    private val userNameReader: UserNameReader,
+    private val userPort: RegisterPort,
+    private val registerUserInput: Input)
+    : Command {
+
+
+    override suspend fun execute() {
+        require(!userNameReader.exist(getUserName())){"Username already exists"}
+
+        userPort.register(
+            registerUserInput.email(),
+            registerUserInput.password(),
+            registerUserInput.username(),
+            registerUserInput.description(),
+            registerUserInput.image()
+        )
+    }
+
+    private fun getUserName(): UserName {
+        return UserName(registerUserInput.username())
+    }
+}
+
+interface Input {
+    fun email(): String
+    fun password(): String
+    fun username(): String
+    fun description(): String?
+    fun image(): String
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/services/AuthenticationService.kt">
+package software.ulpgc.cheffskiss.application.services
+
+import software.ulpgc.cheffskiss.application.port.output.LoginPort
+import software.ulpgc.cheffskiss.application.port.output.RegisterPort
+
+class AuthenticationService(private val logInPort: LoginPort, private val registerPort: RegisterPort) {
+    suspend fun authenticate(email:String, password:String):Boolean{
+        return logInPort.login(email, password)
+    }
+    suspend fun register(email: String, password: String, username: String, description: String?, image: String): Boolean {
+        return registerPort.register(email, password, username, description, image) != null
+    }
+    suspend fun logout(){
+        TODO("Not yet implemented")
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/services/GetAllRecipesQuery.kt">
+package software.ulpgc.cheffskiss.application.services
+
+import kotlinx.coroutines.flow.Flow
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
+
+class GetAllRecipesQuery(private val recipeReader: RecipeReader) {
+    operator fun invoke(): Flow<List<Recipe>> = recipeReader.getAll()
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/control/Command.kt">
+package software.ulpgc.cheffskiss.domain.control
+
+import java.util.UUID
+
+interface Command {
+    suspend fun execute()
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/Ingredient.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+import java.util.UUID
+
+
+data class Ingredient(
+    val id: UUID,
+    val name: String,
+    val image: String
+)
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/RecipeLine.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+import java.util.UUID
+
+data class RecipeLine(
+    val id: UUID,
+    val amount: Int,
+    val measurement:Measurement
+)
+
+enum class Measurement {
+    UNIT,
+    KILOGRAM,
+    GRAM,
+    LITRE,
+    MILLILITRE,
+    CUP,
+    TABLESPOON,
+    TEASPOON,
+    SLICE,
+    PINCH,
+    TO_TASTE,
+    SMALL,
+    MEDIUM,
+    LARGE
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/Step.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+import java.util.UUID
+import kotlin.time.Duration
+
+data class Step(
+    val id: UUID,
+    val description: String,
+    val duration: Duration,
+    val cardinal: Int
+)
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/User.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+import java.util.UUID
+
+data class User(
+    val id: UUID,
+    val image: String,
+    val description: String?,
+    val username: UserName
+)
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/UserName.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+class UserName(val value: String) {
+
+    suspend fun isValid(value: String){
+        require(value.isNotBlank()){"Fill the space"}
+        require(value.length >= 3){"The name is too short"}
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/RecipeReader.kt">
+package software.ulpgc.cheffskiss.domain.port.input
+
+import kotlinx.coroutines.flow.Flow
+import software.ulpgc.cheffskiss.domain.model.Recipe
+
+interface RecipeReader {
+    fun getAll(): Flow<List<Recipe>>
+    suspend fun getById(id: String): Recipe?
+    fun search(query: String): Flow<List<Recipe>>
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/output/UserRepository.kt">
+package software.ulpgc.cheffskiss.domain.port.output
+
+import software.ulpgc.cheffskiss.domain.model.User
+import java.util.UUID
+
+interface UserRepository {
+    suspend fun save(user: User)
+    suspend fun findByEmail(email: String): User?
+    suspend fun findById(id: UUID): User?
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/components/CKTextField.kt">
+package software.ulpgc.cheffskiss.ui.components
+
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
+import software.ulpgc.cheffskiss.ui.theme.*
+
+@Composable
+fun CheffsTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    singleLine: Boolean = true
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, color = Outline.copy(alpha = 0.5f)) },
+        trailingIcon = trailingIcon,
+        visualTransformation = visualTransformation,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        singleLine = singleLine,
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Primary,
+            unfocusedBorderColor = OutlineVariant,
+            focusedContainerColor = Color.White.copy(alpha = 0.5f),
+            unfocusedContainerColor = Color.White.copy(alpha = 0.5f),
+            focusedTextColor = OnSurface,
+            unfocusedTextColor = OnSurface,
+            cursorColor = Primary
+        ),
+        modifier = modifier.fillMaxWidth()
+    )
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/HomeViewModel.kt">
+package software.ulpgc.cheffskiss.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+
+data class HomeUiState(
+    val isLoading: Boolean = true,
+    val recipes: List<Recipe> = emptyList(),
+    val error: String? = null
+)
+
+class HomeViewModel(
+    private val getAllRecipesQuery: GetAllRecipesQuery = GetAllRecipesQuery(FirebaseRecipeReader())
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    init {
+        observeRecipes()
+    }
+
+    private fun observeRecipes() {
+        viewModelScope.launch {
+            getAllRecipesQuery()
+                .onStart { _uiState.value = _uiState.value.copy(isLoading = true) }
+                .catch { e ->
+                    _uiState.value = HomeUiState(
+                        isLoading = false,
+                        error = e.message ?: "Error al cargar recetas"
+                    )
+                }
+                .collect { list ->
+                    _uiState.value = HomeUiState(
+                        isLoading = false,
+                        recipes = list,
+                        error = null
+                    )
+                }
+        }
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Type.kt">
+package software.ulpgc.cheffskiss.ui.theme
+
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
+// Set of Material typography styles to start with
+val Typography = Typography(
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    )
+    /* Other default text styles to override
+    titleLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
+    )
+    */
+)
+</file>
+
+<file path="app/src/main/res/drawable/cheffkiss_icon.xml">
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:autoMirrored="true" android:height="702dp" android:viewportHeight="702" android:viewportWidth="685" android:width="685dp">
+      
+    <path android:fillColor="#000000" android:pathData="M146.5,1.1c-55.4,5.8 -103.9,39.2 -127.9,88.2 -9.8,19.9 -14.8,38.5 -17.6,65.2 -0.7,6.8 -1,71.8 -0.8,201 0.4,209.5 0,196.1 6.3,220.6 10.6,41.3 33.2,74.3 66.4,96.8 13.4,9.2 33.8,17.8 51.8,22 20.9,4.9 27,5.3 81.4,5.8l51.5,0.5 2.2,-7.3c1.2,-4.1 2.7,-10.1 3.3,-13.4 1.1,-5.8 0.8,-17.4 -0.5,-20.5 -0.5,-1.3 1.5,-1.5 15.4,-1.2 9.6,0.2 16,-0 16,-0.6 0,-0.5 -1.7,-1.2 -3.7,-1.6 -4.8,-0.7 -41.6,-12.4 -50.8,-16.1 -32.4,-12.9 -59,-31.9 -74.9,-53.5 -24.3,-33 -23,-75.1 3.3,-108.4 3.9,-4.9 7.5,-10.3 8,-12 0.6,-1.7 1.7,-10.5 2.6,-19.6 1.8,-19.4 2.9,-26.8 5.5,-37 4.5,-17.7 10.8,-32.8 18.8,-44.8 3.1,-4.6 4.7,-6 10.2,-8.5 17.2,-7.8 44.3,-15.9 66,-19.6 22.9,-4 31.8,-4.6 66.5,-4.6 34.8,-0 42.3,0.6 67,5.1 29.8,5.5 67.2,19 72.2,26 5.6,7.9 14.9,30.3 18.7,45.1 2.4,9.1 5.4,28.7 6.1,39.3 1,15.9 2,19.3 7.9,27.1l5.3,6.9 -0.8,6.3c-0.5,3.4 -1.1,7.7 -1.4,9.4l-0.6,3.3 -5.2,-4.2c-11.9,-9.4 -25.6,-12.2 -38.7,-7.8 -8.3,2.8 -11.2,4.6 -22.7,14.2 -8.5,7 -9.8,7.8 -13.6,7.8 -5.9,-0.1 -16.4,-4 -25.5,-9.6 -5.5,-3.4 -12.2,-9.4 -23.2,-20.5 -8.6,-8.7 -18.3,-17.4 -21.7,-19.7 -15.8,-10.1 -37,-9.3 -53.3,1.9 -6,4.1 -8.9,6.9 -25.5,23.8 -11.2,11.4 -17.6,16.4 -26.2,20.3 -4.1,1.8 -7.3,2.2 -21.8,2.7 -16.7,0.6 -17.2,0.7 -23.7,3.9 -11.6,5.7 -16.5,14.3 -15.6,27.6 0.6,9.2 3.6,15.5 10.9,22.6 9.1,8.9 18.9,13 57.2,23.5 20,5.5 27.6,8.5 41.1,16.2 21.2,12.1 30,15.3 42,15.3 20.2,-0 38.6,-12.6 43.7,-29.8 1.5,-5 1.3,-5 11.2,1.6 8.8,6 13.9,11.5 16,17.3 1.4,3.7 4.4,37.7 3.5,38.4 -0.7,0.4 -23.8,8.5 -28.8,10.1 -10.3,3.2 -8.4,3.7 12.5,3.1l20.1,-0.5 2.9,5.6c1.7,3.2 4.9,8.6 7.3,12.2l4.4,6.5 -9.2,8.7 -9.2,8.8 10,-0 10.1,-0 6.7,-7.5c11,-12.1 10.8,-11.1 3.5,-19.1 -11.4,-12.4 -16.1,-25.8 -17.6,-49.9 -1.5,-23.5 -6.4,-32.5 -24.3,-44.5 -3.7,-2.5 -6.8,-5.2 -7,-6.1 -0.2,-1.1 1.3,-2.4 4.5,-4 4.2,-2 6.2,-2.3 16.8,-2.3 9.9,-0 13,0.4 17.5,2.2 12.1,4.8 19.6,13.6 24.6,28.8 1.5,4.6 3.1,8.4 3.5,8.4 0.5,-0 1.3,-0.9 1.9,-2 0.8,-1.5 2.1,-2 5.3,-2 12,0.1 25.5,12.3 31.7,28.9 3.3,9 4.4,8.9 3.7,-0.3 -1.1,-15.1 -10.5,-29.4 -23.5,-36 -2.9,-1.5 -5.2,-2.7 -5.2,-2.9 0,-0.1 0.9,-2.5 2,-5.4 4.4,-11.7 3.4,-23.7 -3,-36.9l-3,-6.2 2.5,-4.3c1.4,-2.4 2.5,-5.2 2.5,-6.2 0,-1.7 -0.2,-1.7 -2.8,0.2 -20.2,15.6 -36.4,22.2 -50.9,20.7 -12.6,-1.3 -23.3,-7.6 -23.3,-13.7 0,-3.4 -0.1,-3.4 10.3,-6.4 16.3,-4.7 22.9,-8.5 37.9,-22.1 9.5,-8.5 16.1,-11.7 24.2,-11.8 7.8,-0 12.8,1.7 17.8,6.2 8.1,7.4 13.8,21.9 16.4,41.7 0.8,6.2 1.1,5.4 5.8,-13.4 7,-27.9 8.5,-39.7 9.6,-76.6 0.9,-29.8 1.6,-34.9 5,-38 5.6,-5 16.1,6.7 21.9,24.5 4,12.5 5.5,24.3 5.5,44.5 0,16.9 -0.3,20.3 -2.7,30.6 -3.1,13.9 -6,21.8 -12.5,34.4 -5.1,10 -4.5,10.8 2.4,3.3 12.8,-13.9 24.2,-38.1 32.4,-69 7.4,-28.2 9.2,-32.8 13.2,-34.9 1.9,-1 2.6,-0.7 5.4,2.4 3.9,4.2 5.1,8.1 6.7,21 3.6,31.3 -12.5,82.1 -34.1,107 -2.3,2.7 -4.2,5 -4.2,5.3 0,0.2 1.9,-0.5 4.3,-1.7 6,-3.1 23.9,-21.4 33.8,-34.9 14.2,-19 20.7,-23.3 22.9,-15 2.7,9.8 -2.8,28.1 -14.7,48.8 -1.5,2.6 -6.3,9.4 -10.8,15.2 -17.3,22.3 -21.6,28.2 -21.3,28.6 0.2,0.2 2.7,-0.5 5.4,-1.5 6.2,-2.4 15.4,-4.1 15.4,-2.9 0,1.9 -8.6,17.8 -14.3,26.3 -6.5,9.7 -17.2,20.7 -27.7,28.6 -12.5,9.4 -22.2,13.4 -42.5,17.5l-12,2.4 12.5,-0.5c33.8,-1.4 65,-11.7 90.5,-30 33.8,-24.3 55.8,-58.4 65,-100.8l2.5,-11.7 0,-209c0,-208.5 0,-209.1 -2.1,-219.2 -10.3,-49.6 -41.1,-89.9 -85.4,-111.8 -20.4,-10.1 -35.6,-14.6 -57,-17 -11,-1.2 -382.2,-1.1 -394,0.1zM375.5,47.4c43,9.5 70,38.2 78.3,83.3 0.9,5.1 2,9.3 2.3,9.3 1,-0 1.9,-8.5 1.9,-17.5 0,-8.7 -2.1,-22.9 -4.4,-29.5 -1.3,-3.7 -1.2,-4 0.6,-4.6 1,-0.3 6.5,-0.6 12.2,-0.6 30.1,-0 57.8,16.1 71,41.2 11.3,21.4 10.3,51.8 -2.4,78.5 -1.6,3.3 -2.7,6.1 -2.5,6.3 0.9,1 9.5,-6.4 13.9,-11.9 5.7,-7 5.9,-6.9 9.7,3 2.9,7.8 3.6,19 1.5,26.8 -5.9,23.1 -24.8,36.2 -54.6,38l-10.5,0.6 -5.5,-3.5c-3,-1.9 -7.5,-4.5 -9.9,-5.8l-4.4,-2.2 5.3,-2.9c9.8,-5.4 18.4,-13.3 24.9,-23.1 3.9,-5.7 8.8,-17.4 7.8,-18.4 -0.3,-0.3 -2.4,1.9 -4.7,4.9 -4.8,6.4 -16.1,16.1 -24.1,20.6 -6.6,3.7 -17.8,7.6 -25.8,9.1 -5.2,0.9 -6.8,0.7 -17.8,-2.4 -6.7,-1.8 -17.4,-4.4 -24,-5.7 -6.5,-1.3 -12,-2.4 -12.2,-2.6 -0.2,-0.1 2.1,-2.9 5,-6.2 13.9,-15.3 22.9,-37.8 22.9,-57.4 0,-10.2 -2.9,-25.7 -4.8,-25.7 -0.4,-0 -0.7,4.6 -0.8,10.2 -0.1,26.5 -14.5,55.5 -35.6,71.3l-6.3,4.7 -7,-0.8c-3.8,-0.5 -20.3,-0.8 -36.6,-0.9l-29.6,-0 -4.1,-2.9c-6.2,-4.2 -17.7,-16.7 -22.9,-24.8 -5.2,-8.1 -11.6,-21.4 -13.3,-27.6 -0.7,-2.6 -1.5,-4 -2.2,-3.6 -2.1,1.3 -0.2,17.4 3.2,27.5 3.8,11.3 7.3,17.7 15.3,27.6 3.2,4 5.8,7.5 5.6,7.7 -0.2,0.2 -3.8,0.8 -7.9,1.5 -9.5,1.5 -25.6,5.3 -38.7,9.2l-10.1,3 -5.9,-1.7c-10.4,-3 -19.8,-8.4 -30.7,-17.8 -6.5,-5.7 -11.5,-12.6 -17,-23.4 -2,-3.9 -3.9,-7.2 -4.3,-7.2 -1.1,-0 0.5,10.4 2.5,16.2 5.1,14.5 19.8,33.1 30.7,38.9 4.4,2.4 5.7,3.9 3.3,3.9 -1.9,0.1 -11.5,6.4 -15.9,10.5 -5.8,5.3 -7.9,10.2 -7.9,18 0,6.2 -0.1,6.6 -2.7,7.7 -4.4,1.8 -22.8,1.5 -30.3,-0.5 -12.3,-3.3 -22.7,-9.2 -31.5,-18.1 -10.7,-10.8 -16.6,-22.1 -19.5,-37.6 -1.4,-7.2 -1.4,-24.4 0,-32.3 6.4,-36.2 31,-70 64.5,-88.2 16.3,-8.9 43.5,-16 58.8,-15.3l6.7,0.3 -5.6,8.3c-3,4.6 -9,12 -13.1,16.3 -4.2,4.3 -6.9,7.9 -6.1,7.9 3.5,-0 14.6,-6.8 21.1,-12.9 3.9,-3.6 11.5,-12.7 17.1,-20.1 22,-29.6 39.8,-43.8 65.6,-52.4 15.7,-5.2 25.2,-6.6 41,-6.2 7.4,0.2 16.7,1.1 20.5,2zM377.5,249.6c43.2,4.5 90,18.4 102.6,30.4 4.8,4.6 5.5,7.4 3.9,17.6 -1.3,8 -1.1,16.1 0.6,39.6l0.7,8.7 -9.4,-4.1c-27.2,-11.7 -49.7,-17.5 -89.9,-23 -15.2,-2.1 -69.1,-1.7 -86.5,0.5 -31.8,4.2 -60,11.2 -82.2,20.5l-14.3,5.9 0.6,-20.1c0.4,-11.6 0.2,-23.4 -0.4,-27.8 -1.3,-10 -0.3,-14.5 4,-18.1 9.2,-7.8 35.8,-17.8 64.5,-24.1 37.3,-8.2 68.1,-10 105.8,-6zM358.2,468.1c8.6,3.7 12.6,6.9 26.8,22 14,14.8 21.8,20.8 34.9,27.1l6.5,3.1 -7.6,2.2c-9.5,2.7 -13.7,5.2 -16.1,9.3 -3.4,5.8 -2,15.7 3.1,21.4 0.8,1 1.3,1.8 1.1,1.8 -0.2,-0 -3.5,0.9 -7.2,1.9 -3.8,1.1 -6.7,1.7 -6.5,1.3 4.5,-8.4 5.9,-18.1 3.8,-24.9 -5,-15.6 -27.2,-25.7 -46,-20.9 -10.5,2.7 -16.8,6.3 -25.1,14.5 -6.8,6.8 -11.8,13.6 -10.7,14.7 0.3,0.2 2.9,-2 6,-5 6.8,-6.6 19.4,-13 29.8,-15.2 12.7,-2.7 24.8,0.5 32.2,8.3 7.7,8.1 5.9,21.4 -3.5,26.5 -1.6,0.8 -1.7,0.7 -0.8,-1.1 2.8,-5.2 -0.3,-12.7 -6.8,-16.5 -2.6,-1.5 -5.2,-2 -10.2,-2 -8.9,0.1 -16.7,3.8 -27.8,13.2 -9.9,8.4 -14.7,11 -23.6,12.5l-6.4,1.1 6.7,2.2c5,1.7 6,2.3 3.8,2.3 -5,0.1 -2.3,1.1 6,2.1 5.6,0.7 11.6,2.5 21.1,6.5 7.3,3 14.7,5.5 16.3,5.5 4.6,-0 9.4,-2.4 11.9,-5.9 1.2,-1.7 3.1,-3.1 4.1,-3.1 2.7,-0 6,4.7 6,8.7 0,8.9 -7,15.2 -19.1,17.4 -12.8,2.3 -24,-1.3 -36.9,-11.9 -7.9,-6.6 -17.7,-12.2 -24.7,-14.3 -4.2,-1.2 -6.3,-3.6 -2.2,-2.6 1.4,0.4 1.9,0.2 1.5,-0.8 -0.2,-0.7 0.2,-1.6 1,-1.9 0.8,-0.3 1.4,-1.2 1.4,-2 0,-1 -1.7,-1.6 -5.7,-2.1 -15.7,-1.8 -30.7,-8.3 -40,-17.3 -3.2,-3.1 -6.2,-5.5 -6.7,-5.4 -0.5,0.2 -0.2,-0.8 0.8,-2.2 3.2,-4.9 1.2,-6 -5.2,-2.7 -2,1 -5.7,2.2 -8.1,2.6 -2.4,0.4 -5.2,1.6 -6.2,2.6 -2.3,2.3 -2.5,8.8 -0.4,12.8 2,3.9 8.8,9.6 15,12.6 6.2,3 5.6,3.1 -3.1,0.4 -17.9,-5.5 -26.7,-14.5 -26.8,-27.5 -0.1,-5 0.4,-6.8 2.7,-10.3 4.4,-6.6 8.7,-8.1 23.3,-8.1 13.5,-0 19.2,-0.8 27.7,-4 11.1,-4.2 18.7,-10.4 42,-34.6 9.2,-9.6 14.9,-13.4 23.8,-15.9 7.1,-2 17.1,-1.3 24.1,1.6zM480.7,562.6c1.3,4.3 1.6,11.7 0.7,15.2 -0.6,2.1 -1,1.8 -4.4,-3.5 -2,-3.2 -5.1,-7.1 -6.9,-8.6l-3.2,-2.7 5.3,-2.4c2.9,-1.3 5.7,-2.3 6.3,-2.2 0.5,0.2 1.5,2 2.2,4.2z" android:strokeColor="#00000000"/>
+      
+    <path android:fillColor="#000000" android:pathData="M319.5,492.2c-5,12.1 -0.4,17.9 5.3,6.6 1.8,-3.6 2.1,-5 1.3,-7.1 -1.5,-3.9 -4.8,-3.6 -6.6,0.5z" android:strokeColor="#00000000"/>
+      
+    <path android:fillColor="#000000" android:pathData="M363.2,490.2c-1.7,1.7 -1.5,6.5 0.5,9.9 3.2,5.5 6.3,4.5 6.3,-2 0,-2.9 0.2,-3.2 1.5,-2.1 2.8,2.3 2.8,0.1 0.1,-3.5 -2.8,-3.6 -6.1,-4.6 -8.4,-2.3z" android:strokeColor="#00000000"/>
+      
+    <path android:fillColor="#000000" android:pathData="M400.4,554.5c-1,0.8 -1.4,1.4 -0.9,1.4 0.6,-0 1.9,-0.6 2.9,-1.4 1.1,-0.8 1.5,-1.5 1,-1.5 -0.6,-0 -1.9,0.7 -3,1.5z" android:strokeColor="#00000000"/>
+      
+    <path android:fillColor="#000000" android:pathData="M243.9,360.4c-12.2,3.3 -25.6,17.2 -24.7,25.8l0.3,3 4.5,-3.5c2.5,-1.9 7.1,-4.9 10.4,-6.7 5.4,-3.1 6.8,-3.4 17.1,-4 12.9,-0.7 16.5,-2.2 16.5,-6.8 0,-7.1 -12.1,-11 -24.1,-7.8z" android:strokeColor="#00000000"/>
+      
+    <path android:fillColor="#000000" android:pathData="M429.7,377.2c-4.6,1.2 -9.7,6.1 -9.7,9.2 0,4.4 2.6,5.5 13.5,5.3 12.1,-0.1 18.6,1.6 27.4,7.3 8.7,5.7 11.3,4.3 7.2,-3.8 -2.7,-5.2 -11.2,-12.9 -17.5,-15.8 -6.1,-2.8 -15.4,-3.8 -20.9,-2.2z" android:strokeColor="#00000000"/>
+      
+    <path android:fillColor="#000000" android:pathData="M240.8,396.3c-11.1,4.2 -17.6,10.5 -23.9,23.2 -7.8,15.6 -8.7,33.5 -2.8,50.9 2.3,6.6 2.8,9.1 1.9,9.4 -0.7,0.3 -2.7,1.7 -4.4,3.3 -2.7,2.5 -2.8,2.8 -1.1,2.9 1.1,-0 4.2,-0.7 6.9,-1.5 6.3,-1.9 17.5,-1.9 25.1,-0 3.3,0.8 10.9,3.9 16.9,7 6,3 11.2,5.3 11.5,4.9 0.3,-0.3 -0.1,-0.9 -0.9,-1.4 -1.1,-0.7 -0.6,-2 2.7,-6.7 9.1,-13.1 12.5,-24 12.5,-40.8 0,-17.8 -4.7,-31.7 -13.8,-41.5 -7.8,-8.3 -22,-12.8 -30.6,-9.7zM262.2,412.5c4,2.9 10.8,10.7 10.8,12.5 0,0.5 -1.9,-0.2 -4.2,-1.5 -3,-1.7 -5.8,-2.5 -9.3,-2.5 -5.4,-0 -13.5,3.1 -13.5,5.1 0,0.7 0.3,1 0.6,0.6 1.2,-1.2 6.4,2.3 8,5.4 4.4,8.6 -5.6,18.2 -12.4,11.9 -1.2,-1.1 -2.5,-3.2 -2.8,-4.5 -1.6,-6.5 -4.4,0.6 -5.1,13 -0.5,8.3 0.6,15.9 3.2,22.7 0.6,1.5 -0.2,1.6 -6.7,1.5l-7.3,-0.2 -1.8,-6.5c-6.6,-24 0.5,-48.6 16.7,-58.1 4.6,-2.7 5.8,-3 12.3,-2.7 6.1,0.3 7.8,0.8 11.5,3.3zM270.8,467.2c1.8,1.8 1.5,4.3 -0.8,6.3 -3.6,3.2 -7.3,-0.4 -5.2,-5.1 1.2,-2.6 4,-3.2 6,-1.2z" android:strokeColor="#00000000"/>
+      
+    <path android:fillColor="#000000" android:pathData="M440,434c-14.5,2.5 -27.4,12 -33.6,24.6 -2.9,6 -2.8,9 0.3,11.1 2,1.4 2.5,1.1 8.5,-4.9 16.4,-16.2 36.8,-19.3 57.2,-8.5l5.8,3.1 1.9,-2.3c1.1,-1.3 1.9,-2.9 1.9,-3.6 0,-1.6 -4.5,-8.3 -7.3,-10.7 -4,-3.5 -14.5,-7.9 -20.9,-8.8 -7.1,-1.1 -7.5,-1.1 -13.8,-0z" android:strokeColor="#00000000"/>
+    
+</vector>
+</file>
+
+<file path="app/src/main/res/drawable/ic_launcher_foreground.xml">
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="85.84757"
+                android:endY="92.4963"
+                android:startX="42.9492"
+                android:startY="49.59793"
+                android:type="linear">
+                <item
+                    android:color="#44000000"
+                    android:offset="0.0" />
+                <item
+                    android:color="#00000000"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="nonZero"
+        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+</vector>
+</file>
+
+<file path="app/src/main/res/values/ic_launcher_background.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#D3E3B7</color>
+</resources>
+</file>
+
+<file path="app/src/main/res/values/strings.xml">
+<resources>
+    <string name="app_name">CheffsKiss</string>
+</resources>
+</file>
+
+<file path="app/src/main/res/xml/backup_rules.xml">
+<?xml version="1.0" encoding="utf-8"?><!--
+   Sample backup rules file; uncomment and customize as necessary.
+   See https://developer.android.com/guide/topics/data/autobackup
+   for details.
+   Note: This file is ignored for devices older than API 31
+   See https://developer.android.com/about/versions/12/backup-restore
+-->
+<full-backup-content>
+    <!--
+   <include domain="sharedpref" path="."/>
+   <exclude domain="sharedpref" path="device.xml"/>
+-->
+</full-backup-content>
+</file>
+
+<file path="app/src/main/res/xml/data_extraction_rules.xml">
+<?xml version="1.0" encoding="utf-8"?><!--
+   Sample data extraction rules file; uncomment and customize as necessary.
+   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
+   for details.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- TODO: Use <include> and <exclude> to control what is backed up.
+        <include .../>
+        <exclude .../>
+        -->
+    </cloud-backup>
+    <!--
+    <device-transfer>
+        <include .../>
+        <exclude .../>
+    </device-transfer>
+    -->
+</data-extraction-rules>
+</file>
+
+<file path="app/src/test/java/software/ulpgc/cheffskiss/ExampleUnitTest.kt">
+package software.ulpgc.cheffskiss
+
+import org.junit.Test
+
+import org.junit.Assert.*
+
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * See [testing documentation](http://d.android.com/tools/testing).
+ */
+class ExampleUnitTest {
+    @Test
+    fun addition_isCorrect() {
+        assertEquals(4, 2 + 2)
+    }
+}
+</file>
+
+<file path="gradle.properties">
+# Project-wide Gradle settings.
+# IDE (e.g. Android Studio) users:
+# Gradle settings configured through the IDE *will override*
+# any settings specified in this file.
+# For more details on how to configure your build environment visit
+# http://www.gradle.org/docs/current/userguide/build_environment.html
+# Specifies the JVM arguments used for the daemon process.
+# The setting is particularly useful for tweaking memory settings.
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+# When configured, Gradle will run in incubating parallel mode.
+# This option should only be used with decoupled projects. For more details, visit
+# https://developer.android.com/r/tools/gradle-multi-project-decoupled-projects
+# org.gradle.parallel=true
+# AndroidX package structure to make it clearer which packages are bundled with the
+# Android operating system, and which are packaged with your app's APK
+# https://developer.android.com/topic/libraries/support-library/androidx-rn
+android.useAndroidX=true
+# Kotlin code style for this project: "official" or "obsolete":
+kotlin.code.style=official
+# Enables namespacing of each library's R class so that its R class includes only the
+# resources declared in the library itself and none from the library's dependencies,
+# thereby reducing the size of the R class for that library
+android.nonTransitiveRClass=true
+</file>
+
+<file path="gradle/wrapper/gradle-wrapper.properties">
+#Thu Mar 19 22:34:20 GMT 2026
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.13-bin.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+</file>
+
+<file path="gradlew">
+#!/usr/bin/env sh
+
+#
+# Copyright 2015 the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+##############################################################################
+##
+##  Gradle start up script for UN*X
+##
+##############################################################################
+
+# Attempt to set APP_HOME
+# Resolve links: $0 may be a link
+PRG="$0"
+# Need this for relative symlinks.
+while [ -h "$PRG" ] ; do
+    ls=`ls -ld "$PRG"`
+    link=`expr "$ls" : '.*-> \(.*\)$'`
+    if expr "$link" : '/.*' > /dev/null; then
+        PRG="$link"
+    else
+        PRG=`dirname "$PRG"`"/$link"
+    fi
+done
+SAVED="`pwd`"
+cd "`dirname \"$PRG\"`/" >/dev/null
+APP_HOME="`pwd -P`"
+cd "$SAVED" >/dev/null
+
+APP_NAME="Gradle"
+APP_BASE_NAME=`basename "$0"`
+
+# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+
+# Use the maximum available, or set MAX_FD != -1 to use that value.
+MAX_FD="maximum"
+
+warn () {
+    echo "$*"
+}
+
+die () {
+    echo
+    echo "$*"
+    echo
+    exit 1
+}
+
+# OS specific support (must be 'true' or 'false').
+cygwin=false
+msys=false
+darwin=false
+nonstop=false
+case "`uname`" in
+  CYGWIN* )
+    cygwin=true
+    ;;
+  Darwin* )
+    darwin=true
+    ;;
+  MINGW* )
+    msys=true
+    ;;
+  NONSTOP* )
+    nonstop=true
+    ;;
+esac
+
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+
+
+# Determine the Java command to use to start the JVM.
+if [ -n "$JAVA_HOME" ] ; then
+    if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
+        # IBM's JDK on AIX uses strange locations for the executables
+        JAVACMD="$JAVA_HOME/jre/sh/java"
+    else
+        JAVACMD="$JAVA_HOME/bin/java"
+    fi
+    if [ ! -x "$JAVACMD" ] ; then
+        die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
+    fi
+else
+    JAVACMD="java"
+    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
+fi
+
+# Increase the maximum file descriptors if we can.
+if [ "$cygwin" = "false" -a "$darwin" = "false" -a "$nonstop" = "false" ] ; then
+    MAX_FD_LIMIT=`ulimit -H -n`
+    if [ $? -eq 0 ] ; then
+        if [ "$MAX_FD" = "maximum" -o "$MAX_FD" = "max" ] ; then
+            MAX_FD="$MAX_FD_LIMIT"
+        fi
+        ulimit -n $MAX_FD
+        if [ $? -ne 0 ] ; then
+            warn "Could not set maximum file descriptor limit: $MAX_FD"
+        fi
+    else
+        warn "Could not query maximum file descriptor limit: $MAX_FD_LIMIT"
+    fi
+fi
+
+# For Darwin, add options to specify how the application appears in the dock
+if $darwin; then
+    GRADLE_OPTS="$GRADLE_OPTS \"-Xdock:name=$APP_NAME\" \"-Xdock:icon=$APP_HOME/media/gradle.icns\""
+fi
+
+# For Cygwin or MSYS, switch paths to Windows format before running java
+if [ "$cygwin" = "true" -o "$msys" = "true" ] ; then
+    APP_HOME=`cygpath --path --mixed "$APP_HOME"`
+    CLASSPATH=`cygpath --path --mixed "$CLASSPATH"`
+
+    JAVACMD=`cygpath --unix "$JAVACMD"`
+
+    # We build the pattern for arguments to be converted via cygpath
+    ROOTDIRSRAW=`find -L / -maxdepth 1 -mindepth 1 -type d 2>/dev/null`
+    SEP=""
+    for dir in $ROOTDIRSRAW ; do
+        ROOTDIRS="$ROOTDIRS$SEP$dir"
+        SEP="|"
+    done
+    OURCYGPATTERN="(^($ROOTDIRS))"
+    # Add a user-defined pattern to the cygpath arguments
+    if [ "$GRADLE_CYGPATTERN" != "" ] ; then
+        OURCYGPATTERN="$OURCYGPATTERN|($GRADLE_CYGPATTERN)"
+    fi
+    # Now convert the arguments - kludge to limit ourselves to /bin/sh
+    i=0
+    for arg in "$@" ; do
+        CHECK=`echo "$arg"|egrep -c "$OURCYGPATTERN" -`
+        CHECK2=`echo "$arg"|egrep -c "^-"`                                 ### Determine if an option
+
+        if [ $CHECK -ne 0 ] && [ $CHECK2 -eq 0 ] ; then                    ### Added a condition
+            eval `echo args$i`=`cygpath --path --ignore --mixed "$arg"`
+        else
+            eval `echo args$i`="\"$arg\""
+        fi
+        i=`expr $i + 1`
+    done
+    case $i in
+        0) set -- ;;
+        1) set -- "$args0" ;;
+        2) set -- "$args0" "$args1" ;;
+        3) set -- "$args0" "$args1" "$args2" ;;
+        4) set -- "$args0" "$args1" "$args2" "$args3" ;;
+        5) set -- "$args0" "$args1" "$args2" "$args3" "$args4" ;;
+        6) set -- "$args0" "$args1" "$args2" "$args3" "$args4" "$args5" ;;
+        7) set -- "$args0" "$args1" "$args2" "$args3" "$args4" "$args5" "$args6" ;;
+        8) set -- "$args0" "$args1" "$args2" "$args3" "$args4" "$args5" "$args6" "$args7" ;;
+        9) set -- "$args0" "$args1" "$args2" "$args3" "$args4" "$args5" "$args6" "$args7" "$args8" ;;
+    esac
+fi
+
+# Escape application args
+save () {
+    for i do printf %s\\n "$i" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/' \\\\/" ; done
+    echo " "
+}
+APP_ARGS=`save "$@"`
+
+# Collect all arguments for the java command, following the shell quoting and substitution rules
+eval set -- $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "\"-Dorg.gradle.appname=$APP_BASE_NAME\"" -classpath "\"$CLASSPATH\"" org.gradle.wrapper.GradleWrapperMain "$APP_ARGS"
+
+exec "$JAVACMD" "$@"
+</file>
+
+<file path="gradlew.bat">
+@rem
+@rem Copyright 2015 the original author or authors.
+@rem
+@rem Licensed under the Apache License, Version 2.0 (the "License");
+@rem you may not use this file except in compliance with the License.
+@rem You may obtain a copy of the License at
+@rem
+@rem      https://www.apache.org/licenses/LICENSE-2.0
+@rem
+@rem Unless required by applicable law or agreed to in writing, software
+@rem distributed under the License is distributed on an "AS IS" BASIS,
+@rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@rem See the License for the specific language governing permissions and
+@rem limitations under the License.
+@rem
+
+@if "%DEBUG%" == "" @echo off
+@rem ##########################################################################
+@rem
+@rem  Gradle startup script for Windows
+@rem
+@rem ##########################################################################
+
+@rem Set local scope for the variables with windows NT shell
+if "%OS%"=="Windows_NT" setlocal
+
+set DIRNAME=%~dp0
+if "%DIRNAME%" == "" set DIRNAME=.
+set APP_BASE_NAME=%~n0
+set APP_HOME=%DIRNAME%
+
+@rem Resolve any "." and ".." in APP_HOME to make it shorter.
+for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
+
+@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
+
+@rem Find java.exe
+if defined JAVA_HOME goto findJavaFromJavaHome
+
+set JAVA_EXE=java.exe
+%JAVA_EXE% -version >NUL 2>&1
+if "%ERRORLEVEL%" == "0" goto execute
+
+echo.
+echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+echo.
+echo Please set the JAVA_HOME variable in your environment to match the
+echo location of your Java installation.
+
+goto fail
+
+:findJavaFromJavaHome
+set JAVA_HOME=%JAVA_HOME:"=%
+set JAVA_EXE=%JAVA_HOME%/bin/java.exe
+
+if exist "%JAVA_EXE%" goto execute
+
+echo.
+echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%
+echo.
+echo Please set the JAVA_HOME variable in your environment to match the
+echo location of your Java installation.
+
+goto fail
+
+:execute
+@rem Setup the command line
+
+set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
+
+
+@rem Execute Gradle
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+
+:end
+@rem End local scope for the variables with windows NT shell
+if "%ERRORLEVEL%"=="0" goto mainEnd
+
+:fail
+rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
+rem the _cmd.exe /c_ return code!
+if  not "" == "%GRADLE_EXIT_CONSOLE%" exit 1
+exit /b 1
+
+:mainEnd
+if "%OS%"=="Windows_NT" endlocal
+
+:omega
+</file>
+
+<file path="settings.gradle.kts">
+pluginManagement {
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "CheffsKiss"
+include(":app")
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/CreateRecipeCommand.kt">
+package software.ulpgc.cheffskiss.application
+
+import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.domain.control.Command
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.Step
+import java.util.UUID
+import kotlin.time.Duration
+
+class CreateRecipeCommand( private val recipePort: RecipePort, private val recipeInput: RecipeInput) : Command {
+    override suspend fun execute() {
+        require(recipeInput.title().isNotBlank()){ "Title cannot be empty" }
+        require(recipeInput.description().isNotBlank()){ "Description cannot be empty" }
+        require(recipeInput.serving() > 0){ "Serving cannot be empty" }
+        require(recipeInput.author().isNotBlank()){ "Author cannot be empty" }
+        require(recipeInput.duration() >= Duration.ZERO) { "Duration is not valid" }
+        require(recipeInput.ingredients().isNotEmpty()){ "Ingredients cannot be empty" }
+        require(recipeInput.steps().isNotEmpty()){ "Steps cannot be empty" }
+        recipePort.createRecipe(Recipe(
+            id = recipeInput.id(),
+            author = recipeInput.author(),
+            title = recipeInput.title(),
+            description = recipeInput.description(),
+            duration = recipeInput.duration(),
+            ingredients = recipeInput.ingredients(),
+            steps = recipeInput.steps(),
+            tags = recipeInput.tags(),
+            image = recipeInput.image(),
+            serving = recipeInput.serving(),
+        ))
+    }
+}
+
+interface RecipeInput {
+    fun id() : UUID
+    fun author() : String
+    fun title(): String
+    fun description(): String
+    fun serving(): Int
+    fun duration(): Duration
+    fun ingredients(): List<String>
+    fun steps(): List<Step>
+    fun tags(): List<String>
+    fun image(): String
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/UserNameReader.kt">
+package software.ulpgc.cheffskiss.domain.port.input
+
+import software.ulpgc.cheffskiss.domain.model.UserName
+
+interface UserNameReader {
+    suspend fun exist(value: UserName): Boolean
+    suspend fun getUsernameByUid(uid: String): String?
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseRecipeReader.kt">
+package software.ulpgc.cheffskiss.infrastructure.adapter.input
+
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
+import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
+
+class FirebaseRecipeReader : RecipeReader {
+
+    private val collection = Firebase.firestore.collection("recipes")
+
+    override fun getAll(): Flow<List<Recipe>> = callbackFlow {
+        val listener = collection.addSnapshotListener { snapshot, error ->
+            if (error != null) { close(error); return@addSnapshotListener }
+            val recipes = snapshot?.documents?.mapNotNull { it.toRecipe() } ?: emptyList()
+            trySend(recipes)
+        }
+        awaitClose { listener.remove() }
+    }
+
+    override suspend fun getById(id: String): Recipe? =
+        collection.document(id).get().await().toRecipe()
+
+    override fun search(query: String): Flow<List<Recipe>> = callbackFlow {
+        val listener = collection
+            .whereGreaterThanOrEqualTo("name", query)
+            .whereLessThanOrEqualTo("name", query + "\uf8ff")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) { close(error); return@addSnapshotListener }
+                trySend(snapshot?.documents?.mapNotNull { it.toRecipe() } ?: emptyList())
+            }
+        awaitClose { listener.remove() }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun DocumentSnapshot.toRecipe(): Recipe? {
+        val id = getString("id") ?: return null
+        val author = getString("author") ?: return null
+        return try {
+            Recipe(
+                id = UUID.fromString(id),
+                author = author,
+                description = getString("description") ?: "",
+                serving = getLong("servings")?.toInt() ?: 0,
+                title = getString("title") ?: "",
+                duration = (getLong("duration") ?: 0L).seconds,
+                ingredients = (get("ingredients") as? List<*>)
+                    ?.filterIsInstance<String>() ?: emptyList(),
+                steps = (get("steps") as? List<*>)
+                    ?.mapNotNull { it.toStep() } ?: emptyList(),
+                tags = (get("tags") as? List<*>)
+                    ?.filterIsInstance<String>() ?: emptyList(),
+                image = getString("image") ?: ""
+            )
+        } catch (e: Exception) { null }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun Any?.toStep(): Step? {
+        val map = this as? Map<String, Any> ?: return null
+        return Step(
+            id = UUID.fromString(map["id"] as? String ?: return null),
+            description = map["description"] as? String ?: "",
+            duration = ((map["duration"] as? Long) ?: 0L).seconds,
+            cardinal = ((map["cardinal"] as? Long) ?: 0L).toInt()
+        )
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseUserNameReader.kt">
+package software.ulpgc.cheffskiss.infrastructure.adapter.input
+
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.domain.model.UserName
+import software.ulpgc.cheffskiss.domain.port.input.UserNameReader
+
+class FirebaseUserNameReader : UserNameReader {
+    override suspend fun exist(value: UserName): Boolean {
+        return Firebase.firestore.collection("Username").document(value.value).get().await().exists()
+    }
+    override suspend fun getUsernameByUid(uid: String): String? {
+        val snapshot = Firebase.firestore
+            .collection("Username")
+            .whereEqualTo("UUID", uid)
+            .get()
+            .await()
+        android.util.Log.d("UserNameReader", "uid buscado: $uid")
+        android.util.Log.d("UserNameReader", "docs encontrados: ${snapshot.documents.size}")
+        return snapshot.documents.firstOrNull()?.getString("username")
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseAuthenticationService.kt">
+package software.ulpgc.cheffskiss.infrastructure.adapter.output
+
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
+import software.ulpgc.cheffskiss.application.port.output.LoginPort
+import software.ulpgc.cheffskiss.application.port.output.LogoutPort
+import software.ulpgc.cheffskiss.application.port.output.RegisterPort
+import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
+
+import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.domain.model.User
+import java.util.UUID
+
+class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , CurrentUserPort {
+
+    override suspend fun register(
+        email: String,
+        password: String,
+        username: String,
+        description: String?,
+        image: String
+    ): UUID? {
+        try {
+            val userId =Firebase.auth.createUserWithEmailAndPassword(email, password).await().user?.uid ?: error("No UID returned")
+            Firebase.firestore.collection("Username").document(username).set(userNameHashMap(userId)).await()
+            Firebase.firestore.collection("Users").document(userId).set(userHashMap(email,description,image)).await()
+            return UUID.fromString(userId)
+
+        }catch (e: Exception){
+            println("Error al registrar: ${e.message}")
+            return null
+        }
+    }
+
+    private fun userHashMap(
+        email: String,
+        description: String?,
+        image: String
+    ): HashMap<String, String?> {
+        return hashMapOf(
+            "email" to email,
+            "image" to image,
+            "description" to description
+        )
+    }
+
+    private fun userNameHashMap(userId: String): HashMap<String, String> {
+        return hashMapOf(
+            "UUID" to userId)
+    }
+
+    override suspend fun logout() {
+        Firebase.auth.signOut()
+    }
+
+    override suspend fun login(email: String, password: String): Boolean {
+        return Firebase.auth.signInWithEmailAndPassword(email, password).await().user != null
+    }
+
+    override fun getCurrentUser(): String? {
+        val uid = Firebase.auth.currentUser?.uid ?: return null
+        return uid
+    }
+
+    fun firebaseUidToUUID(firebaseUid: String): UUID {
+        return UUID.nameUUIDFromBytes(firebaseUid.toByteArray(Charsets.UTF_8))
+    }
+
+}
+interface RegisterUserInput{
+    fun email(): String
+    fun password(): String
+    fun username(): String
+    fun description(): String?
+    fun image(): String
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseRecipeService.kt">
+package software.ulpgc.cheffskiss.infrastructure.adapter.output
+
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.domain.model.Recipe
+
+class FirebaseRecipeService : RecipePort {
+    override suspend fun createRecipe(recipe: Recipe) {
+        Firebase.firestore.collection("recipes")
+            .document(recipe.id.toString())
+            .set(recipe.toMap()).await()
+    }
+
+    private fun Recipe.toMap(): Map<String, Any?> = mapOf(
+        "id"          to id.toString(),
+        "author"      to author,
+        "title"       to title,
+        "description" to description,
+        "serving"     to serving,
+        "duration"    to duration.inWholeSeconds,   // Long
+        "ingredients" to ingredients,               // List<String> — Firestore lo soporta
+        "steps"       to steps.map { step ->
+            mapOf(
+                "id"          to step.id.toString(),
+                "description" to step.description,
+                "duration"    to step.duration.inWholeSeconds,
+                "cardinal"    to step.cardinal
+            )
+        },
+        "tags"        to tags,
+        "image"       to image
+    )
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/RecipeViewMode.kt">
+package software.ulpgc.cheffskiss.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.CreateRecipeCommand
+import software.ulpgc.cheffskiss.application.RecipeInput
+import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
+import java.util.UUID
+import kotlin.time.Duration.Companion.minutes
+
+sealed class RecipeUiState {
+    object Idle : RecipeUiState()
+    object Loading : RecipeUiState()
+    object Success : RecipeUiState()
+    data class Error(val message: String) : RecipeUiState()
+}
+
+class RecipeViewModel : ViewModel() {
+
+    private val recipeService = FirebaseRecipeService()
+
+    private val _uiState = MutableStateFlow<RecipeUiState>(RecipeUiState.Idle)
+    val uiState = _uiState.asStateFlow()
+
+    fun resetState() { _uiState.value = RecipeUiState.Idle }
+
+    fun createRecipe(
+        authorId: String,
+        title: String,
+        description: String,
+        serving: Int,
+        hours: String,
+        minutes: String,
+        ingredients: List<String>,
+        steps: List<Step>,
+        tags: List<String>,
+        image: String
+    ) {
+        when{
+            title.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("The title have to be filled")
+                return
+            }
+            description.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("The description have to be filled")
+                return
+            }
+            (hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0") -> {
+                _uiState.value = RecipeUiState.Error("Indicate the recipe duration")
+                return
+            }            ingredients.isEmpty() -> {
+                _uiState.value = RecipeUiState.Error("The ingredients have to be filled with at least one ingredient")
+                return
+            }
+            steps.isEmpty() -> {
+                _uiState.value = RecipeUiState.Error("The steps have to be filled with at least one step")
+                return
+            }
+            hours.isBlank() && minutes.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("Indica la duración de la receta")
+                return
+            }
+
+
+        }
+        viewModelScope.launch {
+            _uiState.value = RecipeUiState.Loading
+
+            val totalMinutes = ((hours.toIntOrNull() ?: 0) * 60 +
+                    (minutes.toIntOrNull() ?: 0)).toLong()
+
+            val input = object : RecipeInput {
+                override fun id() = UUID.randomUUID()
+                override fun author() = authorId
+                override fun title() = title
+                override fun description() = description
+                override fun serving() = serving
+                override fun duration() = totalMinutes.minutes
+                override fun ingredients() = ingredients
+                override fun steps() = steps
+                override fun tags() = tags
+                override fun image() = image
+            }
+
+            runCatching {
+                CreateRecipeCommand(recipeService, input).execute()
+            }.fold(
+                onSuccess = { _uiState.value = RecipeUiState.Success },
+                onFailure = { e ->
+                    _uiState.value = RecipeUiState.Error(
+                        e.message ?: "Error al publicar la receta"
+                    )
+                }
+            )
+        }
+    }
+}
+</file>
+
+<file path="app/src/main/res/drawable/ic_launcher_background.xml">
+<!-- res/drawable/ic_launcher_background.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <path
+      android:fillColor="#2D5A27"
+      android:pathData="M0,0h108v108h0z"/>
+</vector>
+</file>
+
+<file path="app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+</file>
+
+<file path="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+</file>
+
+<file path="build.gradle.kts">
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    id("com.google.gms.google-services") version "4.4.4" apply false
+}
+</file>
+
+<file path="app/src/main/AndroidManifest.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.CheffsKiss">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.CheffsKiss">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/Recipe.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+import java.util.UUID
+import kotlin.time.Duration
+
+data class Recipe(
+    val id: UUID,
+    val author: String,
+    val title: String,
+    val description: String,
+    val duration: Duration,
+    val ingredients: List<String>,
+    val steps: List<Step>,
+    val tags: List<String>,
+    val image: String,
+    val serving: Int,
+)
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt">
+package software.ulpgc.cheffskiss.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.Input
+import software.ulpgc.cheffskiss.application.LoginInput
+import software.ulpgc.cheffskiss.application.RegisterUserCommand
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+
+sealed class AuthUiState {
+    object Idle    : AuthUiState()
+    object Loading : AuthUiState()
+    object Success : AuthUiState()
+    data class Error(val message: String) : AuthUiState()
+}
+
+class AuthenticantionViewModel : ViewModel() {
+
+    private val firebaseService = FirebaseAuthenticationService()
+    private val userNameReader  = FirebaseUserNameReader()
+
+    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
+    val uiState = _uiState.asStateFlow()
+
+    fun resetState() { _uiState.value = AuthUiState.Idle }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            runCatching {
+                firebaseService.login(email, password)  // ← llama directamente al servicio
+            }.fold(
+                onSuccess = { ok ->
+                    _uiState.value = if (ok) AuthUiState.Success
+                    else AuthUiState.Error("Invalid email or password")
+                },
+                onFailure = { e ->
+                    _uiState.value = AuthUiState.Error(friendlyError(e.message))
+                }
+            )
+        }
+    }
+
+    fun register(email: String, password: String, username: String,
+                 description: String?, image: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val command = RegisterUserCommand(
+                userNameReader = userNameReader,
+                userPort = firebaseService,
+                registerUserInput = object : Input {
+                    override fun email()       = email
+                    override fun password()    = password
+                    override fun username()    = username
+                    override fun description() = description
+                    override fun image()       = image
+                }
+            )
+            runCatching { command.execute() }
+                .fold(
+                    onSuccess = { _uiState.value = AuthUiState.Success },
+                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
+                )
+        }
+    }
+    fun getCurrentUid(): String? = firebaseService.getCurrentUser()
+    private fun friendlyError(msg: String?) = when {
+        msg == null                    -> "Unknown error"
+        "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"
+        "WEAK_PASSWORD"        in msg  -> "Password must be at least 6 characters"
+        "INVALID_EMAIL"        in msg  -> "Invalid email format"
+        "NETWORK"              in msg  -> "No internet connection"
+        "offline"              in msg  -> "No internet connection"
+        "client is offline"    in msg  -> "No internet connection"
+        "USERNAME_ALREADY"     in msg  -> "This username is already taken"
+        "Username already"     in msg  -> "This username is already taken"
+        else                           -> msg
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/LoginScreen.kt">
+package software.ulpgc.cheffskiss.ui.screen
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.ui.AuthUiState
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.theme.*
+import androidx.compose.foundation.Image
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import software.ulpgc.cheffskiss.R
+@Composable
+fun LoginScreen(
+    viewModel: AuthenticantionViewModel = viewModel(),
+    onLoginSuccess: () -> Unit,
+    onGoToRegister: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState) {
+        if (uiState is AuthUiState.Success) {
+            viewModel.resetState()
+            onLoginSuccess()
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(Background)) {
+        // Glow top-right
+        Box(
+            modifier = Modifier
+                .size(320.dp)
+                .offset(x = 100.dp, y = (-80).dp)
+                .align(Alignment.TopEnd)
+                .background(
+                    Brush.radialGradient(listOf(CKSecondary.copy(alpha = 0.2f), Color.Transparent)),
+                    CircleShape
+                )
+                .blur(60.dp)
+        )
+        // Glow bottom-left
+        Box(
+            modifier = Modifier
+                .size(320.dp)
+                .offset(x = (-80).dp, y = 80.dp)
+                .align(Alignment.BottomStart)
+                .background(
+                    Brush.radialGradient(listOf(Primary.copy(alpha = 0.1f), Color.Transparent)),
+                    CircleShape
+                )
+                .blur(60.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+
+            // ── Logo ─────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .rotate(-2f)
+                    .shadow(12.dp, RoundedCornerShape(16.dp))
+                    .background(Primary, RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.cheffkiss_icon),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Primary),
+                    modifier = Modifier
+                        .size(400.dp)
+                        .rotate(-2f)
+                        .shadow(14.dp, RoundedCornerShape(28.dp))
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Background) // ← fondo verde oscuro detrás del pato
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            Text("Cheffs Kiss", fontWeight = FontWeight.ExtraBold,
+                fontSize = 32.sp, color = Primary, letterSpacing = (-0.5).sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Reclaiming the warmth of\nyour digital kitchen",
+                style = MaterialTheme.typography.bodyMedium,
+                color = CKOnSurfaceVariant, textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // ── Card ─────────────────────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Surface.copy(alpha = 0.9f)),
+                elevation = CardDefaults.cardElevation(8.dp)
+            ) {
+                Column(modifier = Modifier.padding(28.dp)) {
+
+                    // Email field
+                    Text("Email or Username", style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold, color = CKOnSurfaceVariant)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    CheffsTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        placeholder = "chef@cheffskiss.com",
+                        trailingIcon = { Icon(Icons.Default.Mail, null, tint = CKOutlineVariant) },
+                        keyboardType = KeyboardType.Email
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Password field
+                    Text("Password", style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold, color = CKOnSurfaceVariant)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    CheffsTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        placeholder = "••••••••",
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    if (passwordVisible) Icons.Default.VisibilityOff
+                                    else Icons.Default.Visibility,
+                                    null, tint = CKOutlineVariant
+                                )
+                            }
+                        },
+                        visualTransformation = if (passwordVisible)
+                            VisualTransformation.None else PasswordVisualTransformation()
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Error
+                    if (uiState is AuthUiState.Error) {
+                        Text(
+                            text = (uiState as AuthUiState.Error).message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+
+                    // Botón Log In
+                    Button(
+                        onClick = { viewModel.login(email, password) },
+                        enabled = uiState !is AuthUiState.Loading,
+                        modifier = Modifier.fillMaxWidth().height(54.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(Color(0xFF003314), Color(0xFF004D1F)),
+                                        start = Offset.Zero,
+                                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                                    ),
+                                    RoundedCornerShape(12.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState is AuthUiState.Loading) {
+                                CircularProgressIndicator(color = OnPrimary,
+                                    modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
+                            } else {
+                                Text("Log In", color = OnPrimary,
+                                    fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text("Forgot password?", color = Primary,
+                            fontWeight = FontWeight.Bold, fontSize = 13.sp,
+                            modifier = Modifier.clickable { })
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Sign up link
+            Row {
+                Text("Don't have an account?", color = CKOnSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Sign up", color = Primary, fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.clickable { onGoToRegister() })
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Footer accent bar
+            Row(modifier = Modifier.fillMaxWidth().height(6.dp)) {
+                Box(Modifier.weight(1f).fillMaxHeight().background(Primary))
+                Box(Modifier.run { weight(1f).fillMaxHeight().background(CKSecondary) })
+                Box(Modifier.weight(1f).fillMaxHeight().background(Outline))
+                Box(Modifier.weight(1f).fillMaxHeight().background(Primary.copy(alpha = 0.8f)))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CheffsTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, color = CKOutlineVariant.copy(alpha = 0.7f)) },
+        trailingIcon = trailingIcon,
+        visualTransformation = visualTransformation,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        modifier = Modifier.fillMaxWidth(),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            focusedIndicatorColor = Primary,
+            unfocusedIndicatorColor = CKSurface.copy(alpha = 0.5f),
+            cursorColor = Primary
+        ),
+        singleLine = true
+    )
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/RegisterScreen.kt">
+package software.ulpgc.cheffskiss.ui.screen
+import software.ulpgc.cheffskiss.R
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.ui.AuthUiState
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.theme.*
+
+// Colores extra del diseño RegisterScreen
+private val SurfaceContainerLow  = Color(0xFFEDF5E1)
+private val SurfaceContainerHigh = Color(0xFFE2EBD7)
+private val Tertiary             = Color(0xFF6B8E23)
+
+@Composable
+fun RegisterScreen(
+    viewModel: AuthenticantionViewModel = viewModel(),
+    onRegisterSuccess: () -> Unit,
+    onGoToLogin: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var username        by remember { mutableStateOf("") }
+    var email           by remember { mutableStateOf("") }
+    var password        by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmVisible  by remember { mutableStateOf(false) }
+
+    // Lógica del indicador de fortaleza
+    val strength = when {
+        password.length >= 10 && password.any { it.isDigit() } &&
+                password.any { !it.isLetterOrDigit() } -> 4
+        password.length >= 8 && password.any { it.isDigit() } -> 3
+        password.length >= 6 -> 2
+        password.isNotEmpty() -> 1
+        else -> 0
+    }
+    val strengthLabel = when (strength) {
+        4    -> "Great" ; 3 -> "Good" ; 2 -> "Fair" ; 1 -> "Weak" ; else -> ""
+    }
+    val strengthColor = when (strength) {
+        4    -> Primary ; 3 -> Tertiary ; 2 -> Color(0xFFDAA520) ; else -> Color(0xFFBA1A1A)
+    }
+
+    val passwordsMatch = confirmPassword.isEmpty() || password == confirmPassword
+
+    LaunchedEffect(uiState) {
+        if (uiState is AuthUiState.Success) {
+            viewModel.resetState()
+            onRegisterSuccess()
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // ── Branding Header ──────────────────────────────
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .shadow(4.dp, RoundedCornerShape(16.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Primary, Color(0xFF004D1C)),
+                            start = Offset.Zero,
+                            end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                        ),
+                        RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.cheffkiss_icon),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(Primary),
+                    modifier = Modifier
+                        .size(400.dp)
+                        .rotate(-2f)
+                        .shadow(14.dp, RoundedCornerShape(28.dp))
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Background) // ← fondo verde oscuro detrás del pato
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "CheffsKiss",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 28.sp,
+                color = OnSurface,
+                letterSpacing = (-0.5).sp
+            )
+            Text(
+                text = "Join our digital heirloom kitchen",
+                style = MaterialTheme.typography.bodyMedium,
+                color = CKOnSurfaceVariant,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // ── Form Card ────────────────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Column(modifier = Modifier.padding(28.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)) {
+
+                    // Username
+                    RegisterField(
+                        label = "Username",
+                        value = username,
+                        onValueChange = { username = it },
+                        placeholder = "chef_gourmet",
+                        leadingIcon = { Icon(Icons.Filled.Person, null, tint = Outline) },
+                        helper = if (username.length >= 3) {
+                            { HelperText("✓  Username is available", Tertiary) }
+                        } else null
+                    )
+
+                    // Email
+                    RegisterField(
+                        label = "Email Address",
+                        value = email,
+                        onValueChange = { email = it },
+                        placeholder = "hello@cheffskiss.com",
+                        leadingIcon = { Icon(Icons.Filled.Email, null, tint = Outline) },
+                        keyboardType = KeyboardType.Email
+                    )
+
+                    // Password
+                    RegisterField(
+                        label = "Password",
+                        value = password,
+                        onValueChange = { password = it },
+                        placeholder = "••••••••",
+                        leadingIcon = { Icon(Icons.Filled.Lock, null, tint = Outline) },
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    if (passwordVisible) Icons.Filled.VisibilityOff
+                                    else Icons.Filled.Visibility,
+                                    null, tint = Outline
+                                )
+                            }
+                        },
+                        visualTransformation = if (passwordVisible)
+                            VisualTransformation.None else PasswordVisualTransformation(),
+                        helper = if (password.isNotEmpty()) {
+                            { PasswordStrengthIndicator(strength, strengthLabel, strengthColor) }
+                        } else null
+                    )
+
+                    // Confirm Password
+                    RegisterField(
+                        label = "Confirm Password",
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        placeholder = "••••••••",
+                        leadingIcon = { Icon(Icons.Filled.LockReset, null, tint = Outline) },
+                        trailingIcon = {
+                            IconButton(onClick = { confirmVisible = !confirmVisible }) {
+                                Icon(
+                                    if (confirmVisible) Icons.Filled.VisibilityOff
+                                    else Icons.Filled.Visibility,
+                                    null, tint = Outline
+                                )
+                            }
+                        },
+                        visualTransformation = if (confirmVisible)
+                            VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = !passwordsMatch,
+                        helper = if (!passwordsMatch) {
+                            { HelperText("Passwords do not match", Color(0xFFBA1A1A)) }
+                        } else null
+                    )
+
+                    // Error general
+                    if (uiState is AuthUiState.Error) {
+                        Text(
+                            text = (uiState as AuthUiState.Error).message,
+                            color = Color(0xFFBA1A1A),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    // Botón Create Account
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = {
+                            if (passwordsMatch && password == confirmPassword) {
+                                viewModel.register(email, password, username, null, "")
+                            }
+                        },
+                        enabled = uiState !is AuthUiState.Loading
+                                && username.isNotBlank()
+                                && email.isNotBlank()
+                                && password.isNotBlank()
+                                && passwordsMatch,
+                        modifier = Modifier.fillMaxWidth().height(54.dp),
+                        shape = RoundedCornerShape(50.dp),  // rounded-full
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        contentPadding = PaddingValues(0.dp),
+                        elevation = ButtonDefaults.buttonElevation(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(Primary, Color(0xFF004D1C)),
+                                        start = Offset.Zero,
+                                        end = Offset(Float.POSITIVE_INFINITY, 0f)
+                                    ),
+                                    RoundedCornerShape(50.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState is AuthUiState.Loading) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Create Account", color = Color.White,
+                                    fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Footer link
+            Row {
+                Text("Already have an account?",
+                    color = CKOnSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Log in",
+                    color = Primary,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.clickable { onGoToLogin() }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+        }
+    }
+}
+
+// ── Componentes auxiliares ───────────────────────────────────
+
+@Composable
+private fun RegisterField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    leadingIcon: @Composable () -> Unit,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    isError: Boolean = false,
+    helper: @Composable (() -> Unit)? = null
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = CKOnSurfaceVariant)
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, color = Outline.copy(alpha = 0.5f)) },
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            visualTransformation = visualTransformation,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = keyboardType
+            ),
+            isError = isError,
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Primary.copy(alpha = 0.4f),
+                unfocusedBorderColor = Color.Transparent,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = SurfaceContainerLow,
+                focusedTextColor = OnSurface,
+                unfocusedTextColor = OnSurface,
+                cursorColor = Primary,
+                errorBorderColor = Color(0xFFBA1A1A)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+        helper?.invoke()
+    }
+}
+
+@Composable
+private fun HelperText(text: String, color: Color) {
+    Text(text,
+        fontSize = 11.sp,
+        color = color,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.padding(start = 4.dp))
+}
+
+@Composable
+private fun PasswordStrengthIndicator(strength: Int, label: String, color: Color) {
+    Column(
+        modifier = Modifier.padding(start = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            repeat(4) { index ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(4.dp)
+                        .background(
+                            if (index < strength) color else SurfaceContainerHigh,
+                            RoundedCornerShape(50.dp)
+                        )
+                )
+            }
+        }
+        if (label.isNotEmpty()) {
+            Text(
+                text = "Strength: ",
+                fontSize = 11.sp,
+                color = CKOnSurfaceVariant,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Color.kt">
+// ✅ ui/theme/Color.kt — solo los colores del proyecto
+package software.ulpgc.cheffskiss.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+val CkSurfaceVariant      = Color(0xFFE2E8CE)
+val CkOnSurfaceVariant    = Color(0xFF3F4935)
+val CkSecondary           = Color(0xFFEAB308)
+val CkOnSecondary         = Color(0xFF422006)
+val CkOutlineVariant      = Color(0xFFC5C9B8)
+val Primary          = Color(0xFF003314)
+val OnPrimary        = Color(0xFFE2E8C0)
+val Secondary        = Color(0xFFE4C062)
+val OnSecondary      = Color(0xFF003314)
+val Background       = Color(0xFFE2E8C0)
+val OnBackground     = Color(0xFF050B01)
+val Surface          = Color(0xFFF2F5E1)
+val OnSurface        = Color(0xFF050B01)
+val SurfaceVariant   = Color(0xFFD0D9A6)
+val OnSurfaceVariant = Color(0xFF2D3512)
+val Outline          = Color(0xFF454E27)
+val OutlineVariant   = Color(0xFFA8B47C)
+val CKPrimary          = Color(0xFF003314)
+val CKOnPrimary        = Color(0xFFE2E8C0)
+val CKSecondary        = Color(0xFFE4C062)
+val CKOnSecondary      = Color(0xFF003314)
+val CKBackground       = Color(0xFFE2E8C0)
+val CKOnBackground     = Color(0xFF050B01)
+val CKSurface          = Color(0xFFF2F5E1)
+val CKOnSurface        = Color(0xFF050B01)
+val CKSurfaceVariant   = Color(0xFFE2E8CE)
+val CKOnSurfaceVariant = Color(0xFF2D3512)
+val CKOutline          = Color(0xFF454E27)
+val CKOutlineVariant   = Color(0xFFA8B47C)
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Theme.kt">
+// ✅ Theme.kt correcto
+package software.ulpgc.cheffskiss.ui.theme
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+
+private val CheffsColorScheme = lightColorScheme(
+    primary          = CKPrimary,
+    onPrimary        = CKOnPrimary,
+    secondary        = CKSecondary,
+    onSecondary      = CKOnSecondary,
+    background       = CKBackground,
+    onBackground     = CKOnBackground,
+    surface          = CKSurface,
+    onSurface        = CKOnSurface,
+    surfaceVariant   = CKSurfaceVariant,
+    onSurfaceVariant = CKOnSurfaceVariant,
+    outline          = CKOutline,
+    outlineVariant   = CKOutlineVariant
+
+)
+
+@Composable
+fun CheffsKissTheme(content: @Composable () -> Unit) {
+    MaterialTheme(
+        colorScheme = CheffsColorScheme,
+        typography = Typography,
+        content = content
+    )
+}
+</file>
+
+<file path="app/src/main/res/values/colors.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="background">#E2E8C0</color>
+    <color name="background_cream">#E8EDD6</color>
+    <color name="green_dark">#1B5E20</color>
+
+</resources>
+</file>
+
+<file path="app/src/main/res/values/themes.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#E2E8C0</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.CheffsKiss</item>
+    </style>
+    <style name="Theme.CheffsKiss" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/background_cream</item>
+        <item name="colorPrimary">@color/green_dark</item>
+        <item name="colorPrimaryDark">@color/green_dark</item>
+    </style>
+</resources>
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/CreateRecipeScreen.kt">
+package software.ulpgc.cheffskiss.ui.screen
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults.outlinedButtonColors
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import software.ulpgc.cheffskiss.ui.theme.*
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.layout.Box
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import software.ulpgc.cheffskiss.ui.RecipeViewModel
+import software.ulpgc.cheffskiss.ui.RecipeUiState
+import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import java.util.UUID
+import kotlin.time.Duration.Companion.minutes
+import coil.compose.AsyncImage
+
+
+data class IngredientRow(
+    val id: Int,
+    val name: String = "",
+    val amount: String = "",
+    val unit: String = "UNIT"
+)
+
+data class StepRow(
+    val id: Int,
+    val description: String = "",
+    val duration: String = ""
+)
+
+val unitOptions = listOf("UNIT", "GRAM", "KG", "ML", "LITRE",
+    "CUP", "TBSP", "TSP", "SLICE", "PINCH")
+
+// ── Screen ────────────────────────────────────────────────────────────────────
+
+@Composable
+fun CreateRecipeScreen(
+    viewModel: RecipeViewModel = viewModel(),
+    authViewModel: AuthenticantionViewModel = viewModel(),
+    onBack: () -> Unit,
+    onPublishSuccess: () -> Unit,
+    onSaveDraft: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var coverImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showImageOptions by remember { mutableStateOf(false) }
+    var title          by remember { mutableStateOf("") }
+    var description    by remember { mutableStateOf("") }
+    var servings       by remember { mutableIntStateOf(4) }
+    var hours          by remember { mutableStateOf("") }
+    var minutes        by remember { mutableStateOf("") }
+    var tagInput       by remember { mutableStateOf("") }
+    val tags           = remember { mutableStateListOf("Vegetarian", "Dessert") }
+    val ingredients    = remember { mutableStateListOf(IngredientRow(0), IngredientRow(1)) }
+    val steps          = remember { mutableStateListOf(StepRow(0)) }
+    var nextIngredId   by remember { mutableIntStateOf(2) }
+    var nextStepId     by remember { mutableIntStateOf(1) }
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri -> uri?.let { coverImageUri = it } }
+    val cameraUri = remember { mutableStateOf<Uri?>(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success -> if (success) coverImageUri = cameraUri.value }
+
+    LaunchedEffect(uiState) {
+        if (uiState is RecipeUiState.Success) {
+            viewModel.resetState()
+            onPublishSuccess()
+        }
+    }
+
+    val handlePublish = {
+        val authorId = authViewModel.getCurrentUid()
+
+        if (authorId == null) {
+        } else {
+            val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
+            val mappedSteps = steps.mapIndexed { index, stepRow ->
+                Step(
+                    id = UUID.randomUUID(),
+                    description = stepRow.description,
+                    duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
+                    cardinal = index + 1
+                )
+            }
+            viewModel.createRecipe(
+                authorId = authorId, // ← ya no es random
+                title = title,
+                description = description,
+                serving = servings,
+                hours = hours,
+                minutes = minutes,
+                ingredients = mappedIngredients,
+                steps = mappedSteps,
+                tags = tags.toList(),
+                image = ""
+            )
+        }
+    }
+
+    Scaffold(
+        topBar = { CreateRecipeTopBar(onBack, onSaveDraft) },
+        bottomBar = { CreateRecipeBottomBar(onSaveDraft, onPublish = handlePublish) },
+        containerColor = Background
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(40.dp)
+        ) {
+            Spacer(Modifier.height(4.dp))
+
+            CoverPhotoPlaceholder(
+                imageUri = coverImageUri,
+                onClick = { showImageOptions = true }
+            )
+
+            SectionHeader(icon = Icons.Default.Info, title = "Basic Info")
+            BasicInfoSection(
+                title = title, onTitleChange = { title = it },
+                description = description, onDescriptionChange = { description = it },
+                servings = servings,
+                onServingsInc = { servings++ },
+                onServingsDec = { if (servings > 1) servings-- },
+                hours = hours, onHoursChange = { hours = it },
+                minutes = minutes, onMinutesChange = { minutes = it },
+                tags = tags, tagInput = tagInput,
+                onTagInputChange = { tagInput = it },
+                onTagAdd = {
+                    if (tagInput.isNotBlank()) {
+                        tags.add(tagInput.trim())
+                        tagInput = ""
+                    }
+                },
+                onTagRemove = { tags.remove(it) }
+            )
+
+            SectionHeader(icon = Icons.Default.Restaurant, title = "Ingredients")
+            IngredientsSection(
+                ingredients = ingredients,
+                onIngredientChange = { id, updated ->
+                    val idx = ingredients.indexOfFirst { it.id == id }
+                    if (idx != -1) ingredients[idx] = updated
+                },
+                onIngredientRemove = { id -> ingredients.removeAll { it.id == id } },
+                onAddIngredient = {
+                    ingredients.add(IngredientRow(nextIngredId++))
+                }
+            )
+
+            SectionHeader(icon = Icons.Default.FormatListNumbered, title = "Steps")
+            StepsSection(
+                steps = steps,
+                onStepChange = { id, updated ->
+                    val idx = steps.indexOfFirst { it.id == id }
+                    if (idx != -1) steps[idx] = updated
+                },
+                onStepRemove = { id -> steps.removeAll { it.id == id } },  // ← nuevo
+                onAddStep = { steps.add(StepRow(nextStepId++)) }
+            )
+        }
+    }
+    if (showImageOptions) {
+        AlertDialog(
+            onDismissRequest = { showImageOptions = false },
+            title = { Text("Add Cover Photo", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(
+                        onClick = {
+                            galleryLauncher.launch("image/*")
+                            showImageOptions = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.PhotoLibrary, null, tint = Primary)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Choose from Gallery", color = Primary)
+                    }
+                    TextButton(
+                        onClick = {
+                            galleryLauncher.launch("image/*")
+                            showImageOptions = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.CameraAlt, null, tint = Primary)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Take Photo", color = Primary)
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showImageOptions = false }) {
+                    Text("Cancel", color = CKOnSurfaceVariant)
+                }
+            },
+            containerColor = Surface,
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
+}
+
+// ── TopAppBar ─────────────────────────────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CreateRecipeTopBar(onBack: () -> Unit, onSaveDraft: () -> Unit) {
+    TopAppBar(
+        title = {
+            Text("New Recipe", fontWeight = FontWeight.Bold,
+                fontSize = 20.sp, color = Primary)
+        },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.ArrowBack, null, tint = Primary)
+            }
+        },
+        actions = {
+            TextButton(onClick = onSaveDraft) {
+                Text("Save Draft", color = Primary, fontWeight = FontWeight.SemiBold)
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
+    )
+}
+
+// ── Bottom Bar ────────────────────────────────────────────────────────────────
+
+@Composable
+private fun CreateRecipeBottomBar(onSaveDraft: () -> Unit, onPublish: () -> Unit) {
+    Surface(
+        color = Surface.copy(alpha = 0.95f),
+        tonalElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp)
+                .navigationBarsPadding(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = onSaveDraft,
+                modifier = Modifier.weight(1f).height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = outlinedButtonColors(
+                    containerColor = CKSurface,
+                    contentColor = Primary
+                ),
+                border = null
+            ) {
+                Text("Save Draft", fontWeight = FontWeight.Bold)
+            }
+
+            Button(
+                onClick = onPublish,
+                modifier = Modifier.weight(2f).height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = PaddingValues(0.dp),
+                elevation = ButtonDefaults.buttonElevation(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.linearGradient(
+                                listOf(Primary, Color(0xFF14532D)),
+                                start = Offset.Zero,
+                                end = Offset(Float.POSITIVE_INFINITY, 0f)
+                            ),
+                            RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.Publish, null, tint = OnPrimary)
+                        Text("Publish Recipe", color = OnPrimary,
+                            fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun CoverPhotoPlaceholder(
+    imageUri: Uri? = null,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .clip(RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .border(2.dp, CKOutlineVariant.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        if (imageUri != null) {
+            AsyncImage(
+                model = imageUri,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(12.dp)
+                    .size(36.dp)
+                    .background(Primary, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Edit, null, tint = OnPrimary, modifier = Modifier.size(18.dp))
+            }
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .background(Primary.copy(alpha = 0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.CameraAlt, null, tint = Primary, modifier = Modifier.size(36.dp))
+                }
+                Text("Add Cover Photo", fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Tap to upload or take a photo", fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+            }
+        }
+    }
+}
+
+// ── Section Header ────────────────────────────────────────────────────────────
+
+@Composable
+private fun SectionHeader(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
+    Row(verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(icon, null, tint = Primary, modifier = Modifier.size(24.dp))
+        Text(title, fontWeight = FontWeight.Bold, fontSize = 22.sp, color = OnSurface)
+    }
+}
+
+// ── Basic Info ────────────────────────────────────────────────────────────────
+
+@Composable
+private fun BasicInfoSection(
+    title: String, onTitleChange: (String) -> Unit,
+    description: String, onDescriptionChange: (String) -> Unit,
+    servings: Int, onServingsInc: () -> Unit, onServingsDec: () -> Unit,
+    hours: String, onHoursChange: (String) -> Unit,
+    minutes: String, onMinutesChange: (String) -> Unit,
+    tags: List<String>, tagInput: String,
+    onTagInputChange: (String) -> Unit,
+    onTagAdd: () -> Unit,
+    onTagRemove: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+
+        // Title
+        RecipeField(label = "Title") {
+            TextField(
+                value = title, onValueChange = onTitleChange,
+                placeholder = { Text("e.g. Grandma's Spiced Apple Cake",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), fontSize = 14.sp) },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                colors = transparentFieldColors(),
+                singleLine = true
+            )
+        }
+
+        // Description
+        RecipeField(label = "Description (Optional)") {
+            TextField(
+                value = description, onValueChange = onDescriptionChange,
+                placeholder = { Text("Tell the story behind this dish...",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), fontSize = 14.sp) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = transparentFieldColors(),
+                minLines = 3, maxLines = 5
+            )
+        }
+
+        // Servings + Duration
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+
+            // Servings
+            Column(modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Servings", fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(16.dp)),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(onClick = onServingsDec) {
+                        Icon(Icons.Default.Remove, null, tint = Primary)
+                    }
+                    Text(servings.toString(), fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp, color = OnSurface)
+                    IconButton(onClick = onServingsInc) {
+                        Icon(Icons.Default.Add, null, tint = Primary)
+                    }
+                }
+            }
+
+            // Duration
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    "Total Duration", fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            RoundedCornerShape(16.dp)
+                        )
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Schedule, null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    // ── Horas ──
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = hours,
+                        onValueChange = { if (it.length <= 2 && it.all(Char::isDigit)) onHoursChange(it) },
+                        modifier = Modifier.width(28.dp),
+                        textStyle = LocalTextStyle.current.copy(
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = OnSurface
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        decorationBox = { innerTextField ->
+                            Box(contentAlignment = Alignment.Center) {
+                                if (hours.isEmpty()) {
+                                    Text(
+                                        "0", textAlign = TextAlign.Center,
+                                        fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                    Text(
+                        "h", fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.width(1.dp).height(20.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    )
+                    // ── Minutos ──
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = minutes,
+                        onValueChange = { if (it.length <= 2 && it.all(Char::isDigit)) onMinutesChange(it) },
+                        modifier = Modifier.width(28.dp),
+                        textStyle = LocalTextStyle.current.copy(
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = OnSurface
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        decorationBox = { innerTextField ->
+                            Box(contentAlignment = Alignment.Center) {
+                                if (minutes.isEmpty()) {
+                                    Text(
+                                        "45", textAlign = TextAlign.Center,
+                                        fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                    Text(
+                        "m", fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                }
+            }
+        }
+
+        RecipeField(label = "Tags") {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                    .padding(12.dp)
+                    .animateContentSize(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                tags.forEach { tag ->
+                    TagChip(tag = tag, onRemove = { onTagRemove(tag) })
+                }
+                TextField(
+                    value = tagInput, onValueChange = onTagInputChange,
+                    modifier = Modifier.defaultMinSize(minWidth = 100.dp),
+                    colors = transparentFieldColors(),
+                    placeholder = { Text("Add tag...", fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                    ),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                        onDone = { onTagAdd() }
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TagChip(tag: String, onRemove: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .background( CKSecondary.copy(alpha = 0.2f), CircleShape)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(tag, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = OnSurface)
+        Icon(Icons.Default.Close, null,
+            modifier = Modifier.size(14.dp).clickable { onRemove() },
+            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+// ── Ingredients ───────────────────────────────────────────────────────────────
+
+@Composable
+private fun IngredientsSection(
+    ingredients: List<IngredientRow>,
+    onIngredientChange: (Int, IngredientRow) -> Unit,
+    onIngredientRemove: (Int) -> Unit,
+    onAddIngredient: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ingredients.forEach { ingredient ->
+            IngredientRowItem(
+                ingredient = ingredient,
+                onChange = { onIngredientChange(ingredient.id, it) },
+                onRemove = { onIngredientRemove(ingredient.id) }
+            )
+        }
+
+        DashedAddButton(label = "Add Ingredient", onClick = onAddIngredient)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun IngredientRowItem(
+    ingredient: IngredientRow,
+    onChange: (IngredientRow) -> Unit,
+    onRemove: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Name
+        TextField(
+            value = ingredient.name,
+            onValueChange = { onChange(ingredient.copy(name = it)) },
+            modifier = Modifier.weight(2f).height(50.dp),
+            placeholder = { Text("Ingredient", fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)) },
+            colors = containerFieldColors(),
+            singleLine = true
+        )
+
+        // Amount
+        TextField(
+            value = ingredient.amount,
+            onValueChange = { onChange(ingredient.copy(amount = it)) },
+            modifier = Modifier.width(64.dp).height(50.dp),
+            placeholder = { Text("Amt", fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                textAlign = TextAlign.Center) },
+            colors = containerFieldColors(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
+        )
+
+        // Unit dropdown
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+            modifier = Modifier.width(88.dp)
+        ) {
+            TextField(
+                value = ingredient.unit,
+                onValueChange = {},
+                readOnly = true,
+                modifier = Modifier.menuAnchor().height(50.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedTextColor = OnSurface,
+                    unfocusedTextColor = OnSurface
+                ),
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(Surface)
+            ) {
+                unitOptions.forEach { unit ->
+                    DropdownMenuItem(
+                        text = { Text(unit) },
+                        onClick = {
+                            onChange(ingredient.copy(unit = unit))
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        // Delete button
+        IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) {
+            Icon(Icons.Outlined.DeleteOutline, null, tint = Color(0xFFBA1A1A))
+        }
+    }
+}
+
+// ── Steps ─────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun StepsSection(
+    steps: List<StepRow>,
+    onStepChange: (Int, StepRow) -> Unit,
+    onStepRemove: (Int) -> Unit,      // ← nuevo
+    onAddStep: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        steps.forEachIndexed { index, step ->
+            StepRowItem(
+                index = index + 1,
+                step = step,
+                onChange = { onStepChange(step.id, it) },
+                onRemove = { onStepRemove(step.id) }   // ← nuevo
+            )
+        }
+        DashedAddButton(label = "Add Step", onClick = onAddStep)
+    }
+}
+
+
+@Composable
+private fun StepRowItem(
+    index: Int,
+    step: StepRow,
+    onChange: (StepRow) -> Unit,
+    onRemove: () -> Unit              // ← nuevo
+) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        // Contenido del step
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, end = 8.dp) // espacio para la X
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .background(Primary, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    index.toString(), color = OnPrimary,
+                    fontWeight = FontWeight.Bold, fontSize = 14.sp
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TextField(
+                    value = step.description,
+                    onValueChange = { onChange(step.copy(description = it)) },
+                    placeholder = {
+                        Text(
+                            "Describe this step...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            fontSize = 13.sp
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = containerFieldColors(),
+                    minLines = 2
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Timer, null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    TextField(
+                        value = step.duration,
+                        onValueChange = { onChange(step.copy(duration = it)) },
+                        placeholder = { Text("Duration (optional)", fontSize = 12.sp) },
+                        modifier = Modifier.width(140.dp).height(40.dp),
+                        colors = transparentFieldColors(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
+            }
+        }
+
+        // ✕ Botón eliminar — esquina superior derecha
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(20.dp)
+                .background(Color(0xFFBA1A1A), CircleShape)
+                .clickable { onRemove() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Close, null,
+                tint = Color.White,
+                modifier = Modifier.size(12.dp)
+            )
+        }
+    }
+}
+
+
+// ── Components Reutilizables ──────────────────────────────────────────────────
+
+@Composable
+private fun RecipeField(label: String, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        content()
+    }
+}
+
+@Composable
+private fun DashedAddButton(label: String, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().height(50.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = outlinedButtonColors(contentColor = Primary),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(label, fontWeight = FontWeight.Bold)
+    }
+}
+
+// ── Colors ────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun transparentFieldColors() = TextFieldDefaults.colors(
+    focusedContainerColor = Color.Transparent,
+    unfocusedContainerColor = Color.Transparent,
+    disabledContainerColor = Color.Transparent,
+    focusedIndicatorColor = Color.Transparent,
+    unfocusedIndicatorColor = Color.Transparent,
+    focusedTextColor = OnSurface,
+    unfocusedTextColor = OnSurface
+)
+
+@Composable
+private fun containerFieldColors() = TextFieldDefaults.colors(
+    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+    focusedIndicatorColor = Color.Transparent,
+    unfocusedIndicatorColor = Color.Transparent,
+    focusedTextColor = OnSurface,
+    unfocusedTextColor = OnSurface
+)
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/HomeScreen.kt">
+package software.ulpgc.cheffskiss.ui.screen
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import software.ulpgc.cheffskiss.ui.HomeUiState
+import software.ulpgc.cheffskiss.ui.HomeViewModel
+import software.ulpgc.cheffskiss.ui.theme.*
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+
+private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisanal")
+
+// ──────────────────── Screen principal ────────────────────
+@Composable
+fun HomeRoute(
+    viewModel: HomeViewModel,
+    onCreateRecipe: () -> Unit,
+    onLogout: () -> Unit
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    HomeScreen(
+        state = state,
+        onCreateRecipe = onCreateRecipe,
+        onLogout = onLogout
+    )
+}
+
+@Composable
+fun HomeScreen(
+    state: HomeUiState,
+    onCreateRecipe: () -> Unit,
+    onLogout: () -> Unit
+) {
+    var selectedTag by remember { mutableStateOf("All") }
+    var searchQuery by remember { mutableStateOf("") }
+
+    Scaffold(
+        containerColor = Background,
+        // ── Bottom Navigation Bar ──
+        bottomBar = { HomeBottomBar(onCreateRecipe) },
+        // ── FAB Create ──
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onCreateRecipe,
+                containerColor = Primary,
+                contentColor = OnPrimary,
+                shape = CircleShape,
+                modifier = Modifier.size(60.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Create recipe", modifier = Modifier.size(28.dp))
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center
+    ) { padding ->
+
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
+        if (state.error != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = state.error, style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { /* TODO: retry button */ }) {
+                        Text("Reintentar")
+                    }
+                }
+            }
+            return@Scaffold
+        }
+
+        val recipes = state.recipes
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(bottom = 24.dp)
+        ) {
+
+            // ── Header ──
+            item { HomeHeader(onLogout) }
+
+            // ── Search bar ──
+            item {
+                HomeSearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+            }
+
+            // ── Tag chips ──
+            item {
+                TagChipRow(
+                    tags = tags,
+                    selected = selectedTag,
+                    onSelect = { selectedTag = it },
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+
+            // ── Featured banner ──
+            item { FeaturedBanner(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) }
+
+            // ── Section title ──
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Fresh Recommendations",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 18.sp,
+                        color = OnBackground
+                    )
+                    Text(
+                        "View all",
+                        fontSize = 12.sp,
+                        color = Primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { }
+                    )
+                }
+            }
+
+            // ── Recipe cards ──
+            val filtered = recipes.filter { recipe ->
+                // Filtro por nombre (search)
+                val matchesSearch = searchQuery.isBlank() ||
+                        recipe.title.contains(searchQuery, ignoreCase = true)
+
+                // Filtro por tag (simplificado, ya que tu Recipe no tiene 'tag')
+                val matchesTag = selectedTag == "All" ||
+                        // TODO: si más adelante añades campo 'tag' a Recipe, aquí lo usas
+                        true // por ahora muestra todas
+
+                matchesSearch && matchesTag
+            }
+
+            items(filtered) { recipe ->
+                RecipeItemCard(
+                    recipe = recipe,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+                )
+            }
+
+            // ── My Recipes ledger ──
+            item { MyRecipesSection(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) }
+
+            // ── CTA Banner ──
+            item { CtaBanner(onClick = onCreateRecipe, modifier = Modifier.padding(20.dp)) }
+        }
+    }
+}
+
+// ──────────────────── Header ────────────────────
+@Composable
+private fun HomeHeader(onLogout: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text("CheffsKiss", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = Primary, letterSpacing = (-0.5).sp)
+            Text("Good evening, Chef 👋", fontSize = 13.sp, color = CKOnSurfaceVariant)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            IconButton(onClick = { }) {
+                Icon(Icons.Default.Search, contentDescription = null, tint = OnBackground)
+            }
+            IconButton(onClick = onLogout) {
+                Icon(Icons.Default.Logout, contentDescription = "Logout", tint = OnBackground)
+            }
+        }
+    }
+}
+
+// ──────────────────── Search Bar ────────────────────
+@Composable
+private fun HomeSearchBar(query: String, onQueryChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = { Text("Search the archives…", fontSize = 14.sp, color = CKOutlineVariant) },
+        leadingIcon = { Icon(Icons.Default.Search, null, tint = CKOutlineVariant) },
+        trailingIcon = { Icon(Icons.Default.Tune, null, tint = Outline) },
+        singleLine = true,
+        shape = RoundedCornerShape(50.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Primary,
+            unfocusedBorderColor = Color.Transparent,
+            focusedContainerColor = Surface,
+            unfocusedContainerColor = Surface,
+            focusedTextColor = OnSurface,
+            unfocusedTextColor = OnSurface,
+            cursorColor = Primary
+        ),
+        modifier = modifier.fillMaxWidth().height(52.dp)
+    )
+}
+
+// ──────────────────── Tag Chips ────────────────────
+@Composable
+private fun TagChipRow(tags: List<String>, selected: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+    ) {
+        items(tags) { tag ->
+            val active = tag == selected
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(if (active) Primary else Surface)
+                    .clickable { onSelect(tag) }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    tag,
+                    fontSize = 13.sp,
+                    fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
+                    color = if (active) OnPrimary else CKOnSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+// ──────────────────── Featured Banner ────────────────────
+@Composable
+private fun FeaturedBanner(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(Primary, Color(0xFF004D1F)),
+                    start = Offset.Zero,
+                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                )
+            )
+    ) {
+        // Decoración circular
+        Box(
+            modifier = Modifier
+                .size(160.dp)
+                .offset(x = 200.dp, y = (-30).dp)
+                .background(Color.White.copy(alpha = 0.05f), CircleShape)
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .background(CKSecondary.copy(alpha = 0.2f), CircleShape)
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(Icons.Default.Star, null, tint = CKSecondary, modifier = Modifier.size(12.dp))
+                Text("FEATURED SEASONAL", fontSize = 10.sp, color = CKSecondary, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(8.dp))
+            Text("Arroz Negro\ncon Alioli", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = Color.White, lineHeight = 26.sp)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(Icons.Default.Timer, null, tint = OnPrimary.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
+                    Text("45m", fontSize = 12.sp, color = OnPrimary.copy(alpha = 0.8f))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(Icons.Default.Restaurant, null, tint = OnPrimary.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
+                    Text("4 servings", fontSize = 12.sp, color = OnPrimary.copy(alpha = 0.8f))
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun RecipeItemCard(recipe: Recipe,
+                           authViewModel: AuthenticantionViewModel = viewModel(),
+                           modifier: Modifier = Modifier) {
+    var authorName by remember(recipe.author) { mutableStateOf("...") }
+
+    LaunchedEffect(recipe.author) {
+    }
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Surface),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Placeholder imagen
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(CKSurfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Restaurant, null, tint = Outline, modifier = Modifier.size(28.dp))
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(recipe.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("Por ${recipe.author}", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Icon(Icons.Default.Timer, null, tint = Outline, modifier = Modifier.size(12.dp))
+                        Text("${recipe.duration.inWholeMinutes}m", fontSize = 11.sp, color = Outline)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Icon(Icons.Default.People, null, tint = Outline, modifier = Modifier.size(12.dp))
+                        Text("4 servings", fontSize = 11.sp, color = Outline)
+                    }
+                }
+            }
+            Icon(Icons.Default.ChevronRight, null, tint = CKOutlineVariant)
+        }
+    }
+}
+
+// ──────────────────── My Recipes Section ────────────────────
+@Composable
+private fun MyRecipesSection(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Surface),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Kitchen Ledger", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = Primary)
+                Icon(Icons.Default.MenuBook, null, tint = Primary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(Modifier.height(12.dp))
+            listOf("01" to "Smoked Paprika Chicken", "02" to "Miso Ginger Broth", "03" to "Lemon Risotto").forEachIndexed { i, (num, title) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(num, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = CKOutlineVariant)
+                        Column {
+                            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = OnSurface)
+                            Text("MODIFIED OCT ${10 + i}", fontSize = 10.sp, color = CKOutlineVariant, letterSpacing = 0.5.sp)
+                        }
+                    }
+                    Icon(Icons.Default.Edit, null, tint = CKOutlineVariant, modifier = Modifier.size(16.dp))
+                }
+                if (i < 2) HorizontalDivider(color = CKSurfaceVariant, thickness = 0.5.dp)
+            }
+        }
+    }
+}
+
+// ──────────────────── CTA Banner ────────────────────
+@Composable
+private fun CtaBanner(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(Primary)
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("What did you\ncook today?", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = Color.White, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text("Log your latest culinary creation\ninto the digital ledger.", fontSize = 13.sp, color = OnPrimary.copy(alpha = 0.8f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Spacer(Modifier.height(4.dp))
+            Button(
+                onClick = onClick,
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(containerColor = CKSecondary, contentColor = CKOnSecondary),
+                modifier = Modifier.height(44.dp)
+            ) {
+                Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Start Entry", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
+        }
+    }
+}
+
+// ──────────────────── Bottom Bar ────────────────────
+@Composable
+private fun HomeBottomBar(onCreateRecipe: () -> Unit) {
+    NavigationBar(containerColor = Surface, tonalElevation = 8.dp) {
+        NavigationBarItem(
+            selected = true,
+            onClick = {},
+            icon = { Icon(Icons.Default.Home, null) },
+            label = { Text("Home", fontSize = 11.sp) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Primary,
+                selectedTextColor = Primary,
+                indicatorColor = Primary.copy(alpha = 0.1f),
+                unselectedIconColor = CKOutlineVariant
+            )
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = {},
+            icon = { Icon(Icons.Default.Explore, null) },
+            label = { Text("Explore", fontSize = 11.sp) },
+            colors = NavigationBarItemDefaults.colors(unselectedIconColor = CKOutlineVariant, unselectedTextColor = CKOutlineVariant)
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = onCreateRecipe,
+            icon = { Icon(Icons.Default.AddCircle, null) },
+            label = { Text("Create", fontSize = 11.sp) },
+            colors = NavigationBarItemDefaults.colors(unselectedIconColor = CKOutlineVariant, unselectedTextColor = CKOutlineVariant)
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = {},
+            icon = { Icon(Icons.Default.Bookmark, null) },
+            label = { Text("Saved", fontSize = 11.sp) },
+            colors = NavigationBarItemDefaults.colors(unselectedIconColor = CKOutlineVariant, unselectedTextColor = CKOutlineVariant)
+        )
+    }
+}
+</file>
+
+<file path="gradle/libs.versions.toml">
+[versions]
+agp = "8.13.2"
+kotlin = "2.0.21"
+coreKtx = "1.10.1"
+junit = "4.13.2"
+junitVersion = "1.1.5"
+espressoCore = "3.5.1"
+lifecycleRuntimeKtx = "2.10.0"
+activityCompose = "1.8.0"
+composeBom = "2024.09.00"
+coil = "2.7.0"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/MainActivity.kt">
+package software.ulpgc.cheffskiss
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import software.ulpgc.cheffskiss.ui.theme.CheffsKissTheme
+import software.ulpgc.cheffskiss.ui.screen.LoginScreen
+import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import software.ulpgc.cheffskiss.ui.screen.CreateRecipeScreen
+import software.ulpgc.cheffskiss.ui.screen.HomeRoute
+import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.ui.HomeViewModel
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            CheffsKissTheme {
+                val navController = rememberNavController()
+                NavHost(
+                    navController = navController,
+                    startDestination = "login"
+                ) {
+                    composable("login") {
+                        LoginScreen(
+                            onLoginSuccess = {
+                                navController.navigate("home") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            },
+                            onGoToRegister = { navController.navigate("register") }
+                        )
+                    }
+                    composable("register") {
+                        RegisterScreen(
+                            onRegisterSuccess = {
+                                navController.navigate("home") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            },
+                            onGoToLogin = { navController.popBackStack() }
+                        )
+                    }
+                    composable("home") {
+                        HomeRoute(
+                            viewModel = viewModel(),
+                            onCreateRecipe = { navController.navigate("create_recipe") },
+                            onLogout = {
+                                navController.navigate("login") {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+                    composable("create_recipe") {
+                        CreateRecipeScreen(
+                            onBack = { navController.popBackStack() },
+                            onPublishSuccess = { // Antes decía solo "onPublish"
+                                navController.navigate("home") {
+                                    popUpTo("home") { inclusive = false }
+                                }
+                            },
+                            onSaveDraft = { navController.popBackStack() }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun Greeting(name: String, modifier: Modifier = Modifier) {
+    Text(
+        text = "Hello $name!",
+        modifier = modifier
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+    CheffsKissTheme {
+        Greeting("Android")
+    }
+}
+</file>
+
+<file path="app/build.gradle.kts">
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
+}
+
+android {
+    namespace = "software.ulpgc.cheffskiss"
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "software.ulpgc.cheffskiss"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    // AndroidX Core
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+
+    // Compose BOM (gestiona versiones automáticamente)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Lifecycle + ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+
+    implementation("androidx.navigation:navigation-compose:2.8.9")
+
+    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation(libs.coil.compose)
+    implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+</file>
+
+</files>
