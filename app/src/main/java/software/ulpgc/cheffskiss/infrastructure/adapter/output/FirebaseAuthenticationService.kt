@@ -24,7 +24,7 @@ class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , Curre
         try {
             val userId =Firebase.auth.createUserWithEmailAndPassword(email, password).await().user?.uid ?: error("No UID returned")
             Firebase.firestore.collection("Username").document(username).set(userNameHashMap(userId)).await()
-            Firebase.firestore.collection("Users").document(userId).set(userHashMap(email,description,image)).await()
+            Firebase.firestore.collection("Users").document(userId).set(userHashMap(email,description,image,username)).await()
             return UUID.fromString(userId)
 
         }catch (e: Exception){
@@ -36,12 +36,14 @@ class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , Curre
     private fun userHashMap(
         email: String,
         description: String?,
-        image: String
+        image: String,
+        username:String
     ): HashMap<String, String?> {
         return hashMapOf(
             "email" to email,
             "image" to image,
-            "description" to description
+            "description" to description,
+            "username" to username
         )
     }
 

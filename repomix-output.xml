@@ -254,16 +254,6 @@ class LogoutUserCommand(private val logOutPort: LogoutPort): Command {
 }
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/CurrentUserPort.kt">
-package software.ulpgc.cheffskiss.application.port.output
-
-import java.util.UUID
-
-interface CurrentUserPort {
-    fun getCurrentUser(): String?
-}
-</file>
-
 <file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/LoginPort.kt">
 package software.ulpgc.cheffskiss.application.port.output
 
@@ -546,56 +536,6 @@ fun CheffsTextField(
         ),
         modifier = modifier.fillMaxWidth()
     )
-}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/HomeViewModel.kt">
-package software.ulpgc.cheffskiss.ui
-
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
-import software.ulpgc.cheffskiss.domain.model.Recipe
-import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
-
-data class HomeUiState(
-    val isLoading: Boolean = true,
-    val recipes: List<Recipe> = emptyList(),
-    val error: String? = null
-)
-
-class HomeViewModel(
-    private val getAllRecipesQuery: GetAllRecipesQuery = GetAllRecipesQuery(FirebaseRecipeReader())
-) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-
-    init {
-        observeRecipes()
-    }
-
-    private fun observeRecipes() {
-        viewModelScope.launch {
-            getAllRecipesQuery()
-                .onStart { _uiState.value = _uiState.value.copy(isLoading = true) }
-                .catch { e ->
-                    _uiState.value = HomeUiState(
-                        isLoading = false,
-                        error = e.message ?: "Error al cargar recetas"
-                    )
-                }
-                .collect { list ->
-                    _uiState.value = HomeUiState(
-                        isLoading = false,
-                        recipes = list,
-                        error = null
-                    )
-                }
-        }
-    }
 }
 </file>
 
@@ -1103,6 +1043,154 @@ rootProject.name = "CheffsKiss"
 include(":app")
 </file>
 
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/CurrentUserPort.kt">
+package software.ulpgc.cheffskiss.application.port.output
+
+import java.util.UUID
+
+interface CurrentUserPort {
+    fun getCurrentUser(): String?
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/UserNameReader.kt">
+package software.ulpgc.cheffskiss.domain.port.input
+
+import software.ulpgc.cheffskiss.domain.model.UserName
+
+interface UserNameReader {
+    suspend fun exist(value: UserName): Boolean
+    suspend fun getUsernameByUid(uid: String): String?
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/HomeViewModel.kt">
+package software.ulpgc.cheffskiss.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+
+data class HomeUiState(
+    val isLoading: Boolean = true,
+    val recipes: List<Recipe> = emptyList(),
+    val error: String? = null
+)
+
+class HomeViewModel(
+    private val getAllRecipesQuery: GetAllRecipesQuery = GetAllRecipesQuery(FirebaseRecipeReader())
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    init {
+        observeRecipes()
+    }
+
+    private fun observeRecipes() {
+        viewModelScope.launch {
+            getAllRecipesQuery()
+                .onStart { _uiState.value = _uiState.value.copy(isLoading = true) }
+                .catch { e ->
+                    _uiState.value = HomeUiState(
+                        isLoading = false,
+                        error = e.message ?: "Error al cargar recetas"
+                    )
+                }
+                .collect { list ->
+                    _uiState.value = HomeUiState(
+                        isLoading = false,
+                        recipes = list,
+                        error = null
+                    )
+                }
+        }
+    }
+}
+</file>
+
+<file path="app/src/main/res/drawable/ic_launcher_background.xml">
+<!-- res/drawable/ic_launcher_background.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <path
+      android:fillColor="#2D5A27"
+      android:pathData="M0,0h108v108h0z"/>
+</vector>
+</file>
+
+<file path="app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+</file>
+
+<file path="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+</file>
+
+<file path="build.gradle.kts">
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    id("com.google.gms.google-services") version "4.4.4" apply false
+}
+</file>
+
+<file path="app/src/main/AndroidManifest.xml">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.CheffsKiss">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.CheffsKiss">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+</file>
+
 <file path="app/src/main/java/software/ulpgc/cheffskiss/application/CreateRecipeCommand.kt">
 package software.ulpgc.cheffskiss.application
 
@@ -1148,17 +1236,6 @@ interface RecipeInput {
     fun steps(): List<Step>
     fun tags(): List<String>
     fun image(): String
-}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/UserNameReader.kt">
-package software.ulpgc.cheffskiss.domain.port.input
-
-import software.ulpgc.cheffskiss.domain.model.UserName
-
-interface UserNameReader {
-    suspend fun exist(value: UserName): Boolean
-    suspend fun getUsernameByUid(uid: String): String?
 }
 </file>
 
@@ -1261,8 +1338,9 @@ class FirebaseUserNameReader : UserNameReader {
             .get()
             .await()
         android.util.Log.d("UserNameReader", "uid buscado: $uid")
+
         android.util.Log.d("UserNameReader", "docs encontrados: ${snapshot.documents.size}")
-        return snapshot.documents.firstOrNull()?.getString("username")
+        return snapshot.documents.forEach { document -> document.id }.toString()
     }
 }
 </file>
@@ -1485,189 +1563,6 @@ class RecipeViewModel : ViewModel() {
                 }
             )
         }
-    }
-}
-</file>
-
-<file path="app/src/main/res/drawable/ic_launcher_background.xml">
-<!-- res/drawable/ic_launcher_background.xml -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-  <path
-      android:fillColor="#2D5A27"
-      android:pathData="M0,0h108v108h0z"/>
-</vector>
-</file>
-
-<file path="app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml">
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-    <monochrome android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
-</file>
-
-<file path="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml">
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-    <monochrome android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
-</file>
-
-<file path="build.gradle.kts">
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-plugins {
-    alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.kotlin.compose) apply false
-    id("com.google.gms.google-services") version "4.4.4" apply false
-}
-</file>
-
-<file path="app/src/main/AndroidManifest.xml">
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <application
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.CheffsKiss">
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.CheffsKiss">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-
-</manifest>
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/Recipe.kt">
-package software.ulpgc.cheffskiss.domain.model
-
-import java.util.UUID
-import kotlin.time.Duration
-
-data class Recipe(
-    val id: UUID,
-    val author: String,
-    val title: String,
-    val description: String,
-    val duration: Duration,
-    val ingredients: List<String>,
-    val steps: List<Step>,
-    val tags: List<String>,
-    val image: String,
-    val serving: Int,
-)
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt">
-package software.ulpgc.cheffskiss.ui
-
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.Input
-import software.ulpgc.cheffskiss.application.LoginInput
-import software.ulpgc.cheffskiss.application.RegisterUserCommand
-import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
-import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
-
-sealed class AuthUiState {
-    object Idle    : AuthUiState()
-    object Loading : AuthUiState()
-    object Success : AuthUiState()
-    data class Error(val message: String) : AuthUiState()
-}
-
-class AuthenticantionViewModel : ViewModel() {
-
-    private val firebaseService = FirebaseAuthenticationService()
-    private val userNameReader  = FirebaseUserNameReader()
-
-    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
-    val uiState = _uiState.asStateFlow()
-
-    fun resetState() { _uiState.value = AuthUiState.Idle }
-
-    fun login(email: String, password: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            runCatching {
-                firebaseService.login(email, password)  // ← llama directamente al servicio
-            }.fold(
-                onSuccess = { ok ->
-                    _uiState.value = if (ok) AuthUiState.Success
-                    else AuthUiState.Error("Invalid email or password")
-                },
-                onFailure = { e ->
-                    _uiState.value = AuthUiState.Error(friendlyError(e.message))
-                }
-            )
-        }
-    }
-
-    fun register(email: String, password: String, username: String,
-                 description: String?, image: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            val command = RegisterUserCommand(
-                userNameReader = userNameReader,
-                userPort = firebaseService,
-                registerUserInput = object : Input {
-                    override fun email()       = email
-                    override fun password()    = password
-                    override fun username()    = username
-                    override fun description() = description
-                    override fun image()       = image
-                }
-            )
-            runCatching { command.execute() }
-                .fold(
-                    onSuccess = { _uiState.value = AuthUiState.Success },
-                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
-                )
-        }
-    }
-    fun getCurrentUid(): String? = firebaseService.getCurrentUser()
-    private fun friendlyError(msg: String?) = when {
-        msg == null                    -> "Unknown error"
-        "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"
-        "WEAK_PASSWORD"        in msg  -> "Password must be at least 6 characters"
-        "INVALID_EMAIL"        in msg  -> "Invalid email format"
-        "NETWORK"              in msg  -> "No internet connection"
-        "offline"              in msg  -> "No internet connection"
-        "client is offline"    in msg  -> "No internet connection"
-        "USERNAME_ALREADY"     in msg  -> "This username is already taken"
-        "Username already"     in msg  -> "This username is already taken"
-        else                           -> msg
     }
 }
 </file>
@@ -2446,6 +2341,148 @@ fun CheffsKissTheme(content: @Composable () -> Unit) {
         <item name="colorPrimaryDark">@color/green_dark</item>
     </style>
 </resources>
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/Recipe.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+import java.util.UUID
+import kotlin.time.Duration
+
+data class Recipe(
+    val id: UUID,
+    val author: String,
+    val title: String,
+    val description: String,
+    val duration: Duration,
+    val ingredients: List<String>,
+    val steps: List<Step>,
+    val tags: List<String>,
+    val image: String,
+    val serving: Int,
+)
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt">
+package software.ulpgc.cheffskiss.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.Input
+import software.ulpgc.cheffskiss.application.LoginInput
+import software.ulpgc.cheffskiss.application.RegisterUserCommand
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+
+sealed class AuthUiState {
+    object Idle    : AuthUiState()
+    object Loading : AuthUiState()
+    object Success : AuthUiState()
+    data class Error(val message: String) : AuthUiState()
+}
+
+class AuthenticantionViewModel : ViewModel() {
+
+    private val firebaseService = FirebaseAuthenticationService()
+    private val userNameReader  = FirebaseUserNameReader()
+
+    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
+    val uiState = _uiState.asStateFlow()
+
+    fun resetState() { _uiState.value = AuthUiState.Idle }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            runCatching {
+                firebaseService.login(email, password)  // ← llama directamente al servicio
+            }.fold(
+                onSuccess = { ok ->
+                    _uiState.value = if (ok) AuthUiState.Success
+                    else AuthUiState.Error("Invalid email or password")
+                },
+                onFailure = { e ->
+                    _uiState.value = AuthUiState.Error(friendlyError(e.message))
+                }
+            )
+        }
+    }
+
+    fun register(email: String, password: String, username: String,
+                 description: String?, image: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val command = RegisterUserCommand(
+                userNameReader = userNameReader,
+                userPort = firebaseService,
+                registerUserInput = object : Input {
+                    override fun email()       = email
+                    override fun password()    = password
+                    override fun username()    = username
+                    override fun description() = description
+                    override fun image()       = image
+                }
+            )
+            runCatching { command.execute() }
+                .fold(
+                    onSuccess = { _uiState.value = AuthUiState.Success },
+                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
+                )
+        }
+    }
+    fun getCurrentUid(): String? = firebaseService.getCurrentUser()
+    private fun friendlyError(msg: String?) = when {
+        msg == null                    -> "Unknown error"
+        "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"
+        "WEAK_PASSWORD"        in msg  -> "Password must be at least 6 characters"
+        "INVALID_EMAIL"        in msg  -> "Invalid email format"
+        "NETWORK"              in msg  -> "No internet connection"
+        "offline"              in msg  -> "No internet connection"
+        "client is offline"    in msg  -> "No internet connection"
+        "USERNAME_ALREADY"     in msg  -> "This username is already taken"
+        "Username already"     in msg  -> "This username is already taken"
+        else                           -> msg
+    }
+}
+</file>
+
+<file path="gradle/libs.versions.toml">
+[versions]
+agp = "8.13.2"
+kotlin = "2.0.21"
+coreKtx = "1.10.1"
+junit = "4.13.2"
+junitVersion = "1.1.5"
+espressoCore = "3.5.1"
+lifecycleRuntimeKtx = "2.10.0"
+activityCompose = "1.8.0"
+composeBom = "2024.09.00"
+coil = "2.7.0"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 </file>
 
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/CreateRecipeScreen.kt">
@@ -3810,42 +3847,6 @@ private fun HomeBottomBar(onCreateRecipe: () -> Unit) {
         )
     }
 }
-</file>
-
-<file path="gradle/libs.versions.toml">
-[versions]
-agp = "8.13.2"
-kotlin = "2.0.21"
-coreKtx = "1.10.1"
-junit = "4.13.2"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
-lifecycleRuntimeKtx = "2.10.0"
-activityCompose = "1.8.0"
-composeBom = "2024.09.00"
-coil = "2.7.0"
-
-[libraries]
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
-androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
-androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
-androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
-coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
-
-[plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 </file>
 
 <file path="app/src/main/java/software/ulpgc/cheffskiss/MainActivity.kt">

@@ -19,6 +19,6 @@ class FirebaseUserNameReader : UserNameReader {
         android.util.Log.d("UserNameReader", "uid buscado: $uid")
 
         android.util.Log.d("UserNameReader", "docs encontrados: ${snapshot.documents.size}")
-        return snapshot.documents.forEach { document -> document.id }.toString()
+        return snapshot.documents.firstOrNull()?.id
     }
 }
