@@ -7,6 +7,7 @@ import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 
 data class HomeUiState(
     val isLoading: Boolean = true,
@@ -20,6 +21,9 @@ class HomeViewModel(
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val userNameReader  = FirebaseUserNameReader()
+    private val _authorNames = MutableStateFlow<Map<String, String>>(emptyMap())
+    val authorNames: StateFlow<Map<String, String>> = _authorNames.asStateFlow()
 
     init {
         observeRecipes()
@@ -41,7 +45,20 @@ class HomeViewModel(
                         recipes = list,
                         error = null
                     )
+                    resolveAllAuthors(list)
+
                 }
         }
     }
-}
+    private fun resolveAllAuthors(recipes: List<Recipe>) {
+        recipes.map { it.author }.distinct().forEach { uid ->
+            if (!_authorNames.value.containsKey(uid)) {
+                viewModelScope.launch {
+                    val name = userNameReader.getUsernameByUid(uid)
+                    if (name != null) {
+                        _authorNames.update { it + (uid to name) }
+                    }
+                }
+            }
+        }
+    }}

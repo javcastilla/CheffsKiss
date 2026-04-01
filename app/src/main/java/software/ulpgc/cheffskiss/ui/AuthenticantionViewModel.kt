@@ -68,6 +68,7 @@ class AuthenticantionViewModel : ViewModel() {
         }
     }
     fun getCurrentUid(): String? = firebaseService.getCurrentUser()
+
     private fun friendlyError(msg: String?) = when {
         msg == null                    -> "Unknown error"
         "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"

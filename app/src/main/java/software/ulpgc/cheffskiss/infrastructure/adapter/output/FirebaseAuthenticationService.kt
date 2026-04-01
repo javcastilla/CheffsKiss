@@ -10,6 +10,7 @@ import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
 
 import kotlinx.coroutines.tasks.await
 import software.ulpgc.cheffskiss.domain.model.User
+import software.ulpgc.cheffskiss.domain.port.output.UserRepository
 import java.util.UUID
 
 class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , CurrentUserPort {
