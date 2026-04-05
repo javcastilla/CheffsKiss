@@ -4,23 +4,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import software.ulpgc.cheffskiss.ui.theme.CheffsKissTheme
-import software.ulpgc.cheffskiss.ui.screen.LoginScreen
-import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
-import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import software.ulpgc.cheffskiss.ui.HomeViewModel
 import software.ulpgc.cheffskiss.ui.screen.CreateRecipeScreen
 import software.ulpgc.cheffskiss.ui.screen.HomeRoute
-import androidx.lifecycle.viewmodel.compose.viewModel
-import software.ulpgc.cheffskiss.ui.HomeViewModel
+import software.ulpgc.cheffskiss.ui.screen.LibraryScreen
+import software.ulpgc.cheffskiss.ui.screen.LoginScreen
+import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
+import software.ulpgc.cheffskiss.ui.theme.CheffsKissTheme
+import androidx.compose.material3.Text
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +27,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             CheffsKissTheme {
                 val navController = rememberNavController()
+
                 NavHost(
                     navController = navController,
                     startDestination = "login"
@@ -43,6 +42,7 @@ class MainActivity : ComponentActivity() {
                             onGoToRegister = { navController.navigate("register") }
                         )
                     }
+
                     composable("register") {
                         RegisterScreen(
                             onRegisterSuccess = {
@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
                             onGoToLogin = { navController.popBackStack() }
                         )
                     }
+
                     composable("home") {
                         HomeRoute(
                             viewModel = viewModel(),
@@ -64,10 +65,24 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
+                    composable("library") {
+                        LibraryScreen(
+                            onGoHome = {
+                                navController.navigate("home") {
+                                    launchSingleTop = true
+                                }
+                            },
+                            onCreateRecipe = {
+                                navController.navigate("create_recipe")
+                            }
+                        )
+                    }
+
                     composable("create_recipe") {
                         CreateRecipeScreen(
                             onBack = { navController.popBackStack() },
-                            onPublishSuccess = { // Antes decía solo "onPublish"
+                            onPublishSuccess = {
                                 navController.navigate("home") {
                                     popUpTo("home") { inclusive = false }
                                 }
