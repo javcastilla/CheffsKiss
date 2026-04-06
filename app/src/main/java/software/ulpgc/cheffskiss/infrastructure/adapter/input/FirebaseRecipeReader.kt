@@ -63,7 +63,7 @@ class FirebaseRecipeReader : RecipeReader {
                 id = UUID.fromString(id),
                 author = author,
                 description = getString("description") ?: "",
-                serving = getLong("servings")?.toInt() ?: 0,
+                servings = getLong("servings")?.toInt() ?: 0,
                 title = getString("title") ?: "",
                 duration = (getLong("duration") ?: 0L).seconds,
                 ingredients = (get("ingredients") as? List<*>)

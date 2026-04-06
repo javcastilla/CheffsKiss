@@ -34,6 +34,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
 
 private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisanal")
 
@@ -42,21 +43,22 @@ private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisa
 fun HomeRoute(
     viewModel: HomeViewModel,
     onCreateRecipe: () -> Unit,
+    onLibraryClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-
     HomeScreen(
         state = state,
         onCreateRecipe = onCreateRecipe,
+        onLibraryClick = onLibraryClick,
         onLogout = onLogout
     )
 }
-
 @Composable
 fun HomeScreen(
     state: HomeUiState,
     onCreateRecipe: () -> Unit,
+    onLibraryClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     var selectedTag by remember { mutableStateOf("All") }
@@ -65,7 +67,14 @@ fun HomeScreen(
     Scaffold(
         containerColor = Background,
         // ── Bottom Navigation Bar ──
-        bottomBar = { HomeBottomBar(onCreateRecipe) },
+        bottomBar = {
+            HomeBottomBar(
+                currentRoute = "home",
+                onHomeClick = {},
+                onCreateClick = onCreateRecipe,
+                onSavedClick = onLibraryClick
+            )
+        },
         // ── FAB Create ──
         floatingActionButton = {
             FloatingActionButton(
@@ -450,45 +459,5 @@ private fun CtaBanner(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 Text("Start Entry", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
-    }
-}
-
-// ──────────────────── Bottom Bar ────────────────────
-@Composable
-private fun HomeBottomBar(onCreateRecipe: () -> Unit) {
-    NavigationBar(containerColor = Surface, tonalElevation = 8.dp) {
-        NavigationBarItem(
-            selected = true,
-            onClick = {},
-            icon = { Icon(Icons.Default.Home, null) },
-            label = { Text("Home", fontSize = 11.sp) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Primary,
-                selectedTextColor = Primary,
-                indicatorColor = Primary.copy(alpha = 0.1f),
-                unselectedIconColor = CKOutlineVariant
-            )
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.Explore, null) },
-            label = { Text("Explore", fontSize = 11.sp) },
-            colors = NavigationBarItemDefaults.colors(unselectedIconColor = CKOutlineVariant, unselectedTextColor = CKOutlineVariant)
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = onCreateRecipe,
-            icon = { Icon(Icons.Default.AddCircle, null) },
-            label = { Text("Create", fontSize = 11.sp) },
-            colors = NavigationBarItemDefaults.colors(unselectedIconColor = CKOutlineVariant, unselectedTextColor = CKOutlineVariant)
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.Bookmark, null) },
-            label = { Text("Saved", fontSize = 11.sp) },
-            colors = NavigationBarItemDefaults.colors(unselectedIconColor = CKOutlineVariant, unselectedTextColor = CKOutlineVariant)
-        )
     }
 }

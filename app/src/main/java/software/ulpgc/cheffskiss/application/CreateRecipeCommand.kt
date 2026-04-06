@@ -11,7 +11,7 @@ class CreateRecipeCommand( private val recipePort: RecipePort, private val recip
     override suspend fun execute() {
         require(recipeInput.title().isNotBlank()){ "Title cannot be empty" }
         require(recipeInput.description().isNotBlank()){ "Description cannot be empty" }
-        require(recipeInput.serving() > 0){ "Serving cannot be empty" }
+        require(recipeInput.servings() > 0){ "Servings cannot be empty" }
         require(recipeInput.author().isNotBlank()){ "Author cannot be empty" }
         require(recipeInput.duration() >= Duration.ZERO) { "Duration is not valid" }
         require(recipeInput.ingredients().isNotEmpty()){ "Ingredients cannot be empty" }
@@ -26,7 +26,7 @@ class CreateRecipeCommand( private val recipePort: RecipePort, private val recip
             steps = recipeInput.steps(),
             tags = recipeInput.tags(),
             image = recipeInput.image(),
-            serving = recipeInput.serving(),
+            servings = recipeInput.servings(),
         ))
     }
 }
@@ -36,7 +36,7 @@ interface RecipeInput {
     fun author() : String
     fun title(): String
     fun description(): String
-    fun serving(): Int
+    fun servings(): Int
     fun duration(): Duration
     fun ingredients(): List<String>
     fun steps(): List<Step>

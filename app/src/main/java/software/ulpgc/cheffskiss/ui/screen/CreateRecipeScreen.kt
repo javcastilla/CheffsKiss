@@ -117,7 +117,7 @@ fun CreateRecipeScreen(
                 authorId = authorId, // ← ya no es random
                 title = title,
                 description = description,
-                serving = servings,
+                servings = servings,
                 hours = hours,
                 minutes = minutes,
                 ingredients = mappedIngredients,

@@ -1,11 +1,11 @@
 package software.ulpgc.cheffskiss.ui.components
 
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -14,17 +14,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import software.ulpgc.cheffskiss.ui.theme.CKOutlineVariant
-import software.ulpgc.cheffskiss.ui.theme.OnPrimary
 import software.ulpgc.cheffskiss.ui.theme.Primary
 import software.ulpgc.cheffskiss.ui.theme.Surface
 
 @Composable
-fun CheffsBottomBar(
+fun HomeBottomBar(
     currentRoute: String,
-    onGoHome: () -> Unit,
-    onGoLibrary: () -> Unit,
-    onCreateRecipe: () -> Unit,
-    onGoSaved: () -> Unit = {}
+    onHomeClick: () -> Unit,
+    onCreateClick: () -> Unit,
+    onSavedClick: () -> Unit
 ) {
     NavigationBar(
         containerColor = Surface,
@@ -32,8 +30,8 @@ fun CheffsBottomBar(
     ) {
         NavigationBarItem(
             selected = currentRoute == "home",
-            onClick = onGoHome,
-            icon = { androidx.compose.material3.Icon(Icons.Default.Home, null) },
+            onClick = onHomeClick,
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
             label = { Text("Home", fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Primary,
@@ -45,14 +43,11 @@ fun CheffsBottomBar(
         )
 
         NavigationBarItem(
-            selected = currentRoute == "library",
-            onClick = onGoLibrary,
-            icon = { androidx.compose.material3.Icon(Icons.Default.MenuBook, null) },
-            label = { Text("Library", fontSize = 11.sp) },
+            selected = false,
+            onClick = {},
+            icon = { Icon(Icons.Default.Explore, contentDescription = "Explore") },
+            label = { Text("Explore", fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Primary,
-                selectedTextColor = Primary,
-                indicatorColor = Primary.copy(alpha = 0.1f),
                 unselectedIconColor = CKOutlineVariant,
                 unselectedTextColor = CKOutlineVariant
             )
@@ -60,22 +55,19 @@ fun CheffsBottomBar(
 
         NavigationBarItem(
             selected = false,
-            onClick = onCreateRecipe,
-            icon = { androidx.compose.material3.Icon(Icons.Default.AddCircle, null) },
+            onClick = onCreateClick,
+            icon = { Icon(Icons.Default.AddCircle, contentDescription = "Create") },
             label = { Text("Create", fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Primary,
-                selectedTextColor = Primary,
-                indicatorColor = Primary.copy(alpha = 0.1f),
                 unselectedIconColor = CKOutlineVariant,
                 unselectedTextColor = CKOutlineVariant
             )
         )
 
         NavigationBarItem(
-            selected = currentRoute == "saved",
-            onClick = onGoSaved,
-            icon = { androidx.compose.material3.Icon(Icons.Default.Bookmark, null) },
+            selected = currentRoute == "library",
+            onClick = onSavedClick,
+            icon = { Icon(Icons.Default.Bookmark, contentDescription = "Saved") },
             label = { Text("Saved", fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Primary,
