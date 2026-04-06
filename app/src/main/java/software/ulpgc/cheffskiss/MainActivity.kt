@@ -73,6 +73,7 @@ class MainActivity : ComponentActivity() {
 
                     composable("library") {
                         LibraryScreen(
+                            viewModel = viewModel(),
                             onGoHome = {
                                 navController.navigate("home") {
                                     launchSingleTop = true
