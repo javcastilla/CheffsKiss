@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import software.ulpgc.cheffskiss.ui.HomeViewModel
 import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
 import software.ulpgc.cheffskiss.ui.theme.Background
@@ -54,10 +55,13 @@ import software.ulpgc.cheffskiss.ui.theme.Surface
 @Composable
 fun LibraryScreen(
     viewModel: HomeViewModel,
+    authViewModel: AuthenticantionViewModel,
     onGoHome: () -> Unit,
     onCreateRecipe: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val currentUid = authViewModel.getCurrentUid()
+    val recipes = state.recipes.filter { it.author == currentUid }
 
     Scaffold(
         containerColor = Background,
@@ -104,7 +108,10 @@ fun LibraryScreen(
             return@Scaffold
         }
 
-        val recipes = state.recipes
+        val currentUid = authViewModel.getCurrentUid()
+        val recipes = state.recipes.filter { recipe ->
+            recipe.author == currentUid
+        }
 
         if (recipes.isEmpty()) {
             Box(
@@ -124,7 +131,7 @@ fun LibraryScreen(
                         modifier = Modifier.size(40.dp)
                     )
                     Text(
-                        text = "Tu library está vacía",
+                        text = "Tu librería está vacía",
                         color = Primary,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold
