@@ -32,6 +32,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
 
 private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisanal")
 
@@ -40,6 +43,7 @@ private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisa
 fun HomeRoute(
     viewModel: HomeViewModel,
     onCreateRecipe: () -> Unit,
+    onLibraryClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -48,6 +52,7 @@ fun HomeRoute(
         state = state,
         authorNames = authorNames,
         onCreateRecipe = onCreateRecipe,
+        onLibraryClick = onLibraryClick,
         onLogout = onLogout
     )
 }
@@ -57,6 +62,7 @@ fun HomeScreen(
     state: HomeUiState,
     authorNames: Map<String, String>,
     onCreateRecipe: () -> Unit,
+    onLibraryClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     var selectedTag by remember { mutableStateOf("All") }
@@ -65,7 +71,14 @@ fun HomeScreen(
     Scaffold(
         containerColor = Background,
         // ── Bottom Navigation Bar ──
-        bottomBar = { HomeBottomBar(onCreateRecipe) },
+        bottomBar = {
+            HomeBottomBar(
+                currentRoute = "home",
+                onHomeClick = {},
+                onCreateClick = onCreateRecipe,
+                onSavedClick = onLibraryClick
+            )
+        },
         // ── FAB Create ──
         floatingActionButton = {
             FloatingActionButton(

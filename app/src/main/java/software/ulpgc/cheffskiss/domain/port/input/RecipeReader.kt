@@ -7,4 +7,5 @@ interface RecipeReader {
     fun getAll(): Flow<List<Recipe>>
     suspend fun getById(id: String): Recipe?
     fun search(query: String): Flow<List<Recipe>>
+    fun getByAuthor(author: String): Flow<List<Recipe>>
 }

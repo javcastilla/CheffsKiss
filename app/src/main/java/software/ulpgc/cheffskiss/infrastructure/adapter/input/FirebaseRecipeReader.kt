@@ -40,6 +40,20 @@ class FirebaseRecipeReader : RecipeReader {
         awaitClose { listener.remove() }
     }
 
+    override fun getByAuthor(author: String): Flow<List<Recipe>> = callbackFlow {
+        val listener = collection
+            .whereEqualTo("author", author)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                trySend(snapshot?.documents?.mapNotNull { it.toRecipe() } ?: emptyList())
+            }
+
+        awaitClose { listener.remove() }
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun DocumentSnapshot.toRecipe(): Recipe? {
         val id = getString("id") ?: return null
@@ -49,7 +63,7 @@ class FirebaseRecipeReader : RecipeReader {
                 id = UUID.fromString(id),
                 author = author,
                 description = getString("description") ?: "",
-                serving = getLong("servings")?.toInt() ?: 0,
+                servings = getLong("servings")?.toInt() ?: 0,
                 title = getString("title") ?: "",
                 duration = (getLong("duration") ?: 0L).seconds,
                 ingredients = (get("ingredients") as? List<*>)

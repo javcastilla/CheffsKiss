@@ -13,5 +13,5 @@ data class Recipe(
     val steps: List<Step>,
     val tags: List<String>,
     val image: String,
-    val serving: Int,
+    val servings: Int,
 )

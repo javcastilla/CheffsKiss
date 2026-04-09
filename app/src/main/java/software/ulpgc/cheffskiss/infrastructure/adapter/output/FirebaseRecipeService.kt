@@ -18,7 +18,7 @@ class FirebaseRecipeService : RecipePort {
         "author"      to author,
         "title"       to title,
         "description" to description,
-        "serving"     to serving,
+        "servings"     to servings,
         "duration"    to duration.inWholeSeconds,   // Long
         "ingredients" to ingredients,               // List<String> — Firestore lo soporta
         "steps"       to steps.map { step ->

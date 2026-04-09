@@ -32,7 +32,7 @@ class RecipeViewModel : ViewModel() {
         authorId: String,
         title: String,
         description: String,
-        serving: Int,
+        servings: Int,
         hours: String,
         minutes: String,
         ingredients: List<String>,
@@ -78,7 +78,7 @@ class RecipeViewModel : ViewModel() {
                 override fun author() = authorId
                 override fun title() = title
                 override fun description() = description
-                override fun serving() = serving
+                override fun servings() = servings
                 override fun duration() = totalMinutes.minutes
                 override fun ingredients() = ingredients
                 override fun steps() = steps
