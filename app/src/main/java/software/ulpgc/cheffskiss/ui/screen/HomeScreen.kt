@@ -363,7 +363,7 @@ private fun RecipeItemCard(
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(recipe.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("Por $authorName", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(" $authorName", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
