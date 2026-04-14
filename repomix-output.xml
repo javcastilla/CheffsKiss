@@ -69,18 +69,23 @@ app/src/main/java/software/ulpgc/cheffskiss/domain/model/User.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/model/UserName.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/RecipeReader.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/UserNameReader.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/UserReader.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/port/output/UserRepository.kt
 app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseRecipeReader.kt
 app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseUserNameReader.kt
+app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseUserReader.kt
 app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseAuthenticationService.kt
 app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseRecipeService.kt
 app/src/main/java/software/ulpgc/cheffskiss/MainActivity.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/components/BottomBar.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/components/CKTextField.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/HomeViewModel.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/LibraryViewModel.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/RecipeViewMode.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/screen/CreateRecipeScreen.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/screen/HomeScreen.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/screen/LibraryScreen.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/screen/LoginScreen.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/screen/RegisterScreen.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Color.kt
@@ -316,7 +321,6 @@ class RegisterUserCommand(
 
     override suspend fun execute() {
         require(!userNameReader.exist(getUserName())){"Username already exists"}
-
         userPort.register(
             registerUserInput.email(),
             registerUserInput.password(),
@@ -457,85 +461,235 @@ class UserName(val value: String) {
 
     suspend fun isValid(value: String){
         require(value.isNotBlank()){"Fill the space"}
-        require(value.length >= 3){"The name is too short"}
+        require(value.length <= 3){"The name is too short"}
     }
 }
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/RecipeReader.kt">
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/UserReader.kt">
 package software.ulpgc.cheffskiss.domain.port.input
 
-import kotlinx.coroutines.flow.Flow
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.User
 
-interface RecipeReader {
-    fun getAll(): Flow<List<Recipe>>
-    suspend fun getById(id: String): Recipe?
-    fun search(query: String): Flow<List<Recipe>>
+interface UserReader {
+    suspend fun getByEmail(email: String): User?
+    suspend fun getByUid(uid: String): User?
 }
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/output/UserRepository.kt">
-package software.ulpgc.cheffskiss.domain.port.output
+<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseUserReader.kt">
+package software.ulpgc.cheffskiss.infrastructure.adapter.input
 
 import software.ulpgc.cheffskiss.domain.model.User
+import software.ulpgc.cheffskiss.domain.port.input.UserReader
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.domain.model.UserName
 import java.util.UUID
 
-interface UserRepository {
-    suspend fun save(user: User)
-    suspend fun findByEmail(email: String): User?
-    suspend fun findById(id: UUID): User?
+class FirebaseUserReader: UserReader {
+    override suspend fun getByEmail(email: String): User? {
+        android.util.Log.d("UserReader", "email buscado: $email")
+        val snapshot = Firebase.firestore.collection("Users").whereEqualTo("email", email).get().await()
+        return snapshot.documents.firstOrNull()?.toUser()
+    }
+    private fun DocumentSnapshot.toUser(): User? {
+        val idStr = id ?: return null
+        return User(
+            id          = UUID.fromString(idStr),
+            username    = UserName(getString("username") ?: return null),
+            image       = getString("image") ?: "",
+            description = getString("description")
+        )
+    }
+
+
+    override suspend fun getByUid(uid: String): User? {
+        android.util.Log.d("UserReader", "uid buscado: $uid")
+        val snapshot = Firebase.firestore.collection("Users").document(uid).get().await()
+        return snapshot.toUser()
+    }
+
 }
 </file>
 
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/components/CKTextField.kt">
 package software.ulpgc.cheffskiss.ui.components
 
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import software.ulpgc.cheffskiss.ui.theme.*
 
+val SurfaceContainerLow = Color(0xFFEDF5E1)
+val SurfaceContainerHigh = Color(0xFFE2EBD7)
+
 @Composable
-fun CheffsTextField(
+ fun CKTextField(
+    label: String,
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    modifier: Modifier = Modifier,
+    leadingIcon: @Composable () -> Unit,
     trailingIcon: @Composable (() -> Unit)? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    singleLine: Boolean = true
+    isError: Boolean = false,
+    helper: @Composable (() -> Unit)? = null
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder, color = Outline.copy(alpha = 0.5f)) },
-        trailingIcon = trailingIcon,
-        visualTransformation = visualTransformation,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = singleLine,
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Primary,
-            unfocusedBorderColor = OutlineVariant,
-            focusedContainerColor = Color.White.copy(alpha = 0.5f),
-            unfocusedContainerColor = Color.White.copy(alpha = 0.5f),
-            focusedTextColor = OnSurface,
-            unfocusedTextColor = OnSurface,
-            cursorColor = Primary
-        ),
-        modifier = modifier.fillMaxWidth()
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = CKOnSurfaceVariant)
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, color = Outline.copy(alpha = 0.5f)) },
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            visualTransformation = visualTransformation,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = keyboardType
+            ),
+            isError = isError,
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Primary.copy(alpha = 0.4f),
+                unfocusedBorderColor = Color.Transparent,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = SurfaceContainerLow,
+                focusedTextColor = OnSurface,
+                unfocusedTextColor = OnSurface,
+                cursorColor = Primary,
+                errorBorderColor = Color(0xFFBA1A1A)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+        helper?.invoke()
+    }
+}
+@Composable
+fun CKHelperText(text: String, color: Color = Color(0xFFBA1A1A)) {
+    Text(
+        text,
+        fontSize = 11.sp,
+        color = color,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.padding(start = 4.dp)
     )
+}
+
+@Composable
+fun CKPasswordStrength(strength: Int, label: String, color: Color) {
+    Column(
+        modifier = Modifier.padding(start = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            repeat(4) { index ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(4.dp)
+                        .background(
+                            if (index < strength) color else SurfaceContainerHigh,
+                            RoundedCornerShape(50.dp)
+                        )
+                )
+            }
+        }
+        if (label.isNotEmpty()) {
+            Text(
+                text = "Strength: $label",
+                fontSize = 11.sp,
+                color = CKOnSurfaceVariant,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/LibraryViewModel.kt">
+package software.ulpgc.cheffskiss.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+
+data class LibraryUiState(
+    val isLoading: Boolean = true,
+    val recipes: List<Recipe> = emptyList(),
+    val error: String? = null
+)
+
+class LibraryViewModel(
+    private val recipeReader: RecipeReader = FirebaseRecipeReader(),
+    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(LibraryUiState())
+    val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
+
+    init {
+        observeMyRecipes()
+    }
+
+    private fun observeMyRecipes() {
+        val currentUid = currentUserPort.getCurrentUser()
+
+        if (currentUid == null) {
+            _uiState.value = LibraryUiState(
+                isLoading = false,
+                error = "No hay usuario autenticado"
+            )
+            return
+        }
+
+        viewModelScope.launch {
+            recipeReader.getByAuthor(currentUid)
+                .onStart {
+                    _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+                }
+                .catch { e ->
+                    _uiState.value = LibraryUiState(
+                        isLoading = false,
+                        error = e.message ?: "Error al cargar tus recetas"
+                    )
+                }
+                .collect { recipes ->
+                    _uiState.value = LibraryUiState(
+                        isLoading = false,
+                        recipes = recipes,
+                        error = null
+                    )
+                }
+        }
+    }
 }
 </file>
 
@@ -1053,6 +1207,20 @@ interface CurrentUserPort {
 }
 </file>
 
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/RecipeReader.kt">
+package software.ulpgc.cheffskiss.domain.port.input
+
+import kotlinx.coroutines.flow.Flow
+import software.ulpgc.cheffskiss.domain.model.Recipe
+
+interface RecipeReader {
+    fun getAll(): Flow<List<Recipe>>
+    suspend fun getById(id: String): Recipe?
+    fun search(query: String): Flow<List<Recipe>>
+    fun getByAuthor(author: String): Flow<List<Recipe>>
+}
+</file>
+
 <file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/UserNameReader.kt">
 package software.ulpgc.cheffskiss.domain.port.input
 
@@ -1064,52 +1232,98 @@ interface UserNameReader {
 }
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/HomeViewModel.kt">
-package software.ulpgc.cheffskiss.ui
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/output/UserRepository.kt">
+package software.ulpgc.cheffskiss.domain.port.output
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
-import software.ulpgc.cheffskiss.domain.model.Recipe
-import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+import software.ulpgc.cheffskiss.domain.model.User
+import java.util.UUID
 
-data class HomeUiState(
-    val isLoading: Boolean = true,
-    val recipes: List<Recipe> = emptyList(),
-    val error: String? = null
-)
+interface UserRepository {
+    suspend fun save(user: User)
 
-class HomeViewModel(
-    private val getAllRecipesQuery: GetAllRecipesQuery = GetAllRecipesQuery(FirebaseRecipeReader())
-) : ViewModel() {
+}
+</file>
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/components/BottomBar.kt">
+package software.ulpgc.cheffskiss.ui.components
 
-    init {
-        observeRecipes()
-    }
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import software.ulpgc.cheffskiss.ui.theme.CKOutlineVariant
+import software.ulpgc.cheffskiss.ui.theme.Primary
+import software.ulpgc.cheffskiss.ui.theme.Surface
 
-    private fun observeRecipes() {
-        viewModelScope.launch {
-            getAllRecipesQuery()
-                .onStart { _uiState.value = _uiState.value.copy(isLoading = true) }
-                .catch { e ->
-                    _uiState.value = HomeUiState(
-                        isLoading = false,
-                        error = e.message ?: "Error al cargar recetas"
-                    )
-                }
-                .collect { list ->
-                    _uiState.value = HomeUiState(
-                        isLoading = false,
-                        recipes = list,
-                        error = null
-                    )
-                }
-        }
+@Composable
+fun HomeBottomBar(
+    currentRoute: String,
+    onHomeClick: () -> Unit,
+    onCreateClick: () -> Unit,
+    onSavedClick: () -> Unit
+) {
+    NavigationBar(
+        containerColor = Surface,
+        tonalElevation = 8.dp
+    ) {
+        NavigationBarItem(
+            selected = currentRoute == "home",
+            onClick = onHomeClick,
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+            label = { Text("Home", fontSize = 11.sp) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Primary,
+                selectedTextColor = Primary,
+                indicatorColor = Primary.copy(alpha = 0.1f),
+                unselectedIconColor = CKOutlineVariant,
+                unselectedTextColor = CKOutlineVariant
+            )
+        )
+
+        NavigationBarItem(
+            selected = false,
+            onClick = {},
+            icon = { Icon(Icons.Default.Explore, contentDescription = "Explore") },
+            label = { Text("Explore", fontSize = 11.sp) },
+            colors = NavigationBarItemDefaults.colors(
+                unselectedIconColor = CKOutlineVariant,
+                unselectedTextColor = CKOutlineVariant
+            )
+        )
+
+        NavigationBarItem(
+            selected = false,
+            onClick = onCreateClick,
+            icon = { Icon(Icons.Default.AddCircle, contentDescription = "Create") },
+            label = { Text("Create", fontSize = 11.sp) },
+            colors = NavigationBarItemDefaults.colors(
+                unselectedIconColor = CKOutlineVariant,
+                unselectedTextColor = CKOutlineVariant
+            )
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == "library",
+            onClick = onSavedClick,
+            icon = { Icon(Icons.Default.Bookmark, contentDescription = "Saved") },
+            label = { Text("Saved", fontSize = 11.sp) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Primary,
+                selectedTextColor = Primary,
+                indicatorColor = Primary.copy(alpha = 0.1f),
+                unselectedIconColor = CKOutlineVariant,
+                unselectedTextColor = CKOutlineVariant
+            )
+        )
     }
 }
 </file>
@@ -1191,393 +1405,86 @@ plugins {
 </manifest>
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/application/CreateRecipeCommand.kt">
-package software.ulpgc.cheffskiss.application
-
-import software.ulpgc.cheffskiss.application.port.output.RecipePort
-import software.ulpgc.cheffskiss.domain.control.Command
-import software.ulpgc.cheffskiss.domain.model.Recipe
-import software.ulpgc.cheffskiss.domain.model.Step
-import java.util.UUID
-import kotlin.time.Duration
-
-class CreateRecipeCommand( private val recipePort: RecipePort, private val recipeInput: RecipeInput) : Command {
-    override suspend fun execute() {
-        require(recipeInput.title().isNotBlank()){ "Title cannot be empty" }
-        require(recipeInput.description().isNotBlank()){ "Description cannot be empty" }
-        require(recipeInput.serving() > 0){ "Serving cannot be empty" }
-        require(recipeInput.author().isNotBlank()){ "Author cannot be empty" }
-        require(recipeInput.duration() >= Duration.ZERO) { "Duration is not valid" }
-        require(recipeInput.ingredients().isNotEmpty()){ "Ingredients cannot be empty" }
-        require(recipeInput.steps().isNotEmpty()){ "Steps cannot be empty" }
-        recipePort.createRecipe(Recipe(
-            id = recipeInput.id(),
-            author = recipeInput.author(),
-            title = recipeInput.title(),
-            description = recipeInput.description(),
-            duration = recipeInput.duration(),
-            ingredients = recipeInput.ingredients(),
-            steps = recipeInput.steps(),
-            tags = recipeInput.tags(),
-            image = recipeInput.image(),
-            serving = recipeInput.serving(),
-        ))
-    }
-}
-
-interface RecipeInput {
-    fun id() : UUID
-    fun author() : String
-    fun title(): String
-    fun description(): String
-    fun serving(): Int
-    fun duration(): Duration
-    fun ingredients(): List<String>
-    fun steps(): List<Step>
-    fun tags(): List<String>
-    fun image(): String
-}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseRecipeReader.kt">
-package software.ulpgc.cheffskiss.infrastructure.adapter.input
-
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
-import software.ulpgc.cheffskiss.domain.model.Recipe
-import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
-import java.util.UUID
-import kotlin.time.Duration.Companion.seconds
-
-class FirebaseRecipeReader : RecipeReader {
-
-    private val collection = Firebase.firestore.collection("recipes")
-
-    override fun getAll(): Flow<List<Recipe>> = callbackFlow {
-        val listener = collection.addSnapshotListener { snapshot, error ->
-            if (error != null) { close(error); return@addSnapshotListener }
-            val recipes = snapshot?.documents?.mapNotNull { it.toRecipe() } ?: emptyList()
-            trySend(recipes)
-        }
-        awaitClose { listener.remove() }
-    }
-
-    override suspend fun getById(id: String): Recipe? =
-        collection.document(id).get().await().toRecipe()
-
-    override fun search(query: String): Flow<List<Recipe>> = callbackFlow {
-        val listener = collection
-            .whereGreaterThanOrEqualTo("name", query)
-            .whereLessThanOrEqualTo("name", query + "\uf8ff")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) { close(error); return@addSnapshotListener }
-                trySend(snapshot?.documents?.mapNotNull { it.toRecipe() } ?: emptyList())
-            }
-        awaitClose { listener.remove() }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun DocumentSnapshot.toRecipe(): Recipe? {
-        val id = getString("id") ?: return null
-        val author = getString("author") ?: return null
-        return try {
-            Recipe(
-                id = UUID.fromString(id),
-                author = author,
-                description = getString("description") ?: "",
-                serving = getLong("servings")?.toInt() ?: 0,
-                title = getString("title") ?: "",
-                duration = (getLong("duration") ?: 0L).seconds,
-                ingredients = (get("ingredients") as? List<*>)
-                    ?.filterIsInstance<String>() ?: emptyList(),
-                steps = (get("steps") as? List<*>)
-                    ?.mapNotNull { it.toStep() } ?: emptyList(),
-                tags = (get("tags") as? List<*>)
-                    ?.filterIsInstance<String>() ?: emptyList(),
-                image = getString("image") ?: ""
-            )
-        } catch (e: Exception) { null }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun Any?.toStep(): Step? {
-        val map = this as? Map<String, Any> ?: return null
-        return Step(
-            id = UUID.fromString(map["id"] as? String ?: return null),
-            description = map["description"] as? String ?: "",
-            duration = ((map["duration"] as? Long) ?: 0L).seconds,
-            cardinal = ((map["cardinal"] as? Long) ?: 0L).toInt()
-        )
-    }
-}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseUserNameReader.kt">
-package software.ulpgc.cheffskiss.infrastructure.adapter.input
-
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.tasks.await
-import software.ulpgc.cheffskiss.domain.model.UserName
-import software.ulpgc.cheffskiss.domain.port.input.UserNameReader
-
-class FirebaseUserNameReader : UserNameReader {
-    override suspend fun exist(value: UserName): Boolean {
-        return Firebase.firestore.collection("Username").document(value.value).get().await().exists()
-    }
-    override suspend fun getUsernameByUid(uid: String): String? {
-        val snapshot = Firebase.firestore
-            .collection("Username")
-            .whereEqualTo("UUID", uid)
-            .get()
-            .await()
-        android.util.Log.d("UserNameReader", "uid buscado: $uid")
-
-        android.util.Log.d("UserNameReader", "docs encontrados: ${snapshot.documents.size}")
-        return snapshot.documents.forEach { document -> document.id }.toString()
-    }
-}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseAuthenticationService.kt">
-package software.ulpgc.cheffskiss.infrastructure.adapter.output
-
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
-import software.ulpgc.cheffskiss.application.port.output.LoginPort
-import software.ulpgc.cheffskiss.application.port.output.LogoutPort
-import software.ulpgc.cheffskiss.application.port.output.RegisterPort
-import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
-
-import kotlinx.coroutines.tasks.await
-import software.ulpgc.cheffskiss.domain.model.User
-import java.util.UUID
-
-class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , CurrentUserPort {
-
-    override suspend fun register(
-        email: String,
-        password: String,
-        username: String,
-        description: String?,
-        image: String
-    ): UUID? {
-        try {
-            val userId =Firebase.auth.createUserWithEmailAndPassword(email, password).await().user?.uid ?: error("No UID returned")
-            Firebase.firestore.collection("Username").document(username).set(userNameHashMap(userId)).await()
-            Firebase.firestore.collection("Users").document(userId).set(userHashMap(email,description,image)).await()
-            return UUID.fromString(userId)
-
-        }catch (e: Exception){
-            println("Error al registrar: ${e.message}")
-            return null
-        }
-    }
-
-    private fun userHashMap(
-        email: String,
-        description: String?,
-        image: String
-    ): HashMap<String, String?> {
-        return hashMapOf(
-            "email" to email,
-            "image" to image,
-            "description" to description
-        )
-    }
-
-    private fun userNameHashMap(userId: String): HashMap<String, String> {
-        return hashMapOf(
-            "UUID" to userId)
-    }
-
-    override suspend fun logout() {
-        Firebase.auth.signOut()
-    }
-
-    override suspend fun login(email: String, password: String): Boolean {
-        return Firebase.auth.signInWithEmailAndPassword(email, password).await().user != null
-    }
-
-    override fun getCurrentUser(): String? {
-        val uid = Firebase.auth.currentUser?.uid ?: return null
-        return uid
-    }
-
-    fun firebaseUidToUUID(firebaseUid: String): UUID {
-        return UUID.nameUUIDFromBytes(firebaseUid.toByteArray(Charsets.UTF_8))
-    }
-
-}
-interface RegisterUserInput{
-    fun email(): String
-    fun password(): String
-    fun username(): String
-    fun description(): String?
-    fun image(): String
-}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseRecipeService.kt">
-package software.ulpgc.cheffskiss.infrastructure.adapter.output
-
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.tasks.await
-import software.ulpgc.cheffskiss.application.port.output.RecipePort
-import software.ulpgc.cheffskiss.domain.model.Recipe
-
-class FirebaseRecipeService : RecipePort {
-    override suspend fun createRecipe(recipe: Recipe) {
-        Firebase.firestore.collection("recipes")
-            .document(recipe.id.toString())
-            .set(recipe.toMap()).await()
-    }
-
-    private fun Recipe.toMap(): Map<String, Any?> = mapOf(
-        "id"          to id.toString(),
-        "author"      to author,
-        "title"       to title,
-        "description" to description,
-        "serving"     to serving,
-        "duration"    to duration.inWholeSeconds,   // Long
-        "ingredients" to ingredients,               // List<String> — Firestore lo soporta
-        "steps"       to steps.map { step ->
-            mapOf(
-                "id"          to step.id.toString(),
-                "description" to step.description,
-                "duration"    to step.duration.inWholeSeconds,
-                "cardinal"    to step.cardinal
-            )
-        },
-        "tags"        to tags,
-        "image"       to image
-    )
-}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/RecipeViewMode.kt">
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/HomeViewModel.kt">
 package software.ulpgc.cheffskiss.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.CreateRecipeCommand
-import software.ulpgc.cheffskiss.application.RecipeInput
-import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
-import java.util.UUID
-import kotlin.time.Duration.Companion.minutes
+import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 
-sealed class RecipeUiState {
-    object Idle : RecipeUiState()
-    object Loading : RecipeUiState()
-    object Success : RecipeUiState()
-    data class Error(val message: String) : RecipeUiState()
-}
+data class HomeUiState(
+    val isLoading: Boolean = true,
+    val recipes: List<Recipe> = emptyList(),
+    val error: String? = null
+)
 
-class RecipeViewModel : ViewModel() {
+class HomeViewModel(
+    private val getAllRecipesQuery: GetAllRecipesQuery = GetAllRecipesQuery(FirebaseRecipeReader())
+) : ViewModel() {
 
-    private val recipeService = FirebaseRecipeService()
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val userNameReader  = FirebaseUserNameReader()
+    private val _authorNames = MutableStateFlow<Map<String, String>>(emptyMap())
+    val authorNames: StateFlow<Map<String, String>> = _authorNames.asStateFlow()
 
-    private val _uiState = MutableStateFlow<RecipeUiState>(RecipeUiState.Idle)
-    val uiState = _uiState.asStateFlow()
+    init {
+        observeRecipes()
+    }
 
-    fun resetState() { _uiState.value = RecipeUiState.Idle }
-
-    fun createRecipe(
-        authorId: String,
-        title: String,
-        description: String,
-        serving: Int,
-        hours: String,
-        minutes: String,
-        ingredients: List<String>,
-        steps: List<Step>,
-        tags: List<String>,
-        image: String
-    ) {
-        when{
-            title.isBlank() -> {
-                _uiState.value = RecipeUiState.Error("The title have to be filled")
-                return
-            }
-            description.isBlank() -> {
-                _uiState.value = RecipeUiState.Error("The description have to be filled")
-                return
-            }
-            (hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0") -> {
-                _uiState.value = RecipeUiState.Error("Indicate the recipe duration")
-                return
-            }            ingredients.isEmpty() -> {
-                _uiState.value = RecipeUiState.Error("The ingredients have to be filled with at least one ingredient")
-                return
-            }
-            steps.isEmpty() -> {
-                _uiState.value = RecipeUiState.Error("The steps have to be filled with at least one step")
-                return
-            }
-            hours.isBlank() && minutes.isBlank() -> {
-                _uiState.value = RecipeUiState.Error("Indica la duración de la receta")
-                return
-            }
-
-
-        }
+    private fun observeRecipes() {
         viewModelScope.launch {
-            _uiState.value = RecipeUiState.Loading
-
-            val totalMinutes = ((hours.toIntOrNull() ?: 0) * 60 +
-                    (minutes.toIntOrNull() ?: 0)).toLong()
-
-            val input = object : RecipeInput {
-                override fun id() = UUID.randomUUID()
-                override fun author() = authorId
-                override fun title() = title
-                override fun description() = description
-                override fun serving() = serving
-                override fun duration() = totalMinutes.minutes
-                override fun ingredients() = ingredients
-                override fun steps() = steps
-                override fun tags() = tags
-                override fun image() = image
-            }
-
-            runCatching {
-                CreateRecipeCommand(recipeService, input).execute()
-            }.fold(
-                onSuccess = { _uiState.value = RecipeUiState.Success },
-                onFailure = { e ->
-                    _uiState.value = RecipeUiState.Error(
-                        e.message ?: "Error al publicar la receta"
+            getAllRecipesQuery()
+                .onStart { _uiState.value = _uiState.value.copy(isLoading = true) }
+                .catch { e ->
+                    _uiState.value = HomeUiState(
+                        isLoading = false,
+                        error = e.message ?: "Error al cargar recetas"
                     )
                 }
-            )
+                .collect { list ->
+                    _uiState.value = HomeUiState(
+                        isLoading = false,
+                        recipes = list,
+                        error = null
+                    )
+                    resolveAllAuthors(list)
+
+                }
         }
     }
-}
+    private fun resolveAllAuthors(recipes: List<Recipe>) {
+        recipes.map { it.author }.distinct().forEach { uid ->
+            if (!_authorNames.value.containsKey(uid)) {
+                viewModelScope.launch {
+                    val name = userNameReader.getUsernameByUid(uid)
+                    if (name != null) {
+                        _authorNames.update { it + (uid to name) }
+                    }
+                }
+            }
+        }
+    }}
 </file>
 
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/LoginScreen.kt">
 package software.ulpgc.cheffskiss.ui.screen
+
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -1586,11 +1493,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -1600,14 +1510,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.R
 import software.ulpgc.cheffskiss.ui.AuthUiState
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.components.CKTextField
 import software.ulpgc.cheffskiss.ui.theme.*
-import androidx.compose.foundation.Image
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.layout.ContentScale
-import software.ulpgc.cheffskiss.R
+
 @Composable
 fun LoginScreen(
     viewModel: AuthenticantionViewModel = viewModel(),
@@ -1679,58 +1587,65 @@ fun LoginScreen(
                         .rotate(-2f)
                         .shadow(14.dp, RoundedCornerShape(28.dp))
                         .clip(RoundedCornerShape(28.dp))
-                        .background(Background) // ← fondo verde oscuro detrás del pato
+                        .background(Background)
                 )
             }
             Spacer(modifier = Modifier.height(20.dp))
-            Text("Cheffs Kiss", fontWeight = FontWeight.ExtraBold,
-                fontSize = 32.sp, color = Primary, letterSpacing = (-0.5).sp)
+            Text(
+                "Cheffs Kiss",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 32.sp,
+                color = Primary,
+                letterSpacing = (-0.5).sp
+            )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Reclaiming the warmth of\nyour digital kitchen",
                 style = MaterialTheme.typography.bodyMedium,
-                color = CKOnSurfaceVariant, textAlign = TextAlign.Center
+                color = CKOnSurfaceVariant,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             // ── Card ─────────────────────────────────────────
             Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Surface.copy(alpha = 0.9f)),
+                colors = CardDefaults.cardColors(containerColor = Surface),
                 elevation = CardDefaults.cardElevation(8.dp)
             ) {
-                Column(modifier = Modifier.padding(28.dp)) {
+                Column(
+                    modifier = Modifier.padding(28.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)  // igual que RegisterScreen
+                ) {
 
-                    // Email field
-                    Text("Email or Username", style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold, color = CKOnSurfaceVariant)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    CheffsTextField(
+                    // ── Email ─────────────────────────────────
+                    CKTextField(
+                        label = "Email",
                         value = email,
                         onValueChange = { email = it },
                         placeholder = "chef@cheffskiss.com",
-                        trailingIcon = { Icon(Icons.Default.Mail, null, tint = CKOutlineVariant) },
+                        leadingIcon = { Icon(Icons.Default.Mail, null, tint = Outline) },
                         keyboardType = KeyboardType.Email
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Password field
-                    Text("Password", style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold, color = CKOnSurfaceVariant)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    CheffsTextField(
+                    // ── Password ──────────────────────────────
+                    CKTextField(
+                        label = "Password",
                         value = password,
                         onValueChange = { password = it },
                         placeholder = "••••••••",
+                        leadingIcon = { Icon(Icons.Default.Lock, null, tint = Outline) },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     if (passwordVisible) Icons.Default.VisibilityOff
                                     else Icons.Default.Visibility,
-                                    null, tint = CKOutlineVariant
+                                    null,
+                                    tint = Primary
                                 )
                             }
                         },
@@ -1738,23 +1653,22 @@ fun LoginScreen(
                             VisualTransformation.None else PasswordVisualTransformation()
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Error
+                    // ── Error ─────────────────────────────────
                     if (uiState is AuthUiState.Error) {
                         Text(
                             text = (uiState as AuthUiState.Error).message,
                             color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
 
-                    // Botón Log In
+                    // ── Botón Log In ──────────────────────────
                     Button(
                         onClick = { viewModel.login(email, password) },
                         enabled = uiState !is AuthUiState.Loading,
-                        modifier = Modifier.fillMaxWidth().height(54.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         contentPadding = PaddingValues(0.dp)
@@ -1773,77 +1687,65 @@ fun LoginScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             if (uiState is AuthUiState.Loading) {
-                                CircularProgressIndicator(color = OnPrimary,
-                                    modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
+                                CircularProgressIndicator(
+                                    color = OnPrimary,
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp
+                                )
                             } else {
-                                Text("Log In", color = OnPrimary,
-                                    fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text(
+                                    "Log In",
+                                    color = OnPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    // ── Forgot password ───────────────────────
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text("Forgot password?", color = Primary,
-                            fontWeight = FontWeight.Bold, fontSize = 13.sp,
-                            modifier = Modifier.clickable { })
+                        Text(
+                            "Forgot password?",
+                            color = Primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            modifier = Modifier.clickable { }
+                        )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Sign up link
+            // ── Sign up link ──────────────────────────────────
             Row {
-                Text("Don't have an account?", color = CKOnSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "Don't have an account?",
+                    color = CKOnSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Sign up", color = Primary, fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.clickable { onGoToRegister() })
+                Text(
+                    "Sign up",
+                    color = Primary,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.clickable { onGoToRegister() }
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Footer accent bar
+            // ── Footer accent bar ─────────────────────────────
             Row(modifier = Modifier.fillMaxWidth().height(6.dp)) {
                 Box(Modifier.weight(1f).fillMaxHeight().background(Primary))
-                Box(Modifier.run { weight(1f).fillMaxHeight().background(CKSecondary) })
+                Box(Modifier.weight(1f).fillMaxHeight().background(CKSecondary))
                 Box(Modifier.weight(1f).fillMaxHeight().background(Outline))
                 Box(Modifier.weight(1f).fillMaxHeight().background(Primary.copy(alpha = 0.8f)))
             }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CheffsTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    trailingIcon: @Composable (() -> Unit)? = null,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-    keyboardType: KeyboardType = KeyboardType.Text
-) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder, color = CKOutlineVariant.copy(alpha = 0.7f)) },
-        trailingIcon = trailingIcon,
-        visualTransformation = visualTransformation,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        modifier = Modifier.fillMaxWidth(),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent,
-            focusedIndicatorColor = Primary,
-            unfocusedIndicatorColor = CKSurface.copy(alpha = 0.5f),
-            cursorColor = Primary
-        ),
-        singleLine = true
-    )
 }
 </file>
 
@@ -1884,11 +1786,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.ui.AuthUiState
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
-
-// Colores extra del diseño RegisterScreen
-private val SurfaceContainerLow  = Color(0xFFEDF5E1)
-private val SurfaceContainerHigh = Color(0xFFE2EBD7)
+import software.ulpgc.cheffskiss.ui.components.CKTextField
+import software.ulpgc.cheffskiss.ui.components.CKHelperText
+import software.ulpgc.cheffskiss.ui.components.CKPasswordStrength
 private val Tertiary             = Color(0xFF6B8E23)
+
 
 @Composable
 fun RegisterScreen(
@@ -1903,8 +1805,9 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmVisible  by remember { mutableStateOf(false) }
+    val usernameAvailable by viewModel.usernameAvailable.collectAsState()
+    var usernameTouched by remember { mutableStateOf(false) }
 
-    // Lógica del indicador de fortaleza
     val strength = when {
         password.length >= 10 && password.any { it.isDigit() } &&
                 password.any { !it.isLetterOrDigit() } -> 4
@@ -1943,7 +1846,6 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
-            // ── Branding Header ──────────────────────────────
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -1968,7 +1870,7 @@ fun RegisterScreen(
                         .rotate(-2f)
                         .shadow(14.dp, RoundedCornerShape(28.dp))
                         .clip(RoundedCornerShape(28.dp))
-                        .background(Background) // ← fondo verde oscuro detrás del pato
+                        .background(Background)
                 )
             }
 
@@ -1995,26 +1897,32 @@ fun RegisterScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = software.ulpgc.cheffskiss.ui.theme.Surface),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
                 Column(modifier = Modifier.padding(28.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)) {
 
                     // Username
-                    RegisterField(
+                    CKTextField(
                         label = "Username",
                         value = username,
-                        onValueChange = { username = it },
+                        onValueChange = {
+                            username = it
+                            usernameTouched = true
+                            viewModel.checkUsernameAvailability(it) },
                         placeholder = "chef_gourmet",
                         leadingIcon = { Icon(Icons.Filled.Person, null, tint = Outline) },
-                        helper = if (username.length >= 3) {
-                            { HelperText("✓  Username is available", Tertiary) }
-                        } else null
-                    )
+                        helper = when {
+                            !usernameTouched           -> null
+                            username.length <= 3       -> { { CKHelperText("Username length should be at least 4", Color(0xFFBA1A1A)) } }
+                            usernameAvailable == true  -> { { CKHelperText("Username is available", Tertiary) } }
+                            usernameAvailable == false -> { { CKHelperText("Username already taken", Color(0xFFBA1A1A)) } }
+                            else                       -> null
+                        }                    )
 
                     // Email
-                    RegisterField(
+                    CKTextField(
                         label = "Email Address",
                         value = email,
                         onValueChange = { email = it },
@@ -2024,7 +1932,7 @@ fun RegisterScreen(
                     )
 
                     // Password
-                    RegisterField(
+                    CKTextField(
                         label = "Password",
                         value = password,
                         onValueChange = { password = it },
@@ -2042,12 +1950,12 @@ fun RegisterScreen(
                         visualTransformation = if (passwordVisible)
                             VisualTransformation.None else PasswordVisualTransformation(),
                         helper = if (password.isNotEmpty()) {
-                            { PasswordStrengthIndicator(strength, strengthLabel, strengthColor) }
+                            { CKPasswordStrength(strength, strengthLabel, strengthColor) }
                         } else null
                     )
 
                     // Confirm Password
-                    RegisterField(
+                    CKTextField(
                         label = "Confirm Password",
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
@@ -2066,7 +1974,7 @@ fun RegisterScreen(
                             VisualTransformation.None else PasswordVisualTransformation(),
                         isError = !passwordsMatch,
                         helper = if (!passwordsMatch) {
-                            { HelperText("Passwords do not match", Color(0xFFBA1A1A)) }
+                            { CKHelperText("Passwords do not match", Color(0xFFBA1A1A)) }
                         } else null
                     )
 
@@ -2148,94 +2056,6 @@ fun RegisterScreen(
         }
     }
 }
-
-// ── Componentes auxiliares ───────────────────────────────────
-
-@Composable
-private fun RegisterField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    leadingIcon: @Composable () -> Unit,
-    trailingIcon: @Composable (() -> Unit)? = null,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-    isError: Boolean = false,
-    helper: @Composable (() -> Unit)? = null
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(label,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = CKOnSurfaceVariant)
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = { Text(placeholder, color = Outline.copy(alpha = 0.5f)) },
-            leadingIcon = leadingIcon,
-            trailingIcon = trailingIcon,
-            visualTransformation = visualTransformation,
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = keyboardType
-            ),
-            isError = isError,
-            singleLine = true,
-            shape = RoundedCornerShape(10.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Primary.copy(alpha = 0.4f),
-                unfocusedBorderColor = Color.Transparent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = SurfaceContainerLow,
-                focusedTextColor = OnSurface,
-                unfocusedTextColor = OnSurface,
-                cursorColor = Primary,
-                errorBorderColor = Color(0xFFBA1A1A)
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-        helper?.invoke()
-    }
-}
-
-@Composable
-private fun HelperText(text: String, color: Color) {
-    Text(text,
-        fontSize = 11.sp,
-        color = color,
-        fontWeight = FontWeight.Medium,
-        modifier = Modifier.padding(start = 4.dp))
-}
-
-@Composable
-private fun PasswordStrengthIndicator(strength: Int, label: String, color: Color) {
-    Column(
-        modifier = Modifier.padding(start = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            repeat(4) { index ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(4.dp)
-                        .background(
-                            if (index < strength) color else SurfaceContainerHigh,
-                            RoundedCornerShape(50.dp)
-                        )
-                )
-            }
-        }
-        if (label.isNotEmpty()) {
-            Text(
-                text = "Strength: ",
-                fontSize = 11.sp,
-                color = CKOnSurfaceVariant,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
 </file>
 
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Color.kt">
@@ -2249,7 +2069,7 @@ val CkOnSurfaceVariant    = Color(0xFF3F4935)
 val CkSecondary           = Color(0xFFEAB308)
 val CkOnSecondary         = Color(0xFF422006)
 val CkOutlineVariant      = Color(0xFFC5C9B8)
-val Primary          = Color(0xFF003314)
+val Primary          = Color(0xFF002308)
 val OnPrimary        = Color(0xFFE2E8C0)
 val Secondary        = Color(0xFFE4C062)
 val OnSecondary      = Color(0xFF003314)
@@ -2343,27 +2163,93 @@ fun CheffsKissTheme(content: @Composable () -> Unit) {
 </resources>
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/Recipe.kt">
-package software.ulpgc.cheffskiss.domain.model
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/CreateRecipeCommand.kt">
+package software.ulpgc.cheffskiss.application
 
+import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.domain.control.Command
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.Step
 import java.util.UUID
 import kotlin.time.Duration
 
-data class Recipe(
-    val id: UUID,
-    val author: String,
-    val title: String,
-    val description: String,
-    val duration: Duration,
-    val ingredients: List<String>,
-    val steps: List<Step>,
-    val tags: List<String>,
-    val image: String,
-    val serving: Int,
-)
+class CreateRecipeCommand( private val recipePort: RecipePort, private val recipeInput: RecipeInput) : Command {
+    override suspend fun execute() {
+        require(recipeInput.title().isNotBlank()){ "Title cannot be empty" }
+        require(recipeInput.description().isNotBlank()){ "Description cannot be empty" }
+        require(recipeInput.servings() > 0){ "Servings cannot be empty" }
+        require(recipeInput.author().isNotBlank()){ "Author cannot be empty" }
+        require(recipeInput.duration() >= Duration.ZERO) { "Duration is not valid" }
+        require(recipeInput.ingredients().isNotEmpty()){ "Ingredients cannot be empty" }
+        require(recipeInput.steps().isNotEmpty()){ "Steps cannot be empty" }
+        recipePort.createRecipe(Recipe(
+            id = recipeInput.id(),
+            author = recipeInput.author(),
+            title = recipeInput.title(),
+            description = recipeInput.description(),
+            duration = recipeInput.duration(),
+            ingredients = recipeInput.ingredients(),
+            steps = recipeInput.steps(),
+            tags = recipeInput.tags(),
+            image = recipeInput.image(),
+            servings = recipeInput.servings(),
+        ))
+    }
+}
+
+interface RecipeInput {
+    fun id() : UUID
+    fun author() : String
+    fun title(): String
+    fun description(): String
+    fun servings(): Int
+    fun duration(): Duration
+    fun ingredients(): List<String>
+    fun steps(): List<Step>
+    fun tags(): List<String>
+    fun image(): String
+}
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt">
+<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseRecipeService.kt">
+package software.ulpgc.cheffskiss.infrastructure.adapter.output
+
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.domain.model.Recipe
+
+class FirebaseRecipeService : RecipePort {
+    override suspend fun createRecipe(recipe: Recipe) {
+        Firebase.firestore.collection("recipes")
+            .document(recipe.id.toString())
+            .set(recipe.toMap()).await()
+    }
+
+    private fun Recipe.toMap(): Map<String, Any?> = mapOf(
+        "id"          to id.toString(),
+        "author"      to author,
+        "title"       to title,
+        "description" to description,
+        "servings"     to servings,
+        "duration"    to duration.inWholeSeconds,   // Long
+        "ingredients" to ingredients,               // List<String> — Firestore lo soporta
+        "steps"       to steps.map { step ->
+            mapOf(
+                "id"          to step.id.toString(),
+                "description" to step.description,
+                "duration"    to step.duration.inWholeSeconds,
+                "cardinal"    to step.cardinal
+            )
+        },
+        "tags"        to tags,
+        "image"       to image
+    )
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/RecipeViewMode.kt">
 package software.ulpgc.cheffskiss.ui
 
 import androidx.lifecycle.ViewModel
@@ -2371,80 +2257,357 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.Input
-import software.ulpgc.cheffskiss.application.LoginInput
-import software.ulpgc.cheffskiss.application.RegisterUserCommand
-import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
-import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+import software.ulpgc.cheffskiss.application.CreateRecipeCommand
+import software.ulpgc.cheffskiss.application.RecipeInput
+import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
+import java.util.UUID
+import kotlin.time.Duration.Companion.minutes
 
-sealed class AuthUiState {
-    object Idle    : AuthUiState()
-    object Loading : AuthUiState()
-    object Success : AuthUiState()
-    data class Error(val message: String) : AuthUiState()
+sealed class RecipeUiState {
+    object Idle : RecipeUiState()
+    object Loading : RecipeUiState()
+    object Success : RecipeUiState()
+    data class Error(val message: String) : RecipeUiState()
 }
 
-class AuthenticantionViewModel : ViewModel() {
+class RecipeViewModel : ViewModel() {
 
-    private val firebaseService = FirebaseAuthenticationService()
-    private val userNameReader  = FirebaseUserNameReader()
+    private val recipeService = FirebaseRecipeService()
 
-    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
+    private val _uiState = MutableStateFlow<RecipeUiState>(RecipeUiState.Idle)
     val uiState = _uiState.asStateFlow()
 
-    fun resetState() { _uiState.value = AuthUiState.Idle }
+    fun resetState() { _uiState.value = RecipeUiState.Idle }
 
-    fun login(email: String, password: String) {
+    fun createRecipe(
+        authorId: String,
+        title: String,
+        description: String,
+        servings: Int,
+        hours: String,
+        minutes: String,
+        ingredients: List<String>,
+        steps: List<Step>,
+        tags: List<String>,
+        image: String
+    ) {
+        when{
+            title.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("The title have to be filled")
+                return
+            }
+            description.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("The description have to be filled")
+                return
+            }
+            (hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0") -> {
+                _uiState.value = RecipeUiState.Error("Indicate the recipe duration")
+                return
+            }            ingredients.isEmpty() -> {
+                _uiState.value = RecipeUiState.Error("The ingredients have to be filled with at least one ingredient")
+                return
+            }
+            steps.isEmpty() -> {
+                _uiState.value = RecipeUiState.Error("The steps have to be filled with at least one step")
+                return
+            }
+            hours.isBlank() && minutes.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("Indica la duración de la receta")
+                return
+            }
+
+
+        }
         viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
+            _uiState.value = RecipeUiState.Loading
+
+            val totalMinutes = ((hours.toIntOrNull() ?: 0) * 60 +
+                    (minutes.toIntOrNull() ?: 0)).toLong()
+
+            val input = object : RecipeInput {
+                override fun id() = UUID.randomUUID()
+                override fun author() = authorId
+                override fun title() = title
+                override fun description() = description
+                override fun servings() = servings
+                override fun duration() = totalMinutes.minutes
+                override fun ingredients() = ingredients
+                override fun steps() = steps
+                override fun tags() = tags
+                override fun image() = image
+            }
+
             runCatching {
-                firebaseService.login(email, password)  // ← llama directamente al servicio
+                CreateRecipeCommand(recipeService, input).execute()
             }.fold(
-                onSuccess = { ok ->
-                    _uiState.value = if (ok) AuthUiState.Success
-                    else AuthUiState.Error("Invalid email or password")
-                },
+                onSuccess = { _uiState.value = RecipeUiState.Success },
                 onFailure = { e ->
-                    _uiState.value = AuthUiState.Error(friendlyError(e.message))
+                    _uiState.value = RecipeUiState.Error(
+                        e.message ?: "Error al publicar la receta"
+                    )
                 }
             )
         }
     }
+}
+</file>
 
-    fun register(email: String, password: String, username: String,
-                 description: String?, image: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            val command = RegisterUserCommand(
-                userNameReader = userNameReader,
-                userPort = firebaseService,
-                registerUserInput = object : Input {
-                    override fun email()       = email
-                    override fun password()    = password
-                    override fun username()    = username
-                    override fun description() = description
-                    override fun image()       = image
-                }
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/LibraryScreen.kt">
+package software.ulpgc.cheffskiss.ui.screen
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.HomeViewModel
+import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
+import software.ulpgc.cheffskiss.ui.theme.Background
+import software.ulpgc.cheffskiss.ui.theme.CKOnSurfaceVariant
+import software.ulpgc.cheffskiss.ui.theme.CKOutlineVariant
+import software.ulpgc.cheffskiss.ui.theme.CKSurfaceVariant
+import software.ulpgc.cheffskiss.ui.theme.OnBackground
+import software.ulpgc.cheffskiss.ui.theme.OnSurface
+import software.ulpgc.cheffskiss.ui.theme.Outline
+import software.ulpgc.cheffskiss.ui.theme.Primary
+import software.ulpgc.cheffskiss.ui.theme.Surface
+
+@Composable
+fun LibraryScreen(
+    viewModel: HomeViewModel,
+    authViewModel: AuthenticantionViewModel,
+    onGoHome: () -> Unit,
+    onCreateRecipe: () -> Unit
+) {
+    val state by viewModel.uiState.collectAsState()
+    val currentUid = authViewModel.getCurrentUid()
+    val recipes = state.recipes.filter { it.author == currentUid }
+
+    Scaffold(
+        containerColor = Background,
+        bottomBar = {
+            HomeBottomBar(
+                currentRoute = "library",
+                onHomeClick = onGoHome,
+                onCreateClick = onCreateRecipe,
+                onSavedClick = {}
             )
-            runCatching { command.execute() }
-                .fold(
-                    onSuccess = { _uiState.value = AuthUiState.Success },
-                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
+        }
+    ) { padding ->
+
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
+        if (state.error != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = state.error ?: "Error al cargar recetas",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { }) {
+                        Text("Reintentar")
+                    }
+                }
+            }
+            return@Scaffold
+        }
+
+        val currentUid = authViewModel.getCurrentUid()
+        val recipes = state.recipes.filter { recipe ->
+            recipe.author == currentUid
+        }
+
+        if (recipes.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Bookmark,
+                        contentDescription = null,
+                        tint = Primary,
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Text(
+                        text = "Tu librería está vacía",
+                        color = Primary,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Aquí aparecerán tus recetas y las guardadas.",
+                        color = OnBackground
+                    )
+                }
+            }
+            return@Scaffold
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            item {
+                Text(
+                    text = "Library",
+                    color = Primary,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
+                Text(
+                    text = "Tus recetas creadas y guardadas.",
+                    color = CKOnSurfaceVariant,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
+            items(recipes) { recipe ->
+                LibraryRecipeCard(
+                    recipe = recipe,
+                    modifier = Modifier.padding(vertical = 6.dp)
+                )
+            }
         }
     }
-    fun getCurrentUid(): String? = firebaseService.getCurrentUser()
-    private fun friendlyError(msg: String?) = when {
-        msg == null                    -> "Unknown error"
-        "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"
-        "WEAK_PASSWORD"        in msg  -> "Password must be at least 6 characters"
-        "INVALID_EMAIL"        in msg  -> "Invalid email format"
-        "NETWORK"              in msg  -> "No internet connection"
-        "offline"              in msg  -> "No internet connection"
-        "client is offline"    in msg  -> "No internet connection"
-        "USERNAME_ALREADY"     in msg  -> "This username is already taken"
-        "Username already"     in msg  -> "This username is already taken"
-        else                           -> msg
+}
+
+@Composable
+private fun LibraryRecipeCard(
+    recipe: Recipe,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Surface),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        androidx.compose.foundation.layout.Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(CKSurfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Restaurant,
+                    contentDescription = null,
+                    tint = Outline,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = recipe.title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = OnSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Por ${recipe.author}",
+                    fontSize = 12.sp,
+                    color = CKOnSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(6.dp))
+                androidx.compose.foundation.layout.Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    androidx.compose.foundation.layout.Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Icon(Icons.Default.Timer, contentDescription = null, tint = Outline, modifier = Modifier.size(12.dp))
+                        Text("${recipe.duration.inWholeMinutes}m", fontSize = 11.sp, color = Outline)
+                    }
+
+                    androidx.compose.foundation.layout.Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Icon(Icons.Default.People, contentDescription = null, tint = Outline, modifier = Modifier.size(12.dp))
+                        Text("${recipe.servings} servings", fontSize = 11.sp, color = Outline)
+                    }
+                }
+            }
+
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = CKOutlineVariant
+            )
+        }
     }
 }
 </file>
@@ -2483,6 +2646,345 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/Recipe.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+import java.util.UUID
+import kotlin.time.Duration
+
+data class Recipe(
+    val id: UUID,
+    val author: String,
+    val title: String,
+    val description: String,
+    val duration: Duration,
+    val ingredients: List<String>,
+    val steps: List<Step>,
+    val tags: List<String>,
+    val image: String,
+    val servings: Int,
+)
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseRecipeReader.kt">
+package software.ulpgc.cheffskiss.infrastructure.adapter.input
+
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
+import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
+
+class FirebaseRecipeReader : RecipeReader {
+
+    private val collection = Firebase.firestore.collection("recipes")
+
+    override fun getAll(): Flow<List<Recipe>> = callbackFlow {
+        val listener = collection.addSnapshotListener { snapshot, error ->
+            if (error != null) { close(error); return@addSnapshotListener }
+            val recipes = snapshot?.documents?.mapNotNull { it.toRecipe() } ?: emptyList()
+            trySend(recipes)
+        }
+        awaitClose { listener.remove() }
+    }
+
+    override suspend fun getById(id: String): Recipe? =
+        collection.document(id).get().await().toRecipe()
+
+    override fun search(query: String): Flow<List<Recipe>> = callbackFlow {
+        val listener = collection
+            .whereGreaterThanOrEqualTo("name", query)
+            .whereLessThanOrEqualTo("name", query + "\uf8ff")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) { close(error); return@addSnapshotListener }
+                trySend(snapshot?.documents?.mapNotNull { it.toRecipe() } ?: emptyList())
+            }
+        awaitClose { listener.remove() }
+    }
+
+    override fun getByAuthor(author: String): Flow<List<Recipe>> = callbackFlow {
+        val listener = collection
+            .whereEqualTo("author", author)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                trySend(snapshot?.documents?.mapNotNull { it.toRecipe() } ?: emptyList())
+            }
+
+        awaitClose { listener.remove() }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun DocumentSnapshot.toRecipe(): Recipe? {
+        val id = getString("id") ?: return null
+        val author = getString("author") ?: return null
+        return try {
+            Recipe(
+                id = UUID.fromString(id),
+                author = author,
+                description = getString("description") ?: "",
+                servings = getLong("servings")?.toInt() ?: 0,
+                title = getString("title") ?: "",
+                duration = (getLong("duration") ?: 0L).seconds,
+                ingredients = (get("ingredients") as? List<*>)
+                    ?.filterIsInstance<String>() ?: emptyList(),
+                steps = (get("steps") as? List<*>)
+                    ?.mapNotNull { it.toStep() } ?: emptyList(),
+                tags = (get("tags") as? List<*>)
+                    ?.filterIsInstance<String>() ?: emptyList(),
+                image = getString("image") ?: ""
+            )
+        } catch (e: Exception) { null }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun Any?.toStep(): Step? {
+        val map = this as? Map<String, Any> ?: return null
+        return Step(
+            id = UUID.fromString(map["id"] as? String ?: return null),
+            description = map["description"] as? String ?: "",
+            duration = ((map["duration"] as? Long) ?: 0L).seconds,
+            cardinal = ((map["cardinal"] as? Long) ?: 0L).toInt()
+        )
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseUserNameReader.kt">
+package software.ulpgc.cheffskiss.infrastructure.adapter.input
+
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.domain.model.UserName
+import software.ulpgc.cheffskiss.domain.port.input.UserNameReader
+
+class FirebaseUserNameReader : UserNameReader {
+    override suspend fun exist(value: UserName): Boolean {
+        return Firebase.firestore.collection("Username").document(value.value).get().await().exists()
+    }
+    override suspend fun getUsernameByUid(uid: String): String {
+        val snapshot = Firebase.firestore
+            .collection("Username")
+            .whereEqualTo("UUID", uid)
+            .get()
+            .await()
+        android.util.Log.d("UserNameReader", "uid buscado: $uid")
+
+        android.util.Log.d("UserNameReader", "docs encontrados: ${snapshot.documents.size}")
+        return snapshot.documents.firstOrNull()?.id ?:""
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseAuthenticationService.kt">
+package software.ulpgc.cheffskiss.infrastructure.adapter.output
+
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
+import software.ulpgc.cheffskiss.application.port.output.LoginPort
+import software.ulpgc.cheffskiss.application.port.output.LogoutPort
+import software.ulpgc.cheffskiss.application.port.output.RegisterPort
+import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
+
+import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.domain.model.User
+import software.ulpgc.cheffskiss.domain.port.output.UserRepository
+import java.util.UUID
+
+class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , CurrentUserPort {
+
+    override suspend fun register(
+        email: String,
+        password: String,
+        username: String,
+        description: String?,
+        image: String
+    ): UUID? {
+        try {
+            val userId =Firebase.auth.createUserWithEmailAndPassword(email, password).await().user?.uid ?: error("No UID returned")
+            Firebase.firestore.collection("Username").document(username).set(userNameHashMap(userId)).await()
+            Firebase.firestore.collection("Users").document(userId).set(userHashMap(email,description,image,username)).await()
+            return UUID.fromString(userId)
+
+        }catch (e: Exception){
+            println("Error al registrar: ${e.message}")
+            return null
+        }
+    }
+
+    private fun userHashMap(
+        email: String,
+        description: String?,
+        image: String,
+        username:String
+    ): HashMap<String, String?> {
+        return hashMapOf(
+            "email" to email,
+            "image" to image,
+            "description" to description,
+            "username" to username
+        )
+    }
+
+    private fun userNameHashMap(userId: String): HashMap<String, String> {
+        return hashMapOf(
+            "UUID" to userId)
+    }
+
+    override suspend fun logout() {
+        Firebase.auth.signOut()
+    }
+
+    override suspend fun login(email: String, password: String): Boolean {
+        return Firebase.auth.signInWithEmailAndPassword(email, password).await().user != null
+    }
+
+    override fun getCurrentUser(): String? {
+        val uid = Firebase.auth.currentUser?.uid ?: return null
+        return uid
+    }
+
+    fun firebaseUidToUUID(firebaseUid: String): UUID {
+        return UUID.nameUUIDFromBytes(firebaseUid.toByteArray(Charsets.UTF_8))
+    }
+
+}
+interface RegisterUserInput{
+    fun email(): String
+    fun password(): String
+    fun username(): String
+    fun description(): String?
+    fun image(): String
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt">
+package software.ulpgc.cheffskiss.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.Input
+import software.ulpgc.cheffskiss.application.LoginInput
+import software.ulpgc.cheffskiss.application.RegisterUserCommand
+import software.ulpgc.cheffskiss.domain.model.UserName
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+
+sealed class AuthUiState {
+    object Idle    : AuthUiState()
+    object Loading : AuthUiState()
+    object Success : AuthUiState()
+    data class Error(val message: String) : AuthUiState()
+}
+
+class AuthenticantionViewModel : ViewModel() {
+
+    private val firebaseService = FirebaseAuthenticationService()
+    private val userNameReader  = FirebaseUserNameReader()
+
+    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
+    val uiState = _uiState.asStateFlow()
+
+    fun resetState() { _uiState.value = AuthUiState.Idle }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            runCatching {
+                firebaseService.login(email, password)
+            }.fold(
+                onSuccess = { ok ->
+                    _uiState.value = if (ok) AuthUiState.Success
+                    else AuthUiState.Error("Invalid email or password")
+                },
+                onFailure = { e ->
+                    _uiState.value = AuthUiState.Error(friendlyError(e.message))
+                }
+            )
+        }
+    }
+
+    fun register(email: String, password: String, username: String,
+                 description: String?, image: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val command = RegisterUserCommand(
+                userNameReader = userNameReader,
+                userPort = firebaseService,
+                registerUserInput = object : Input {
+                    override fun email()       = email
+                    override fun password()    = password
+                    override fun username()    = username
+                    override fun description() = description
+                    override fun image()       = image
+                }
+            )
+            runCatching { command.execute() }
+                .fold(
+                    onSuccess = { _uiState.value = AuthUiState.Success },
+                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
+                )
+        }
+    }
+    fun getCurrentUid(): String? = firebaseService.getCurrentUser()
+    private val _usernameAvailable = MutableStateFlow<Boolean?>(null)
+    val usernameAvailable: StateFlow<Boolean?> = _usernameAvailable.asStateFlow()
+
+    fun checkUsernameAvailability(username: String) {
+        if (username.length <= 3) {
+            _usernameAvailable.value = null
+            return
+        }
+        viewModelScope.launch {
+            val exists = userNameReader.exist(toUserName(username))
+            _usernameAvailable.value = !exists
+        }
+    }
+
+    private fun toUserName(username: String): UserName { return UserName(username) }
+
+    private fun friendlyError(msg: String?) = when {
+        msg == null                    -> "Unknown error"
+        "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"
+        "WEAK_PASSWORD"        in msg  -> "Password must be at least 6 characters"
+        "INVALID_EMAIL"        in msg  -> "Invalid email format"
+        "NETWORK"              in msg  -> "No internet connection"
+        "offline"              in msg  -> "No internet connection"
+        "client is offline"    in msg  -> "No internet connection"
+        "USERNAME_ALREADY"     in msg  -> "This username is already taken"
+        "Username already"     in msg  -> "This username is already taken"
+        "INVALID_EMAIL" in msg -> "The email address is not valid"
+        "EMAIL_NOT_FOUND" in msg ||
+                "NO_SUCH_USER" in msg ||
+                "USER_NOT_FOUND" in msg   -> "No account found with this email"
+        "INVALID_PASSWORD" in msg ||
+                "WRONG_PASSWORD" in msg ||
+                "INVALID_LOGIN_CREDENTIALS" in msg -> "Incorrect password"
+        "USER_DISABLED" in msg    -> "This account has been disabled"
+        "TOO_MANY_ATTEMPTS" in msg ||
+                "TOO_MANY_REQUESTS" in msg -> "Too many failed attempts. Try again later"
+        "NETWORK_ERROR" in msg ||
+                "TIMEOUT" in msg          -> "Network error. Check your connection"
+        else                           -> msg
+    }
+}
 </file>
 
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/CreateRecipeScreen.kt">
@@ -2605,7 +3107,7 @@ fun CreateRecipeScreen(
                 authorId = authorId, // ← ya no es random
                 title = title,
                 description = description,
-                serving = servings,
+                servings = servings,
                 hours = hours,
                 minutes = minutes,
                 ingredients = mappedIngredients,
@@ -3352,6 +3854,87 @@ private fun containerFieldColors() = TextFieldDefaults.colors(
 )
 </file>
 
+<file path="app/build.gradle.kts">
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
+}
+
+android {
+    namespace = "software.ulpgc.cheffskiss"
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "software.ulpgc.cheffskiss"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    // AndroidX Core
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+
+    // Compose BOM (gestiona versiones automáticamente)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Lifecycle + ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+
+    implementation("androidx.navigation:navigation-compose:2.8.9")
+
+    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation(libs.coil.compose)
+    implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+</file>
+
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/HomeScreen.kt">
 package software.ulpgc.cheffskiss.ui.screen
 
@@ -3389,6 +3972,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
 
 private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisanal")
 
@@ -3397,13 +3981,16 @@ private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisa
 fun HomeRoute(
     viewModel: HomeViewModel,
     onCreateRecipe: () -> Unit,
+    onLibraryClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-
+    val authorNames by viewModel.authorNames.collectAsState()
     HomeScreen(
         state = state,
+        authorNames = authorNames,
         onCreateRecipe = onCreateRecipe,
+        onLibraryClick = onLibraryClick,
         onLogout = onLogout
     )
 }
@@ -3411,7 +3998,9 @@ fun HomeRoute(
 @Composable
 fun HomeScreen(
     state: HomeUiState,
+    authorNames: Map<String, String>,
     onCreateRecipe: () -> Unit,
+    onLibraryClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     var selectedTag by remember { mutableStateOf("All") }
@@ -3420,7 +4009,14 @@ fun HomeScreen(
     Scaffold(
         containerColor = Background,
         // ── Bottom Navigation Bar ──
-        bottomBar = { HomeBottomBar(onCreateRecipe) },
+        bottomBar = {
+            HomeBottomBar(
+                currentRoute = "home",
+                onHomeClick = {},
+                onCreateClick = onCreateRecipe,
+                onSavedClick = onLibraryClick
+            )
+        },
         // ── FAB Create ──
         floatingActionButton = {
             FloatingActionButton(
@@ -3542,6 +4138,7 @@ fun HomeScreen(
             items(filtered) { recipe ->
                 RecipeItemCard(
                     recipe = recipe,
+                    authorName = authorNames[recipe.author] ?: "...",
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
                 )
             }
@@ -3689,13 +4286,11 @@ private fun FeaturedBanner(modifier: Modifier = Modifier) {
 
 
 @Composable
-private fun RecipeItemCard(recipe: Recipe,
-                           authViewModel: AuthenticantionViewModel = viewModel(),
-                           modifier: Modifier = Modifier) {
-    var authorName by remember(recipe.author) { mutableStateOf("...") }
-
-    LaunchedEffect(recipe.author) {
-    }
+private fun RecipeItemCard(
+    recipe: Recipe,
+    authorName: String,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -3719,7 +4314,7 @@ private fun RecipeItemCard(recipe: Recipe,
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(recipe.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("Por ${recipe.author}", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(" $authorName", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -3856,23 +4451,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import software.ulpgc.cheffskiss.ui.theme.CheffsKissTheme
-import software.ulpgc.cheffskiss.ui.screen.LoginScreen
-import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
-import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import software.ulpgc.cheffskiss.ui.screen.CreateRecipeScreen
 import software.ulpgc.cheffskiss.ui.screen.HomeRoute
-import androidx.lifecycle.viewmodel.compose.viewModel
-import software.ulpgc.cheffskiss.ui.HomeViewModel
+import software.ulpgc.cheffskiss.ui.screen.LibraryScreen
+import software.ulpgc.cheffskiss.ui.screen.LoginScreen
+import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
+import software.ulpgc.cheffskiss.ui.theme.CheffsKissTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -3881,6 +4473,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             CheffsKissTheme {
                 val navController = rememberNavController()
+
                 NavHost(
                     navController = navController,
                     startDestination = "login"
@@ -3895,6 +4488,7 @@ class MainActivity : ComponentActivity() {
                             onGoToRegister = { navController.navigate("register") }
                         )
                     }
+
                     composable("register") {
                         RegisterScreen(
                             onRegisterSuccess = {
@@ -3905,10 +4499,17 @@ class MainActivity : ComponentActivity() {
                             onGoToLogin = { navController.popBackStack() }
                         )
                     }
+
+
                     composable("home") {
                         HomeRoute(
                             viewModel = viewModel(),
                             onCreateRecipe = { navController.navigate("create_recipe") },
+                            onLibraryClick = {
+                                navController.navigate("library") {
+                                    launchSingleTop = true
+                                }
+                            },
                             onLogout = {
                                 navController.navigate("login") {
                                     popUpTo(0) { inclusive = true }
@@ -3916,10 +4517,26 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
+                    composable("library") {
+                        LibraryScreen(
+                            viewModel = viewModel(),
+                            authViewModel = viewModel(),
+                            onGoHome = {
+                                navController.navigate("home") {
+                                    launchSingleTop = true
+                                }
+                            },
+                            onCreateRecipe = {
+                                navController.navigate("create_recipe")
+                            }
+                        )
+                    }
+
                     composable("create_recipe") {
                         CreateRecipeScreen(
                             onBack = { navController.popBackStack() },
-                            onPublishSuccess = { // Antes decía solo "onPublish"
+                            onPublishSuccess = {
                                 navController.navigate("home") {
                                     popUpTo("home") { inclusive = false }
                                 }
@@ -3947,87 +4564,6 @@ fun GreetingPreview() {
     CheffsKissTheme {
         Greeting("Android")
     }
-}
-</file>
-
-<file path="app/build.gradle.kts">
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    id("com.google.gms.google-services")
-}
-
-android {
-    namespace = "software.ulpgc.cheffskiss"
-    compileSdk = 36
-
-    defaultConfig {
-        applicationId = "software.ulpgc.cheffskiss"
-        minSdk = 24
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
-}
-
-dependencies {
-    // AndroidX Core
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-
-    // Compose BOM (gestiona versiones automáticamente)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    implementation("androidx.compose.material:material-icons-extended")
-
-    // Lifecycle + ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
-
-    implementation("androidx.navigation:navigation-compose:2.8.9")
-
-    implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("io.coil-kt:coil-compose:2.6.0")
-    implementation("com.google.android.material:material:1.12.0")
-    implementation(libs.coil.compose)
-    implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore")
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 </file>
 

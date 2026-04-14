@@ -34,11 +34,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.ui.AuthUiState
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
-
-// Colores extra del diseño RegisterScreen
-private val SurfaceContainerLow  = Color(0xFFEDF5E1)
-private val SurfaceContainerHigh = Color(0xFFE2EBD7)
+import software.ulpgc.cheffskiss.ui.components.CKTextField
+import software.ulpgc.cheffskiss.ui.components.CKHelperText
+import software.ulpgc.cheffskiss.ui.components.CKPasswordStrength
 private val Tertiary             = Color(0xFF6B8E23)
+
 
 @Composable
 fun RegisterScreen(
@@ -53,8 +53,9 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmVisible  by remember { mutableStateOf(false) }
+    val usernameAvailable by viewModel.usernameAvailable.collectAsState()
+    var usernameTouched by remember { mutableStateOf(false) }
 
-    // Lógica del indicador de fortaleza
     val strength = when {
         password.length >= 10 && password.any { it.isDigit() } &&
                 password.any { !it.isLetterOrDigit() } -> 4
@@ -93,7 +94,6 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
-            // ── Branding Header ──────────────────────────────
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -118,7 +118,7 @@ fun RegisterScreen(
                         .rotate(-2f)
                         .shadow(14.dp, RoundedCornerShape(28.dp))
                         .clip(RoundedCornerShape(28.dp))
-                        .background(Background) // ← fondo verde oscuro detrás del pato
+                        .background(Background)
                 )
             }
 
@@ -145,26 +145,32 @@ fun RegisterScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = software.ulpgc.cheffskiss.ui.theme.Surface),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
                 Column(modifier = Modifier.padding(28.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)) {
 
                     // Username
-                    RegisterField(
+                    CKTextField(
                         label = "Username",
                         value = username,
-                        onValueChange = { username = it },
+                        onValueChange = {
+                            username = it
+                            usernameTouched = true
+                            viewModel.checkUsernameAvailability(it) },
                         placeholder = "chef_gourmet",
                         leadingIcon = { Icon(Icons.Filled.Person, null, tint = Outline) },
-                        helper = if (username.length >= 3) {
-                            { HelperText("✓  Username is available", Tertiary) }
-                        } else null
-                    )
+                        helper = when {
+                            !usernameTouched           -> null
+                            username.length <= 3       -> { { CKHelperText("Username length should be at least 4", Color(0xFFBA1A1A)) } }
+                            usernameAvailable == true  -> { { CKHelperText("Username is available", Tertiary) } }
+                            usernameAvailable == false -> { { CKHelperText("Username already taken", Color(0xFFBA1A1A)) } }
+                            else                       -> null
+                        }                    )
 
                     // Email
-                    RegisterField(
+                    CKTextField(
                         label = "Email Address",
                         value = email,
                         onValueChange = { email = it },
@@ -174,7 +180,7 @@ fun RegisterScreen(
                     )
 
                     // Password
-                    RegisterField(
+                    CKTextField(
                         label = "Password",
                         value = password,
                         onValueChange = { password = it },
@@ -192,12 +198,12 @@ fun RegisterScreen(
                         visualTransformation = if (passwordVisible)
                             VisualTransformation.None else PasswordVisualTransformation(),
                         helper = if (password.isNotEmpty()) {
-                            { PasswordStrengthIndicator(strength, strengthLabel, strengthColor) }
+                            { CKPasswordStrength(strength, strengthLabel, strengthColor) }
                         } else null
                     )
 
                     // Confirm Password
-                    RegisterField(
+                    CKTextField(
                         label = "Confirm Password",
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
@@ -216,7 +222,7 @@ fun RegisterScreen(
                             VisualTransformation.None else PasswordVisualTransformation(),
                         isError = !passwordsMatch,
                         helper = if (!passwordsMatch) {
-                            { HelperText("Passwords do not match", Color(0xFFBA1A1A)) }
+                            { CKHelperText("Passwords do not match", Color(0xFFBA1A1A)) }
                         } else null
                     )
 
@@ -299,90 +305,3 @@ fun RegisterScreen(
     }
 }
 
-// ── Componentes auxiliares ───────────────────────────────────
-
-@Composable
-private fun RegisterField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    leadingIcon: @Composable () -> Unit,
-    trailingIcon: @Composable (() -> Unit)? = null,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-    isError: Boolean = false,
-    helper: @Composable (() -> Unit)? = null
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(label,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = CKOnSurfaceVariant)
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = { Text(placeholder, color = Outline.copy(alpha = 0.5f)) },
-            leadingIcon = leadingIcon,
-            trailingIcon = trailingIcon,
-            visualTransformation = visualTransformation,
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = keyboardType
-            ),
-            isError = isError,
-            singleLine = true,
-            shape = RoundedCornerShape(10.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Primary.copy(alpha = 0.4f),
-                unfocusedBorderColor = Color.Transparent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = SurfaceContainerLow,
-                focusedTextColor = OnSurface,
-                unfocusedTextColor = OnSurface,
-                cursorColor = Primary,
-                errorBorderColor = Color(0xFFBA1A1A)
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-        helper?.invoke()
-    }
-}
-
-@Composable
-private fun HelperText(text: String, color: Color) {
-    Text(text,
-        fontSize = 11.sp,
-        color = color,
-        fontWeight = FontWeight.Medium,
-        modifier = Modifier.padding(start = 4.dp))
-}
-
-@Composable
-private fun PasswordStrengthIndicator(strength: Int, label: String, color: Color) {
-    Column(
-        modifier = Modifier.padding(start = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            repeat(4) { index ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(4.dp)
-                        .background(
-                            if (index < strength) color else SurfaceContainerHigh,
-                            RoundedCornerShape(50.dp)
-                        )
-                )
-            }
-        }
-        if (label.isNotEmpty()) {
-            Text(
-                text = "Strength: ",
-                fontSize = 11.sp,
-                color = CKOnSurfaceVariant,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}

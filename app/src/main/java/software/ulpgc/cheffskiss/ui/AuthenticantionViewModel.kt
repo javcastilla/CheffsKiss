@@ -3,11 +3,13 @@ package software.ulpgc.cheffskiss.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.Input
 import software.ulpgc.cheffskiss.application.LoginInput
 import software.ulpgc.cheffskiss.application.RegisterUserCommand
+import software.ulpgc.cheffskiss.domain.model.UserName
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 
@@ -32,7 +34,7 @@ class AuthenticantionViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             runCatching {
-                firebaseService.login(email, password)  // ← llama directamente al servicio
+                firebaseService.login(email, password)
             }.fold(
                 onSuccess = { ok ->
                     _uiState.value = if (ok) AuthUiState.Success
@@ -68,6 +70,21 @@ class AuthenticantionViewModel : ViewModel() {
         }
     }
     fun getCurrentUid(): String? = firebaseService.getCurrentUser()
+    private val _usernameAvailable = MutableStateFlow<Boolean?>(null)
+    val usernameAvailable: StateFlow<Boolean?> = _usernameAvailable.asStateFlow()
+
+    fun checkUsernameAvailability(username: String) {
+        if (username.length <= 3) {
+            _usernameAvailable.value = null
+            return
+        }
+        viewModelScope.launch {
+            val exists = userNameReader.exist(toUserName(username))
+            _usernameAvailable.value = !exists
+        }
+    }
+
+    private fun toUserName(username: String): UserName { return UserName(username) }
 
     private fun friendlyError(msg: String?) = when {
         msg == null                    -> "Unknown error"
@@ -79,6 +96,18 @@ class AuthenticantionViewModel : ViewModel() {
         "client is offline"    in msg  -> "No internet connection"
         "USERNAME_ALREADY"     in msg  -> "This username is already taken"
         "Username already"     in msg  -> "This username is already taken"
+        "INVALID_EMAIL" in msg -> "The email address is not valid"
+        "EMAIL_NOT_FOUND" in msg ||
+                "NO_SUCH_USER" in msg ||
+                "USER_NOT_FOUND" in msg   -> "No account found with this email"
+        "INVALID_PASSWORD" in msg ||
+                "WRONG_PASSWORD" in msg ||
+                "INVALID_LOGIN_CREDENTIALS" in msg -> "Incorrect password"
+        "USER_DISABLED" in msg    -> "This account has been disabled"
+        "TOO_MANY_ATTEMPTS" in msg ||
+                "TOO_MANY_REQUESTS" in msg -> "Too many failed attempts. Try again later"
+        "NETWORK_ERROR" in msg ||
+                "TIMEOUT" in msg          -> "Network error. Check your connection"
         else                           -> msg
     }
 }

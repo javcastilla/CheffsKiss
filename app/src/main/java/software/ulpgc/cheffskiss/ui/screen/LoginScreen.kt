@@ -1,13 +1,15 @@
 package software.ulpgc.cheffskiss.ui.screen
+
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -16,11 +18,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -30,14 +35,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.R
 import software.ulpgc.cheffskiss.ui.AuthUiState
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.components.CKHelperText
+import software.ulpgc.cheffskiss.ui.components.CKTextField
 import software.ulpgc.cheffskiss.ui.theme.*
-import androidx.compose.foundation.Image
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.layout.ContentScale
-import software.ulpgc.cheffskiss.R
+
 @Composable
 fun LoginScreen(
     viewModel: AuthenticantionViewModel = viewModel(),
@@ -48,14 +52,42 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(uiState) {
-        if (uiState is AuthUiState.Success) {
-            viewModel.resetState()
-            onLoginSuccess()
+        when (uiState) {
+            is AuthUiState.Success -> {
+                viewModel.resetState()
+                onLoginSuccess()
+            }
+            is AuthUiState.Error -> {
+                val msg = (uiState as AuthUiState.Error).message
+                when {
+                    "email" in msg.lowercase() || "found" in msg.lowercase() || "account" in msg.lowercase() -> {
+                        emailError = msg
+                        passwordError = null
+                    }
+                    "password" in msg.lowercase() || "credential" in msg.lowercase() || "incorrect" in msg.lowercase() -> {
+                        passwordError = msg
+                        emailError = null
+                    }
+                    "disabled" in msg.lowercase() -> {
+                        emailError = msg
+                        passwordError = null
+                    }
+                    "attempts" in msg.lowercase() || "requests" in msg.lowercase() -> {
+                        passwordError = msg
+                        emailError = null
+                    }
+                    else -> {
+                        passwordError = msg
+                        emailError = null
+                    }
+                }
+            }
+            else -> {}
         }
     }
-
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         // Glow top-right
         Box(
@@ -109,82 +141,103 @@ fun LoginScreen(
                         .rotate(-2f)
                         .shadow(14.dp, RoundedCornerShape(28.dp))
                         .clip(RoundedCornerShape(28.dp))
-                        .background(Background) // ← fondo verde oscuro detrás del pato
+                        .background(Background)
                 )
             }
             Spacer(modifier = Modifier.height(20.dp))
-            Text("Cheffs Kiss", fontWeight = FontWeight.ExtraBold,
-                fontSize = 32.sp, color = Primary, letterSpacing = (-0.5).sp)
+            Text(
+                "Cheffs Kiss",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 32.sp,
+                color = Primary,
+                letterSpacing = (-0.5).sp
+            )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Reclaiming the warmth of\nyour digital kitchen",
                 style = MaterialTheme.typography.bodyMedium,
-                color = CKOnSurfaceVariant, textAlign = TextAlign.Center
+                color = CKOnSurfaceVariant,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             // ── Card ─────────────────────────────────────────
             Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Surface.copy(alpha = 0.9f)),
+                colors = CardDefaults.cardColors(containerColor = Surface),
                 elevation = CardDefaults.cardElevation(8.dp)
             ) {
-                Column(modifier = Modifier.padding(28.dp)) {
+                Column(
+                    modifier = Modifier.padding(28.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)  // igual que RegisterScreen
+                ) {
 
-                    // Email field
-                    Text("Email or Username", style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold, color = CKOnSurfaceVariant)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    CheffsTextField(
+
+                    CKTextField(
+                        label = "Email",
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = {
+                            email = it
+                            emailError = null
+                        },
                         placeholder = "chef@cheffskiss.com",
-                        trailingIcon = { Icon(Icons.Default.Mail, null, tint = CKOutlineVariant) },
-                        keyboardType = KeyboardType.Email
+                        leadingIcon = { Icon(Icons.Default.Mail, null, tint = Outline) },
+                        keyboardType = KeyboardType.Email,
+                        isError = emailError != null,
+                        helper = when {
+                            emailError != null -> { { CKHelperText(emailError!!) } }
+                            email.isNotEmpty() && !isValidEmail(email) ->
+                            { { CKHelperText("Enter a valid email address") } }
+                            else -> null
+                        }
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Password field
-                    Text("Password", style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold, color = CKOnSurfaceVariant)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    CheffsTextField(
+                    CKTextField(
+                        label = "Password",
                         value = password,
-                        onValueChange = { password = it },
+                        onValueChange = {
+                            password = it
+                            passwordError = null},
                         placeholder = "••••••••",
+                        leadingIcon = { Icon(Icons.Default.Lock, null, tint = Outline) },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     if (passwordVisible) Icons.Default.VisibilityOff
                                     else Icons.Default.Visibility,
-                                    null, tint = CKOutlineVariant
+                                    null,
+                                    tint = Primary
                                 )
                             }
                         },
                         visualTransformation = if (passwordVisible)
-                            VisualTransformation.None else PasswordVisualTransformation()
+                            VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = passwordError != null,
+                        helper = if (passwordError != null) {
+                            { CKHelperText(passwordError!!) }
+                        } else null
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
 
-                    // Error
-                    if (uiState is AuthUiState.Error) {
-                        Text(
-                            text = (uiState as AuthUiState.Error).message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
 
-                    // Botón Log In
+
                     Button(
-                        onClick = { viewModel.login(email, password) },
+                        onClick =  {
+                            if (email.isBlank()) emailError = "Email is required"
+                            if (password.isBlank()) passwordError = "Password is required"
+
+                            if (emailError == null && passwordError == null) {
+                                viewModel.login(email, password)
+                            }
+                        },
                         enabled = uiState !is AuthUiState.Loading,
-                        modifier = Modifier.fillMaxWidth().height(54.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         contentPadding = PaddingValues(0.dp)
@@ -203,75 +256,63 @@ fun LoginScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             if (uiState is AuthUiState.Loading) {
-                                CircularProgressIndicator(color = OnPrimary,
-                                    modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
+                                CircularProgressIndicator(
+                                    color = OnPrimary,
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp
+                                )
                             } else {
-                                Text("Log In", color = OnPrimary,
-                                    fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text(
+                                    "Log In",
+                                    color = OnPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text("Forgot password?", color = Primary,
-                            fontWeight = FontWeight.Bold, fontSize = 13.sp,
-                            modifier = Modifier.clickable { })
+                        Text(
+                            "Forgot password?",
+                            color = Primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            modifier = Modifier.clickable { }
+                        )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Sign up link
             Row {
-                Text("Don't have an account?", color = CKOnSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "Don't have an account?",
+                    color = CKOnSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Sign up", color = Primary, fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.clickable { onGoToRegister() })
+                Text(
+                    "Sign up",
+                    color = Primary,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.clickable { onGoToRegister() }
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Footer accent bar
+            // ── Footer accent bar ─────────────────────────────
             Row(modifier = Modifier.fillMaxWidth().height(6.dp)) {
                 Box(Modifier.weight(1f).fillMaxHeight().background(Primary))
-                Box(Modifier.run { weight(1f).fillMaxHeight().background(CKSecondary) })
+                Box(Modifier.weight(1f).fillMaxHeight().background(CKSecondary))
                 Box(Modifier.weight(1f).fillMaxHeight().background(Outline))
                 Box(Modifier.weight(1f).fillMaxHeight().background(Primary.copy(alpha = 0.8f)))
             }
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CheffsTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    trailingIcon: @Composable (() -> Unit)? = null,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-    keyboardType: KeyboardType = KeyboardType.Text
-) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder, color = CKOutlineVariant.copy(alpha = 0.7f)) },
-        trailingIcon = trailingIcon,
-        visualTransformation = visualTransformation,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        modifier = Modifier.fillMaxWidth(),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent,
-            focusedIndicatorColor = Primary,
-            unfocusedIndicatorColor = CKSurface.copy(alpha = 0.5f),
-            cursorColor = Primary
-        ),
-        singleLine = true
-    )
-}
+private fun isValidEmail(email: String): Boolean =
+    android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()

@@ -15,7 +15,6 @@ class RegisterUserCommand(
 
     override suspend fun execute() {
         require(!userNameReader.exist(getUserName())){"Username already exists"}
-
         userPort.register(
             registerUserInput.email(),
             registerUserInput.password(),
