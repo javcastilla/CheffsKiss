@@ -234,7 +234,7 @@ fun LoginScreen(
                                 viewModel.login(email, password)
                             }
                         },
-                        enabled = uiState !is AuthUiState.Loading,
+                        enabled = uiState !is AuthUiState.Loading && email.isNotBlank() && password.isNotBlank(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(54.dp),
@@ -247,7 +247,15 @@ fun LoginScreen(
                                 .fillMaxSize()
                                 .background(
                                     Brush.linearGradient(
-                                        listOf(Color(0xFF003314), Color(0xFF004D1F)),
+                                        if (uiState !is AuthUiState.Loading && email.isNotBlank() && password.isNotBlank()){
+                                            listOf(Color(0xFF003314), Color(0xFF004D1F))
+                                        }else{
+                                            listOf(
+                                                Primary.copy(alpha = 0.4f),
+                                                Color(0xFF003314).copy(alpha = 0.4f)
+                                            )
+                                        }
+                                        ,
                                         start = Offset.Zero,
                                         end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
                                     ),
