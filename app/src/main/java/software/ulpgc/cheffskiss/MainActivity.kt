@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import software.ulpgc.cheffskiss.ui.screen.CreateRecipeScreen
 import software.ulpgc.cheffskiss.ui.screen.HomeRoute
 import software.ulpgc.cheffskiss.ui.screen.LibraryScreen
@@ -26,10 +27,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             CheffsKissTheme {
                 val navController = rememberNavController()
-
+                val startDestination = if (FirebaseAuth.getInstance().currentUser!=null){
+                    "home"
+                } else {
+                    "login"
+                }
                 NavHost(
                     navController = navController,
-                    startDestination = "login"
+                    startDestination = startDestination
                 ) {
                     composable("login") {
                         LoginScreen(

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.Input
 import software.ulpgc.cheffskiss.application.LoginInput
+import software.ulpgc.cheffskiss.application.LogoutUserCommand
 import software.ulpgc.cheffskiss.application.RegisterUserCommand
 import software.ulpgc.cheffskiss.domain.model.UserName
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
@@ -62,6 +63,16 @@ class AuthenticantionViewModel : ViewModel() {
                     override fun image()       = image
                 }
             )
+            runCatching { command.execute() }
+                .fold(
+                    onSuccess = { _uiState.value = AuthUiState.Success },
+                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
+                )
+        }
+    }
+    fun logout() {
+        viewModelScope.launch {
+            val command = LogoutUserCommand(firebaseService)
             runCatching { command.execute() }
                 .fold(
                     onSuccess = { _uiState.value = AuthUiState.Success },

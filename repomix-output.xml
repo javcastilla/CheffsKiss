@@ -303,47 +303,6 @@ interface StepPort {
 }
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/application/RegisterUserCommand.kt">
-package software.ulpgc.cheffskiss.application
-
-import software.ulpgc.cheffskiss.application.port.output.RegisterPort
-import software.ulpgc.cheffskiss.domain.control.Command
-import software.ulpgc.cheffskiss.domain.model.UserName
-import software.ulpgc.cheffskiss.domain.port.input.UserNameReader
-import java.util.UUID
-
-class RegisterUserCommand(
-    private val userNameReader: UserNameReader,
-    private val userPort: RegisterPort,
-    private val registerUserInput: Input)
-    : Command {
-
-
-    override suspend fun execute() {
-        require(!userNameReader.exist(getUserName())){"Username already exists"}
-        userPort.register(
-            registerUserInput.email(),
-            registerUserInput.password(),
-            registerUserInput.username(),
-            registerUserInput.description(),
-            registerUserInput.image()
-        )
-    }
-
-    private fun getUserName(): UserName {
-        return UserName(registerUserInput.username())
-    }
-}
-
-interface Input {
-    fun email(): String
-    fun password(): String
-    fun username(): String
-    fun description(): String?
-    fun image(): String
-}
-</file>
-
 <file path="app/src/main/java/software/ulpgc/cheffskiss/application/services/AuthenticationService.kt">
 package software.ulpgc.cheffskiss.application.services
 
@@ -454,18 +413,6 @@ data class User(
 )
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/UserName.kt">
-package software.ulpgc.cheffskiss.domain.model
-
-class UserName(val value: String) {
-
-    suspend fun isValid(value: String){
-        require(value.isNotBlank()){"Fill the space"}
-        require(value.length <= 3){"The name is too short"}
-    }
-}
-</file>
-
 <file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/UserReader.kt">
 package software.ulpgc.cheffskiss.domain.port.input
 
@@ -512,115 +459,6 @@ class FirebaseUserReader: UserReader {
         return snapshot.toUser()
     }
 
-}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/components/CKTextField.kt">
-package software.ulpgc.cheffskiss.ui.components
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import software.ulpgc.cheffskiss.ui.theme.*
-
-val SurfaceContainerLow = Color(0xFFEDF5E1)
-val SurfaceContainerHigh = Color(0xFFE2EBD7)
-
-@Composable
- fun CKTextField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    leadingIcon: @Composable () -> Unit,
-    trailingIcon: @Composable (() -> Unit)? = null,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-    isError: Boolean = false,
-    helper: @Composable (() -> Unit)? = null
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(label,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = CKOnSurfaceVariant)
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = { Text(placeholder, color = Outline.copy(alpha = 0.5f)) },
-            leadingIcon = leadingIcon,
-            trailingIcon = trailingIcon,
-            visualTransformation = visualTransformation,
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = keyboardType
-            ),
-            isError = isError,
-            singleLine = true,
-            shape = RoundedCornerShape(10.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Primary.copy(alpha = 0.4f),
-                unfocusedBorderColor = Color.Transparent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = SurfaceContainerLow,
-                focusedTextColor = OnSurface,
-                unfocusedTextColor = OnSurface,
-                cursorColor = Primary,
-                errorBorderColor = Color(0xFFBA1A1A)
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-        helper?.invoke()
-    }
-}
-@Composable
-fun CKHelperText(text: String, color: Color = Color(0xFFBA1A1A)) {
-    Text(
-        text,
-        fontSize = 11.sp,
-        color = color,
-        fontWeight = FontWeight.Medium,
-        modifier = Modifier.padding(start = 4.dp)
-    )
-}
-
-@Composable
-fun CKPasswordStrength(strength: Int, label: String, color: Color) {
-    Column(
-        modifier = Modifier.padding(start = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            repeat(4) { index ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(4.dp)
-                        .background(
-                            if (index < strength) color else SurfaceContainerHigh,
-                            RoundedCornerShape(50.dp)
-                        )
-                )
-            }
-        }
-        if (label.isNotEmpty()) {
-            Text(
-                text = "Strength: $label",
-                fontSize = 11.sp,
-                color = CKOnSurfaceVariant,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
 }
 </file>
 
@@ -1207,6 +1045,59 @@ interface CurrentUserPort {
 }
 </file>
 
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/RegisterUserCommand.kt">
+package software.ulpgc.cheffskiss.application
+
+import software.ulpgc.cheffskiss.application.port.output.RegisterPort
+import software.ulpgc.cheffskiss.domain.control.Command
+import software.ulpgc.cheffskiss.domain.model.UserName
+import software.ulpgc.cheffskiss.domain.port.input.UserNameReader
+import java.util.UUID
+
+class RegisterUserCommand(
+    private val userNameReader: UserNameReader,
+    private val userPort: RegisterPort,
+    private val registerUserInput: Input)
+    : Command {
+
+
+    override suspend fun execute() {
+        require(!userNameReader.exist(getUserName())){"Username already exists"}
+        userPort.register(
+            registerUserInput.email(),
+            registerUserInput.password(),
+            registerUserInput.username(),
+            registerUserInput.description(),
+            registerUserInput.image()
+        )
+    }
+
+    private fun getUserName(): UserName {
+        return UserName(registerUserInput.username())
+    }
+}
+
+interface Input {
+    fun email(): String
+    fun password(): String
+    fun username(): String
+    fun description(): String?
+    fun image(): String
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/UserName.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+class UserName(val value: String) {
+
+    suspend fun isValid(value: String){
+        require(value.isNotBlank()){"Fill the space"}
+        require(value.length <= 3){"The name is too short"}
+    }
+}
+</file>
+
 <file path="app/src/main/java/software/ulpgc/cheffskiss/domain/port/input/RecipeReader.kt">
 package software.ulpgc.cheffskiss.domain.port.input
 
@@ -1324,6 +1215,115 @@ fun HomeBottomBar(
                 unselectedTextColor = CKOutlineVariant
             )
         )
+    }
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/components/CKTextField.kt">
+package software.ulpgc.cheffskiss.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import software.ulpgc.cheffskiss.ui.theme.*
+
+val SurfaceContainerLow = Color(0xFFEDF5E1)
+val SurfaceContainerHigh = Color(0xFFE2EBD7)
+
+@Composable
+ fun CKTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    leadingIcon: @Composable () -> Unit,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    isError: Boolean = false,
+    helper: @Composable (() -> Unit)? = null
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = CKOnSurfaceVariant)
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, color = Outline.copy(alpha = 0.5f)) },
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            visualTransformation = visualTransformation,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = keyboardType
+            ),
+            isError = isError,
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Primary.copy(alpha = 0.4f),
+                unfocusedBorderColor = Color.Transparent,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = SurfaceContainerLow,
+                focusedTextColor = OnSurface,
+                unfocusedTextColor = OnSurface,
+                cursorColor = Primary,
+                errorBorderColor = Color(0xFFBA1A1A)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+        helper?.invoke()
+    }
+}
+@Composable
+fun CKHelperText(text: String, color: Color = Color(0xFFBA1A1A)) {
+    Text(
+        text,
+        fontSize = 11.sp,
+        color = color,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.padding(start = 4.dp)
+    )
+}
+
+@Composable
+fun CKPasswordStrength(strength: Int, label: String, color: Color) {
+    Column(
+        modifier = Modifier.padding(start = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            repeat(4) { index ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(4.dp)
+                        .background(
+                            if (index < strength) color else SurfaceContainerHigh,
+                            RoundedCornerShape(50.dp)
+                        )
+                )
+            }
+        }
+        if (label.isNotEmpty()) {
+            Text(
+                text = "Strength: $label",
+                fontSize = 11.sp,
+                color = CKOnSurfaceVariant,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 </file>
@@ -1470,629 +1470,6 @@ class HomeViewModel(
             }
         }
     }}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/LoginScreen.kt">
-package software.ulpgc.cheffskiss.ui.screen
-
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Mail
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import software.ulpgc.cheffskiss.R
-import software.ulpgc.cheffskiss.ui.AuthUiState
-import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
-import software.ulpgc.cheffskiss.ui.components.CKTextField
-import software.ulpgc.cheffskiss.ui.theme.*
-
-@Composable
-fun LoginScreen(
-    viewModel: AuthenticantionViewModel = viewModel(),
-    onLoginSuccess: () -> Unit,
-    onGoToRegister: () -> Unit
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(uiState) {
-        if (uiState is AuthUiState.Success) {
-            viewModel.resetState()
-            onLoginSuccess()
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize().background(Background)) {
-        // Glow top-right
-        Box(
-            modifier = Modifier
-                .size(320.dp)
-                .offset(x = 100.dp, y = (-80).dp)
-                .align(Alignment.TopEnd)
-                .background(
-                    Brush.radialGradient(listOf(CKSecondary.copy(alpha = 0.2f), Color.Transparent)),
-                    CircleShape
-                )
-                .blur(60.dp)
-        )
-        // Glow bottom-left
-        Box(
-            modifier = Modifier
-                .size(320.dp)
-                .offset(x = (-80).dp, y = 80.dp)
-                .align(Alignment.BottomStart)
-                .background(
-                    Brush.radialGradient(listOf(Primary.copy(alpha = 0.1f), Color.Transparent)),
-                    CircleShape
-                )
-                .blur(60.dp)
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.weight(1f))
-
-            // ── Logo ─────────────────────────────────────────
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .rotate(-2f)
-                    .shadow(12.dp, RoundedCornerShape(16.dp))
-                    .background(Primary, RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.cheffkiss_icon),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Primary),
-                    modifier = Modifier
-                        .size(400.dp)
-                        .rotate(-2f)
-                        .shadow(14.dp, RoundedCornerShape(28.dp))
-                        .clip(RoundedCornerShape(28.dp))
-                        .background(Background)
-                )
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                "Cheffs Kiss",
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 32.sp,
-                color = Primary,
-                letterSpacing = (-0.5).sp
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "Reclaiming the warmth of\nyour digital kitchen",
-                style = MaterialTheme.typography.bodyMedium,
-                color = CKOnSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // ── Card ─────────────────────────────────────────
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Surface),
-                elevation = CardDefaults.cardElevation(8.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(28.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)  // igual que RegisterScreen
-                ) {
-
-                    // ── Email ─────────────────────────────────
-                    CKTextField(
-                        label = "Email",
-                        value = email,
-                        onValueChange = { email = it },
-                        placeholder = "chef@cheffskiss.com",
-                        leadingIcon = { Icon(Icons.Default.Mail, null, tint = Outline) },
-                        keyboardType = KeyboardType.Email
-                    )
-
-                    // ── Password ──────────────────────────────
-                    CKTextField(
-                        label = "Password",
-                        value = password,
-                        onValueChange = { password = it },
-                        placeholder = "••••••••",
-                        leadingIcon = { Icon(Icons.Default.Lock, null, tint = Outline) },
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    if (passwordVisible) Icons.Default.VisibilityOff
-                                    else Icons.Default.Visibility,
-                                    null,
-                                    tint = Primary
-                                )
-                            }
-                        },
-                        visualTransformation = if (passwordVisible)
-                            VisualTransformation.None else PasswordVisualTransformation()
-                    )
-
-                    // ── Error ─────────────────────────────────
-                    if (uiState is AuthUiState.Error) {
-                        Text(
-                            text = (uiState as AuthUiState.Error).message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-
-                    // ── Botón Log In ──────────────────────────
-                    Button(
-                        onClick = { viewModel.login(email, password) },
-                        enabled = uiState !is AuthUiState.Loading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(Color(0xFF003314), Color(0xFF004D1F)),
-                                        start = Offset.Zero,
-                                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                                    ),
-                                    RoundedCornerShape(12.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (uiState is AuthUiState.Loading) {
-                                CircularProgressIndicator(
-                                    color = OnPrimary,
-                                    modifier = Modifier.size(22.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text(
-                                    "Log In",
-                                    color = OnPrimary,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
-                            }
-                        }
-                    }
-
-                    // ── Forgot password ───────────────────────
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "Forgot password?",
-                            color = Primary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            modifier = Modifier.clickable { }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // ── Sign up link ──────────────────────────────────
-            Row {
-                Text(
-                    "Don't have an account?",
-                    color = CKOnSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    "Sign up",
-                    color = Primary,
-                    fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.clickable { onGoToRegister() }
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // ── Footer accent bar ─────────────────────────────
-            Row(modifier = Modifier.fillMaxWidth().height(6.dp)) {
-                Box(Modifier.weight(1f).fillMaxHeight().background(Primary))
-                Box(Modifier.weight(1f).fillMaxHeight().background(CKSecondary))
-                Box(Modifier.weight(1f).fillMaxHeight().background(Outline))
-                Box(Modifier.weight(1f).fillMaxHeight().background(Primary.copy(alpha = 0.8f)))
-            }
-        }
-    }
-}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/RegisterScreen.kt">
-package software.ulpgc.cheffskiss.ui.screen
-import software.ulpgc.cheffskiss.R
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import software.ulpgc.cheffskiss.ui.AuthUiState
-import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
-import software.ulpgc.cheffskiss.ui.theme.*
-import software.ulpgc.cheffskiss.ui.components.CKTextField
-import software.ulpgc.cheffskiss.ui.components.CKHelperText
-import software.ulpgc.cheffskiss.ui.components.CKPasswordStrength
-private val Tertiary             = Color(0xFF6B8E23)
-
-
-@Composable
-fun RegisterScreen(
-    viewModel: AuthenticantionViewModel = viewModel(),
-    onRegisterSuccess: () -> Unit,
-    onGoToLogin: () -> Unit
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var username        by remember { mutableStateOf("") }
-    var email           by remember { mutableStateOf("") }
-    var password        by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var confirmVisible  by remember { mutableStateOf(false) }
-    val usernameAvailable by viewModel.usernameAvailable.collectAsState()
-    var usernameTouched by remember { mutableStateOf(false) }
-
-    val strength = when {
-        password.length >= 10 && password.any { it.isDigit() } &&
-                password.any { !it.isLetterOrDigit() } -> 4
-        password.length >= 8 && password.any { it.isDigit() } -> 3
-        password.length >= 6 -> 2
-        password.isNotEmpty() -> 1
-        else -> 0
-    }
-    val strengthLabel = when (strength) {
-        4    -> "Great" ; 3 -> "Good" ; 2 -> "Fair" ; 1 -> "Weak" ; else -> ""
-    }
-    val strengthColor = when (strength) {
-        4    -> Primary ; 3 -> Tertiary ; 2 -> Color(0xFFDAA520) ; else -> Color(0xFFBA1A1A)
-    }
-
-    val passwordsMatch = confirmPassword.isEmpty() || password == confirmPassword
-
-    LaunchedEffect(uiState) {
-        if (uiState is AuthUiState.Success) {
-            viewModel.resetState()
-            onRegisterSuccess()
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(48.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .shadow(4.dp, RoundedCornerShape(16.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(Primary, Color(0xFF004D1C)),
-                            start = Offset.Zero,
-                            end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                        ),
-                        RoundedCornerShape(16.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.cheffkiss_icon),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(Primary),
-                    modifier = Modifier
-                        .size(400.dp)
-                        .rotate(-2f)
-                        .shadow(14.dp, RoundedCornerShape(28.dp))
-                        .clip(RoundedCornerShape(28.dp))
-                        .background(Background)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "CheffsKiss",
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 28.sp,
-                color = OnSurface,
-                letterSpacing = (-0.5).sp
-            )
-            Text(
-                text = "Join our digital heirloom kitchen",
-                style = MaterialTheme.typography.bodyMedium,
-                color = CKOnSurfaceVariant,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // ── Form Card ────────────────────────────────────
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = software.ulpgc.cheffskiss.ui.theme.Surface),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Column(modifier = Modifier.padding(28.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)) {
-
-                    // Username
-                    CKTextField(
-                        label = "Username",
-                        value = username,
-                        onValueChange = {
-                            username = it
-                            usernameTouched = true
-                            viewModel.checkUsernameAvailability(it) },
-                        placeholder = "chef_gourmet",
-                        leadingIcon = { Icon(Icons.Filled.Person, null, tint = Outline) },
-                        helper = when {
-                            !usernameTouched           -> null
-                            username.length <= 3       -> { { CKHelperText("Username length should be at least 4", Color(0xFFBA1A1A)) } }
-                            usernameAvailable == true  -> { { CKHelperText("Username is available", Tertiary) } }
-                            usernameAvailable == false -> { { CKHelperText("Username already taken", Color(0xFFBA1A1A)) } }
-                            else                       -> null
-                        }                    )
-
-                    // Email
-                    CKTextField(
-                        label = "Email Address",
-                        value = email,
-                        onValueChange = { email = it },
-                        placeholder = "hello@cheffskiss.com",
-                        leadingIcon = { Icon(Icons.Filled.Email, null, tint = Outline) },
-                        keyboardType = KeyboardType.Email
-                    )
-
-                    // Password
-                    CKTextField(
-                        label = "Password",
-                        value = password,
-                        onValueChange = { password = it },
-                        placeholder = "••••••••",
-                        leadingIcon = { Icon(Icons.Filled.Lock, null, tint = Outline) },
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    if (passwordVisible) Icons.Filled.VisibilityOff
-                                    else Icons.Filled.Visibility,
-                                    null, tint = Outline
-                                )
-                            }
-                        },
-                        visualTransformation = if (passwordVisible)
-                            VisualTransformation.None else PasswordVisualTransformation(),
-                        helper = if (password.isNotEmpty()) {
-                            { CKPasswordStrength(strength, strengthLabel, strengthColor) }
-                        } else null
-                    )
-
-                    // Confirm Password
-                    CKTextField(
-                        label = "Confirm Password",
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        placeholder = "••••••••",
-                        leadingIcon = { Icon(Icons.Filled.LockReset, null, tint = Outline) },
-                        trailingIcon = {
-                            IconButton(onClick = { confirmVisible = !confirmVisible }) {
-                                Icon(
-                                    if (confirmVisible) Icons.Filled.VisibilityOff
-                                    else Icons.Filled.Visibility,
-                                    null, tint = Outline
-                                )
-                            }
-                        },
-                        visualTransformation = if (confirmVisible)
-                            VisualTransformation.None else PasswordVisualTransformation(),
-                        isError = !passwordsMatch,
-                        helper = if (!passwordsMatch) {
-                            { CKHelperText("Passwords do not match", Color(0xFFBA1A1A)) }
-                        } else null
-                    )
-
-                    // Error general
-                    if (uiState is AuthUiState.Error) {
-                        Text(
-                            text = (uiState as AuthUiState.Error).message,
-                            color = Color(0xFFBA1A1A),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-
-                    // Botón Create Account
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Button(
-                        onClick = {
-                            if (passwordsMatch && password == confirmPassword) {
-                                viewModel.register(email, password, username, null, "")
-                            }
-                        },
-                        enabled = uiState !is AuthUiState.Loading
-                                && username.isNotBlank()
-                                && email.isNotBlank()
-                                && password.isNotBlank()
-                                && passwordsMatch,
-                        modifier = Modifier.fillMaxWidth().height(54.dp),
-                        shape = RoundedCornerShape(50.dp),  // rounded-full
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                        contentPadding = PaddingValues(0.dp),
-                        elevation = ButtonDefaults.buttonElevation(6.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(Primary, Color(0xFF004D1C)),
-                                        start = Offset.Zero,
-                                        end = Offset(Float.POSITIVE_INFINITY, 0f)
-                                    ),
-                                    RoundedCornerShape(50.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (uiState is AuthUiState.Loading) {
-                                CircularProgressIndicator(
-                                    color = Color.White,
-                                    modifier = Modifier.size(22.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text("Create Account", color = Color.White,
-                                    fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Footer link
-            Row {
-                Text("Already have an account?",
-                    color = CKOnSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Log in",
-                    color = Primary,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.clickable { onGoToLogin() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(48.dp))
-        }
-    }
-}
-</file>
-
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Color.kt">
-// ✅ ui/theme/Color.kt — solo los colores del proyecto
-package software.ulpgc.cheffskiss.ui.theme
-
-import androidx.compose.ui.graphics.Color
-
-val CkSurfaceVariant      = Color(0xFFE2E8CE)
-val CkOnSurfaceVariant    = Color(0xFF3F4935)
-val CkSecondary           = Color(0xFFEAB308)
-val CkOnSecondary         = Color(0xFF422006)
-val CkOutlineVariant      = Color(0xFFC5C9B8)
-val Primary          = Color(0xFF002308)
-val OnPrimary        = Color(0xFFE2E8C0)
-val Secondary        = Color(0xFFE4C062)
-val OnSecondary      = Color(0xFF003314)
-val Background       = Color(0xFFE2E8C0)
-val OnBackground     = Color(0xFF050B01)
-val Surface          = Color(0xFFF2F5E1)
-val OnSurface        = Color(0xFF050B01)
-val SurfaceVariant   = Color(0xFFD0D9A6)
-val OnSurfaceVariant = Color(0xFF2D3512)
-val Outline          = Color(0xFF454E27)
-val OutlineVariant   = Color(0xFFA8B47C)
-val CKPrimary          = Color(0xFF003314)
-val CKOnPrimary        = Color(0xFFE2E8C0)
-val CKSecondary        = Color(0xFFE4C062)
-val CKOnSecondary      = Color(0xFF003314)
-val CKBackground       = Color(0xFFE2E8C0)
-val CKOnBackground     = Color(0xFF050B01)
-val CKSurface          = Color(0xFFF2F5E1)
-val CKOnSurface        = Color(0xFF050B01)
-val CKSurfaceVariant   = Color(0xFFE2E8CE)
-val CKOnSurfaceVariant = Color(0xFF2D3512)
-val CKOutline          = Color(0xFF454E27)
-val CKOutlineVariant   = Color(0xFFA8B47C)
 </file>
 
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Theme.kt">
@@ -2612,6 +1989,43 @@ private fun LibraryRecipeCard(
 }
 </file>
 
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Color.kt">
+// ✅ ui/theme/Color.kt — solo los colores del proyecto
+package software.ulpgc.cheffskiss.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+val CkSurfaceVariant      = Color(0xFFE2E8CE)
+val CkOnSurfaceVariant    = Color(0xFF3F4935)
+val CkSecondary           = Color(0xFFEAB308)
+val CkOnSecondary         = Color(0xFF422006)
+val CkOutlineVariant      = Color(0xFFC5C9B8)
+val Primary          = Color(0xFF002308)
+val OnPrimary        = Color(0xFFE2E8C0)
+val Secondary        = Color(0xFFE4C062)
+val OnSecondary      = Color(0xFF003314)
+val Background       = Color(0xFFE2E8C0)
+val OnBackground     = Color(0xFF050B01)
+val Surface          = Color(0xFFF2F5E1)
+val OnSurface        = Color(0xFF050B01)
+val SurfaceVariant   = Color(0xFFD0D9A6)
+val OnSurfaceVariant = Color(0xFF2D3512)
+val Outline          = Color(0xFF454E27)
+val OutlineVariant   = Color(0xFFA8B47C)
+val CKPrimary          = Color(0xFF003314)
+val CKOnPrimary        = Color(0xFFE2E8C0)
+val CKSecondary        = Color(0xFFE4C062)
+val CKOnSecondary      = Color(0xFF003314)
+val CKBackground       = Color(0xFFE2E8C0)
+val CKOnBackground     = Color(0xFF050B01)
+val CKSurface          = Color(0xFFF2F5E1)
+val CKOnSurface        = Color(0xFF050B01)
+val CKSurfaceVariant   = Color(0xFFE2E8CE)
+val CKOnSurfaceVariant = Color(0xFF2D3512)
+val CKOutline          = Color(0xFF454E27)
+val CKOutlineVariant   = Color(0xFFA8B47C)
+</file>
+
 <file path="gradle/libs.versions.toml">
 [versions]
 agp = "8.13.2"
@@ -2871,118 +2285,645 @@ interface RegisterUserInput{
 }
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt">
-package software.ulpgc.cheffskiss.ui
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/LoginScreen.kt">
+package software.ulpgc.cheffskiss.ui.screen
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.Input
-import software.ulpgc.cheffskiss.application.LoginInput
-import software.ulpgc.cheffskiss.application.RegisterUserCommand
-import software.ulpgc.cheffskiss.domain.model.UserName
-import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
-import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.R
+import software.ulpgc.cheffskiss.ui.AuthUiState
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.components.CKHelperText
+import software.ulpgc.cheffskiss.ui.components.CKTextField
+import software.ulpgc.cheffskiss.ui.theme.*
 
-sealed class AuthUiState {
-    object Idle    : AuthUiState()
-    object Loading : AuthUiState()
-    object Success : AuthUiState()
-    data class Error(val message: String) : AuthUiState()
-}
-
-class AuthenticantionViewModel : ViewModel() {
-
-    private val firebaseService = FirebaseAuthenticationService()
-    private val userNameReader  = FirebaseUserNameReader()
-
-    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
-    val uiState = _uiState.asStateFlow()
-
-    fun resetState() { _uiState.value = AuthUiState.Idle }
-
-    fun login(email: String, password: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            runCatching {
-                firebaseService.login(email, password)
-            }.fold(
-                onSuccess = { ok ->
-                    _uiState.value = if (ok) AuthUiState.Success
-                    else AuthUiState.Error("Invalid email or password")
-                },
-                onFailure = { e ->
-                    _uiState.value = AuthUiState.Error(friendlyError(e.message))
+@Composable
+fun LoginScreen(
+    viewModel: AuthenticantionViewModel = viewModel(),
+    onLoginSuccess: () -> Unit,
+    onGoToRegister: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is AuthUiState.Success -> {
+                viewModel.resetState()
+                onLoginSuccess()
+            }
+            is AuthUiState.Error -> {
+                val msg = (uiState as AuthUiState.Error).message
+                when {
+                    "email" in msg.lowercase() || "found" in msg.lowercase() || "account" in msg.lowercase() -> {
+                        emailError = msg
+                        passwordError = null
+                    }
+                    "password" in msg.lowercase() || "credential" in msg.lowercase() || "incorrect" in msg.lowercase() -> {
+                        passwordError = msg
+                        emailError = null
+                    }
+                    "disabled" in msg.lowercase() -> {
+                        emailError = msg
+                        passwordError = null
+                    }
+                    "attempts" in msg.lowercase() || "requests" in msg.lowercase() -> {
+                        passwordError = msg
+                        emailError = null
+                    }
+                    else -> {
+                        passwordError = msg
+                        emailError = null
+                    }
                 }
-            )
+            }
+            else -> {}
         }
     }
-
-    fun register(email: String, password: String, username: String,
-                 description: String?, image: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            val command = RegisterUserCommand(
-                userNameReader = userNameReader,
-                userPort = firebaseService,
-                registerUserInput = object : Input {
-                    override fun email()       = email
-                    override fun password()    = password
-                    override fun username()    = username
-                    override fun description() = description
-                    override fun image()       = image
-                }
-            )
-            runCatching { command.execute() }
-                .fold(
-                    onSuccess = { _uiState.value = AuthUiState.Success },
-                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
+    Box(modifier = Modifier.fillMaxSize().background(Background)) {
+        // Glow top-right
+        Box(
+            modifier = Modifier
+                .size(320.dp)
+                .offset(x = 100.dp, y = (-80).dp)
+                .align(Alignment.TopEnd)
+                .background(
+                    Brush.radialGradient(listOf(CKSecondary.copy(alpha = 0.2f), Color.Transparent)),
+                    CircleShape
                 )
+                .blur(60.dp)
+        )
+        // Glow bottom-left
+        Box(
+            modifier = Modifier
+                .size(320.dp)
+                .offset(x = (-80).dp, y = 80.dp)
+                .align(Alignment.BottomStart)
+                .background(
+                    Brush.radialGradient(listOf(Primary.copy(alpha = 0.1f), Color.Transparent)),
+                    CircleShape
+                )
+                .blur(60.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+
+            // ── Logo ─────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .rotate(-2f)
+                    .shadow(12.dp, RoundedCornerShape(16.dp))
+                    .background(Primary, RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.cheffkiss_icon),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Primary),
+                    modifier = Modifier
+                        .size(400.dp)
+                        .rotate(-2f)
+                        .shadow(14.dp, RoundedCornerShape(28.dp))
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Background)
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                "Cheffs Kiss",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 32.sp,
+                color = Primary,
+                letterSpacing = (-0.5).sp
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Reclaiming the warmth of\nyour digital kitchen",
+                style = MaterialTheme.typography.bodyMedium,
+                color = CKOnSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // ── Card ─────────────────────────────────────────
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Surface),
+                elevation = CardDefaults.cardElevation(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(28.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)  // igual que RegisterScreen
+                ) {
+
+
+                    CKTextField(
+                        label = "Email",
+                        value = email,
+                        onValueChange = {
+                            email = it
+                            emailError = null
+                        },
+                        placeholder = "chef@cheffskiss.com",
+                        leadingIcon = { Icon(Icons.Default.Mail, null, tint = Outline) },
+                        keyboardType = KeyboardType.Email,
+                        isError = emailError != null,
+                        helper = when {
+                            emailError != null -> { { CKHelperText(emailError!!) } }
+                            email.isNotEmpty() && !viewModel.isValidEmail(email) ->
+                            { { CKHelperText("Enter a valid email address") } }
+                            else -> null
+                        }
+                    )
+
+                    CKTextField(
+                        label = "Password",
+                        value = password,
+                        onValueChange = {
+                            password = it
+                            passwordError = null},
+                        placeholder = "••••••••",
+                        leadingIcon = { Icon(Icons.Default.Lock, null, tint = Outline) },
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    if (passwordVisible) Icons.Default.VisibilityOff
+                                    else Icons.Default.Visibility,
+                                    null,
+                                    tint = Primary
+                                )
+                            }
+                        },
+                        visualTransformation = if (passwordVisible)
+                            VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = passwordError != null,
+                        helper = if (passwordError != null) {
+                            { CKHelperText(passwordError!!) }
+                        } else null
+                    )
+
+
+
+
+                    Button(
+                        onClick =  {
+                            if (email.isBlank()) emailError = "Email is required"
+                            if (password.isBlank()) passwordError = "Password is required"
+
+                            if (emailError == null && passwordError == null) {
+                                viewModel.login(email, password)
+                            }
+                        },
+                        enabled = uiState !is AuthUiState.Loading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(Color(0xFF003314), Color(0xFF004D1F)),
+                                        start = Offset.Zero,
+                                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                                    ),
+                                    RoundedCornerShape(12.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState is AuthUiState.Loading) {
+                                CircularProgressIndicator(
+                                    color = OnPrimary,
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    "Log In",
+                                    color = OnPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
+                    }
+
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "Forgot password?",
+                            color = Primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            modifier = Modifier.clickable { }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Row {
+                Text(
+                    "Don't have an account?",
+                    color = CKOnSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    "Sign up",
+                    color = Primary,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.clickable { onGoToRegister() }
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // ── Footer accent bar ─────────────────────────────
+            Row(modifier = Modifier.fillMaxWidth().height(6.dp)) {
+                Box(Modifier.weight(1f).fillMaxHeight().background(Primary))
+                Box(Modifier.weight(1f).fillMaxHeight().background(CKSecondary))
+                Box(Modifier.weight(1f).fillMaxHeight().background(Outline))
+                Box(Modifier.weight(1f).fillMaxHeight().background(Primary.copy(alpha = 0.8f)))
+            }
         }
     }
-    fun getCurrentUid(): String? = firebaseService.getCurrentUser()
-    private val _usernameAvailable = MutableStateFlow<Boolean?>(null)
-    val usernameAvailable: StateFlow<Boolean?> = _usernameAvailable.asStateFlow()
+}
+</file>
 
-    fun checkUsernameAvailability(username: String) {
-        if (username.length <= 3) {
-            _usernameAvailable.value = null
-            return
-        }
-        viewModelScope.launch {
-            val exists = userNameReader.exist(toUserName(username))
-            _usernameAvailable.value = !exists
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/RegisterScreen.kt">
+package software.ulpgc.cheffskiss.ui.screen
+import software.ulpgc.cheffskiss.R
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import software.ulpgc.cheffskiss.ui.AuthUiState
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.theme.*
+import software.ulpgc.cheffskiss.ui.components.CKTextField
+import software.ulpgc.cheffskiss.ui.components.CKHelperText
+import software.ulpgc.cheffskiss.ui.components.CKPasswordStrength
+private val Tertiary             = Color(0xFF6B8E23)
+
+
+@Composable
+fun RegisterScreen(
+    viewModel: AuthenticantionViewModel = viewModel(),
+    onRegisterSuccess: () -> Unit,
+    onGoToLogin: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var username        by remember { mutableStateOf("") }
+    var email           by remember { mutableStateOf("") }
+    var password        by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmVisible  by remember { mutableStateOf(false) }
+    val usernameAvailable by viewModel.usernameAvailable.collectAsState()
+    var usernameTouched by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
+    val strength = when {
+        password.length >= 10 && password.any { it.isDigit() } &&
+                password.any { !it.isLetterOrDigit() } -> 4
+        password.length >= 8 && password.any { it.isDigit() } -> 3
+        password.length >= 6 -> 2
+        password.isNotEmpty() -> 1
+        else -> 0
+    }
+    val strengthLabel = when (strength) {
+        4    -> "Great" ; 3 -> "Good" ; 2 -> "Fair" ; 1 -> "Weak" ; else -> ""
+    }
+    val strengthColor = when (strength) {
+        4    -> Primary ; 3 -> Tertiary ; 2 -> Color(0xFFDAA520) ; else -> Color(0xFFBA1A1A)
+    }
+
+    val passwordsMatch = confirmPassword.isEmpty() || password == confirmPassword
+
+    LaunchedEffect(uiState) {
+        if (uiState is AuthUiState.Success) {
+            viewModel.resetState()
+            onRegisterSuccess()
         }
     }
 
-    private fun toUserName(username: String): UserName { return UserName(username) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(48.dp))
 
-    private fun friendlyError(msg: String?) = when {
-        msg == null                    -> "Unknown error"
-        "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"
-        "WEAK_PASSWORD"        in msg  -> "Password must be at least 6 characters"
-        "INVALID_EMAIL"        in msg  -> "Invalid email format"
-        "NETWORK"              in msg  -> "No internet connection"
-        "offline"              in msg  -> "No internet connection"
-        "client is offline"    in msg  -> "No internet connection"
-        "USERNAME_ALREADY"     in msg  -> "This username is already taken"
-        "Username already"     in msg  -> "This username is already taken"
-        "INVALID_EMAIL" in msg -> "The email address is not valid"
-        "EMAIL_NOT_FOUND" in msg ||
-                "NO_SUCH_USER" in msg ||
-                "USER_NOT_FOUND" in msg   -> "No account found with this email"
-        "INVALID_PASSWORD" in msg ||
-                "WRONG_PASSWORD" in msg ||
-                "INVALID_LOGIN_CREDENTIALS" in msg -> "Incorrect password"
-        "USER_DISABLED" in msg    -> "This account has been disabled"
-        "TOO_MANY_ATTEMPTS" in msg ||
-                "TOO_MANY_REQUESTS" in msg -> "Too many failed attempts. Try again later"
-        "NETWORK_ERROR" in msg ||
-                "TIMEOUT" in msg          -> "Network error. Check your connection"
-        else                           -> msg
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .shadow(4.dp, RoundedCornerShape(16.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Primary, Color(0xFF004D1C)),
+                            start = Offset.Zero,
+                            end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                        ),
+                        RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.cheffkiss_icon),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(Primary),
+                    modifier = Modifier
+                        .size(400.dp)
+                        .rotate(-2f)
+                        .shadow(14.dp, RoundedCornerShape(28.dp))
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Background)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "CheffsKiss",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 28.sp,
+                color = OnSurface,
+                letterSpacing = (-0.5).sp
+            )
+            Text(
+                text = "Join our digital heirloom kitchen",
+                style = MaterialTheme.typography.bodyMedium,
+                color = CKOnSurfaceVariant,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // ── Form Card ────────────────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = software.ulpgc.cheffskiss.ui.theme.Surface),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Column(modifier = Modifier.padding(28.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)) {
+
+                    // Username
+                    CKTextField(
+                        label = "Username",
+                        value = username,
+                        onValueChange = {
+                            username = it
+                            usernameTouched = true
+                            viewModel.checkUsernameAvailability(it) },
+                        placeholder = "chef_gourmet",
+                        leadingIcon = { Icon(Icons.Filled.Person, null, tint = Outline) },
+                        helper = when {
+                            !usernameTouched           -> null
+                            username.length <= 3       -> { { CKHelperText("Username length should be at least 4", Color(0xFFBA1A1A)) } }
+                            usernameAvailable == true  -> { { CKHelperText("Username is available", Tertiary) } }
+                            usernameAvailable == false -> { { CKHelperText("Username already taken", Color(0xFFBA1A1A)) } }
+                            else                       -> null
+                        }                    )
+
+                    // Email
+                    CKTextField(
+                        label = "Email Address",
+                        value = email,
+                        onValueChange = { email = it
+                                        emailError= null},
+                        placeholder = "hello@cheffskiss.com",
+                        leadingIcon = { Icon(Icons.Filled.Email, null, tint = Outline) },
+                        keyboardType = KeyboardType.Email,
+                        helper = when{
+                            emailError != null -> { { CKHelperText(emailError!!) } }
+                            email.isEmpty() -> {null}
+                            !viewModel.isValidEmail(email) -> { { CKHelperText("Enter a valid email address") } }
+                            else -> null
+                        }
+                    )
+
+                    // Password
+                    CKTextField(
+                        label = "Password",
+                        value = password,
+                        onValueChange = { password = it
+                                        passwordError=  null},
+                        placeholder = "••••••••",
+                        leadingIcon = { Icon(Icons.Filled.Lock, null, tint = Outline) },
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    if (passwordVisible) Icons.Filled.VisibilityOff
+                                    else Icons.Filled.Visibility,
+                                    null, tint = Outline
+                                )
+                            }
+                        },
+                        visualTransformation = if (passwordVisible)
+                            VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = passwordError != null,
+                        helper = when {
+                            passwordError != null -> { { CKHelperText(passwordError!!) } }   // ← primero el error
+                            password.isNotEmpty() -> { { CKPasswordStrength(strength, strengthLabel, strengthColor) } }
+                            else -> null
+                        }
+                    )
+
+                    // Confirm Password
+                    CKTextField(
+                        label = "Confirm Password",
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        placeholder = "••••••••",
+                        leadingIcon = { Icon(Icons.Filled.LockReset, null, tint = Outline) },
+                        trailingIcon = {
+                            IconButton(onClick = { confirmVisible = !confirmVisible }) {
+                                Icon(
+                                    if (confirmVisible) Icons.Filled.VisibilityOff
+                                    else Icons.Filled.Visibility,
+                                    null, tint = Outline
+                                )
+                            }
+                        },
+                        visualTransformation = if (confirmVisible)
+                            VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = !passwordsMatch,
+                        helper = if (!passwordsMatch) {
+                            { CKHelperText("Passwords do not match", Color(0xFFBA1A1A)) }
+                        } else null
+                    )
+
+                    // Error general
+                    if (uiState is AuthUiState.Error) {
+                        Text(
+                            text = (uiState as AuthUiState.Error).message,
+                            color = Color(0xFFBA1A1A),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    // Botón Create Account
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = {
+                            if (email.isBlank()) emailError= "Email is required"
+                            if (password.isBlank()) passwordError = "Password is required"
+                            if (emailError == null && passwordError == null && passwordsMatch && password == confirmPassword) {
+                                viewModel.register(email, password, username, null, "")
+                            }
+                        },
+                        enabled = uiState !is AuthUiState.Loading
+                                && username.isNotBlank()
+                                && email.isNotBlank()
+                                && password.isNotBlank()
+                                && passwordsMatch,
+                        modifier = Modifier.fillMaxWidth().height(54.dp),
+                        shape = RoundedCornerShape(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        contentPadding = PaddingValues(0.dp),
+                        elevation = ButtonDefaults.buttonElevation(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(Primary, Color(0xFF004D1C)),
+                                        start = Offset.Zero,
+                                        end = Offset(Float.POSITIVE_INFINITY, 0f)
+                                    ),
+                                    RoundedCornerShape(50.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState is AuthUiState.Loading) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Create Account", color = Color.White,
+                                    fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Footer link
+            Row {
+                Text("Already have an account?",
+                    color = CKOnSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Log in",
+                    color = Primary,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.clickable { onGoToLogin() }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+        }
     }
 }
 </file>
@@ -3852,6 +3793,123 @@ private fun containerFieldColors() = TextFieldDefaults.colors(
     focusedTextColor = OnSurface,
     unfocusedTextColor = OnSurface
 )
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt">
+package software.ulpgc.cheffskiss.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.Input
+import software.ulpgc.cheffskiss.application.LoginInput
+import software.ulpgc.cheffskiss.application.RegisterUserCommand
+import software.ulpgc.cheffskiss.domain.model.UserName
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+
+sealed class AuthUiState {
+    object Idle    : AuthUiState()
+    object Loading : AuthUiState()
+    object Success : AuthUiState()
+    data class Error(val message: String) : AuthUiState()
+}
+
+class AuthenticantionViewModel : ViewModel() {
+
+    private val firebaseService = FirebaseAuthenticationService()
+    private val userNameReader  = FirebaseUserNameReader()
+
+    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
+    val uiState = _uiState.asStateFlow()
+
+    fun resetState() { _uiState.value = AuthUiState.Idle }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            runCatching {
+                firebaseService.login(email, password)
+            }.fold(
+                onSuccess = { ok ->
+                    _uiState.value = if (ok) AuthUiState.Success
+                    else AuthUiState.Error("Invalid email or password")
+                },
+                onFailure = { e ->
+                    _uiState.value = AuthUiState.Error(friendlyError(e.message))
+                }
+            )
+        }
+    }
+
+    fun register(email: String, password: String, username: String,
+                 description: String?, image: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val command = RegisterUserCommand(
+                userNameReader = userNameReader,
+                userPort = firebaseService,
+                registerUserInput = object : Input {
+                    override fun email()       = email
+                    override fun password()    = password
+                    override fun username()    = username
+                    override fun description() = description
+                    override fun image()       = image
+                }
+            )
+            runCatching { command.execute() }
+                .fold(
+                    onSuccess = { _uiState.value = AuthUiState.Success },
+                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
+                )
+        }
+    }
+    fun getCurrentUid(): String? = firebaseService.getCurrentUser()
+    private val _usernameAvailable = MutableStateFlow<Boolean?>(null)
+    val usernameAvailable: StateFlow<Boolean?> = _usernameAvailable.asStateFlow()
+
+    fun checkUsernameAvailability(username: String) {
+        if (username.length <= 3) {
+            _usernameAvailable.value = null
+            return
+        }
+        viewModelScope.launch {
+            val exists = userNameReader.exist(toUserName(username))
+            _usernameAvailable.value = !exists
+        }
+    }
+     fun isValidEmail(email: String): Boolean =
+        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    private fun toUserName(username: String): UserName { return UserName(username) }
+
+    private fun friendlyError(msg: String?) = when {
+        msg == null                    -> "Unknown error"
+        "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"
+        "WEAK_PASSWORD"        in msg  -> "Password must be at least 6 characters"
+        "INVALID_EMAIL"        in msg  -> "Invalid email format"
+        "NETWORK"              in msg  -> "No internet connection"
+        "offline"              in msg  -> "No internet connection"
+        "client is offline"    in msg  -> "No internet connection"
+        "USERNAME_ALREADY"     in msg  -> "This username is already taken"
+        "Username already"     in msg  -> "This username is already taken"
+        "INVALID_EMAIL" in msg -> "The email address is not valid"
+        "EMAIL_NOT_FOUND" in msg ||
+                "NO_SUCH_USER" in msg ||
+                "USER_NOT_FOUND" in msg   -> "No account found with this email"
+        "INVALID_PASSWORD" in msg ||
+                "WRONG_PASSWORD" in msg ||
+                "INVALID_LOGIN_CREDENTIALS" in msg -> "Incorrect password"
+        "USER_DISABLED" in msg    -> "This account has been disabled"
+        "TOO_MANY_ATTEMPTS" in msg ||
+                "TOO_MANY_REQUESTS" in msg -> "Too many failed attempts. Try again later"
+        "NETWORK_ERROR" in msg ||
+                "TIMEOUT" in msg          -> "Network error. Check your connection"
+        else                           -> msg
+    }
+}
 </file>
 
 <file path="app/build.gradle.kts">

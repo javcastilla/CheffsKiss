@@ -42,6 +42,7 @@ private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisa
 @Composable
 fun HomeRoute(
     viewModel: HomeViewModel,
+    authViewModel: AuthenticantionViewModel=viewModel(),
     onCreateRecipe: () -> Unit,
     onLibraryClick: () -> Unit,
     onLogout: () -> Unit
@@ -53,7 +54,9 @@ fun HomeRoute(
         authorNames = authorNames,
         onCreateRecipe = onCreateRecipe,
         onLibraryClick = onLibraryClick,
-        onLogout = onLogout
+        onLogout = {
+            authViewModel.logout()
+            onLogout() }
     )
 }
 
@@ -232,7 +235,8 @@ private fun HomeHeader(onLogout: () -> Unit) {
             IconButton(onClick = { }) {
                 Icon(Icons.Default.Search, contentDescription = null, tint = OnBackground)
             }
-            IconButton(onClick = onLogout) {
+            IconButton(onClick = onLogout
+                        ) {
                 Icon(Icons.Default.Logout, contentDescription = "Logout", tint = OnBackground)
             }
         }
@@ -259,7 +263,9 @@ private fun HomeSearchBar(query: String, onQueryChange: (String) -> Unit, modifi
             unfocusedTextColor = OnSurface,
             cursorColor = Primary
         ),
-        modifier = modifier.fillMaxWidth().height(52.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .height(52.dp)
     )
 }
 
