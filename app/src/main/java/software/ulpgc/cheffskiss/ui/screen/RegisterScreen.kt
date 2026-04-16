@@ -55,6 +55,8 @@ fun RegisterScreen(
     var confirmVisible  by remember { mutableStateOf(false) }
     val usernameAvailable by viewModel.usernameAvailable.collectAsState()
     var usernameTouched by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
 
     val strength = when {
         password.length >= 10 && password.any { it.isDigit() } &&
@@ -173,17 +175,25 @@ fun RegisterScreen(
                     CKTextField(
                         label = "Email Address",
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = { email = it
+                                        emailError= null},
                         placeholder = "hello@cheffskiss.com",
                         leadingIcon = { Icon(Icons.Filled.Email, null, tint = Outline) },
-                        keyboardType = KeyboardType.Email
+                        keyboardType = KeyboardType.Email,
+                        helper = when{
+                            emailError != null -> { { CKHelperText(emailError!!) } }
+                            email.isEmpty() -> {null}
+                            !viewModel.isValidEmail(email) -> { { CKHelperText("Enter a valid email address") } }
+                            else -> null
+                        }
                     )
 
                     // Password
                     CKTextField(
                         label = "Password",
                         value = password,
-                        onValueChange = { password = it },
+                        onValueChange = { password = it
+                                        passwordError=  null},
                         placeholder = "••••••••",
                         leadingIcon = { Icon(Icons.Filled.Lock, null, tint = Outline) },
                         trailingIcon = {
@@ -197,9 +207,12 @@ fun RegisterScreen(
                         },
                         visualTransformation = if (passwordVisible)
                             VisualTransformation.None else PasswordVisualTransformation(),
-                        helper = if (password.isNotEmpty()) {
-                            { CKPasswordStrength(strength, strengthLabel, strengthColor) }
-                        } else null
+                        isError = passwordError != null,
+                        helper = when {
+                            passwordError != null -> { { CKHelperText(passwordError!!) } }   // ← primero el error
+                            password.isNotEmpty() -> { { CKPasswordStrength(strength, strengthLabel, strengthColor) } }
+                            else -> null
+                        }
                     )
 
                     // Confirm Password
@@ -239,7 +252,9 @@ fun RegisterScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Button(
                         onClick = {
-                            if (passwordsMatch && password == confirmPassword) {
+                            if (email.isBlank()) emailError= "Email is required"
+                            if (password.isBlank()) passwordError = "Password is required"
+                            if (emailError == null && passwordError == null && passwordsMatch && password == confirmPassword) {
                                 viewModel.register(email, password, username, null, "")
                             }
                         },
@@ -249,7 +264,7 @@ fun RegisterScreen(
                                 && password.isNotBlank()
                                 && passwordsMatch,
                         modifier = Modifier.fillMaxWidth().height(54.dp),
-                        shape = RoundedCornerShape(50.dp),  // rounded-full
+                        shape = RoundedCornerShape(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         contentPadding = PaddingValues(0.dp),
                         elevation = ButtonDefaults.buttonElevation(6.dp)

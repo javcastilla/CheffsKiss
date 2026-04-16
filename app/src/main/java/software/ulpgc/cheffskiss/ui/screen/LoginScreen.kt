@@ -190,7 +190,7 @@ fun LoginScreen(
                         isError = emailError != null,
                         helper = when {
                             emailError != null -> { { CKHelperText(emailError!!) } }
-                            email.isNotEmpty() && !isValidEmail(email) ->
+                            email.isNotEmpty() && !viewModel.isValidEmail(email) ->
                             { { CKHelperText("Enter a valid email address") } }
                             else -> null
                         }
@@ -314,5 +314,3 @@ fun LoginScreen(
         }
     }
 }
-private fun isValidEmail(email: String): Boolean =
-    android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()

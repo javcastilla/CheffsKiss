@@ -83,7 +83,8 @@ class AuthenticantionViewModel : ViewModel() {
             _usernameAvailable.value = !exists
         }
     }
-
+     fun isValidEmail(email: String): Boolean =
+        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     private fun toUserName(username: String): UserName { return UserName(username) }
 
     private fun friendlyError(msg: String?) = when {
