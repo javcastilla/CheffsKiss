@@ -14,14 +14,15 @@ class RegisterUserCommand(
 
 
     override suspend fun execute() {
-        require(!userNameReader.exist(getUserName())){"Username already exists"}
-        userPort.register(
+        require(!userNameReader.exist(getUserName())) { "Username already exists" }
+        val uid=userPort.register(
             registerUserInput.email(),
             registerUserInput.password(),
             registerUserInput.username(),
             registerUserInput.description(),
             registerUserInput.image()
         )
+        require(uid != null) { "Error registering user" }
     }
 
     private fun getUserName(): UserName {
@@ -34,5 +35,5 @@ interface Input {
     fun password(): String
     fun username(): String
     fun description(): String?
-    fun image(): String
+    fun image(): String?
 }

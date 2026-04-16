@@ -20,24 +20,29 @@ class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , Curre
         password: String,
         username: String,
         description: String?,
-        image: String
+        image: String?
     ): UUID? {
-        try {
-            val userId =Firebase.auth.createUserWithEmailAndPassword(email, password).await().user?.uid ?: error("No UID returned")
-            Firebase.firestore.collection("Username").document(username).set(userNameHashMap(userId)).await()
-            Firebase.firestore.collection("Users").document(userId).set(userHashMap(email,description,image,username)).await()
-            return UUID.fromString(userId)
+        val userId = Firebase.auth
+            .createUserWithEmailAndPassword(email, password)
+            .await().user?.uid ?: error("No UID returned")
 
-        }catch (e: Exception){
-            println("Error al registrar: ${e.message}")
-            return null
+        Firebase.firestore.collection("Username")
+            .document(username).set(userNameHashMap(userId)).await()
+
+        Firebase.firestore.collection("Users")
+            .document(userId).set(userHashMap(email, description, image, username)).await()
+
+        return try {
+            UUID.fromString(userId)
+        } catch (e: IllegalArgumentException) {
+            UUID.nameUUIDFromBytes(userId.toByteArray(Charsets.UTF_8))
         }
     }
 
     private fun userHashMap(
         email: String,
         description: String?,
-        image: String,
+        image: String?,
         username:String
     ): HashMap<String, String?> {
         return hashMapOf(

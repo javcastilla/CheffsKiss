@@ -291,7 +291,7 @@ package software.ulpgc.cheffskiss.application.port.output
 import java.util.UUID
 
 interface RegisterPort {
-    suspend fun register(email: String, password: String, username: String, description: String?, image: String): UUID?
+    suspend fun register(email: String, password: String, username: String, description: String?, image: String?): UUID?
 }
 </file>
 
@@ -407,7 +407,7 @@ import java.util.UUID
 
 data class User(
     val id: UUID,
-    val image: String,
+    val image: String?,
     val description: String?,
     val username: UserName
 )
@@ -1062,14 +1062,15 @@ class RegisterUserCommand(
 
 
     override suspend fun execute() {
-        require(!userNameReader.exist(getUserName())){"Username already exists"}
-        userPort.register(
+        require(!userNameReader.exist(getUserName())) { "Username already exists" }
+        val uid=userPort.register(
             registerUserInput.email(),
             registerUserInput.password(),
             registerUserInput.username(),
             registerUserInput.description(),
             registerUserInput.image()
         )
+        require(uid != null) { "Error registering user" }
     }
 
     private fun getUserName(): UserName {
@@ -1082,7 +1083,7 @@ interface Input {
     fun password(): String
     fun username(): String
     fun description(): String?
-    fun image(): String
+    fun image(): String?
 }
 </file>
 
@@ -2225,24 +2226,25 @@ class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , Curre
         password: String,
         username: String,
         description: String?,
-        image: String
+        image: String?
     ): UUID? {
-        try {
-            val userId =Firebase.auth.createUserWithEmailAndPassword(email, password).await().user?.uid ?: error("No UID returned")
-            Firebase.firestore.collection("Username").document(username).set(userNameHashMap(userId)).await()
-            Firebase.firestore.collection("Users").document(userId).set(userHashMap(email,description,image,username)).await()
-            return UUID.fromString(userId)
+        val userId = Firebase.auth
+            .createUserWithEmailAndPassword(email, password)
+            .await().user?.uid ?: error("No UID returned")
 
-        }catch (e: Exception){
-            println("Error al registrar: ${e.message}")
-            return null
-        }
+        Firebase.firestore.collection("Username")
+            .document(username).set(userNameHashMap(userId)).await()
+
+        Firebase.firestore.collection("Users")
+            .document(userId).set(userHashMap(email, description, image, username)).await()
+
+        return UUID.fromString(userId)
     }
 
     private fun userHashMap(
         email: String,
         description: String?,
-        image: String,
+        image: String?,
         username:String
     ): HashMap<String, String?> {
         return hashMapOf(
@@ -2857,31 +2859,46 @@ fun RegisterScreen(
 
                     // Botón Create Account
                     Spacer(modifier = Modifier.height(4.dp))
+                    val isFormValid = uiState !is AuthUiState.Loading
+                            && username.length > 3
+                            && usernameAvailable == true
+                            && email.isNotBlank()
+                            && viewModel.isValidEmail(email)
+                            && emailError == null
+                            && password.isNotBlank()
+                            && strength >= 2
+                            && passwordError == null
+                            && confirmPassword.isNotBlank()
+                            && password == confirmPassword
                     Button(
                         onClick = {
                             if (email.isBlank()) emailError= "Email is required"
                             if (password.isBlank()) passwordError = "Password is required"
-                            if (emailError == null && passwordError == null && passwordsMatch && password == confirmPassword) {
+                            if (isFormValid) {
                                 viewModel.register(email, password, username, null, "")
                             }
                         },
-                        enabled = uiState !is AuthUiState.Loading
-                                && username.isNotBlank()
-                                && email.isNotBlank()
-                                && password.isNotBlank()
-                                && passwordsMatch,
+                        enabled = isFormValid,
                         modifier = Modifier.fillMaxWidth().height(54.dp),
                         shape = RoundedCornerShape(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         contentPadding = PaddingValues(0.dp),
                         elevation = ButtonDefaults.buttonElevation(6.dp)
                     ) {
+
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
                                     Brush.linearGradient(
-                                        listOf(Primary, Color(0xFF004D1C)),
+                                        if (isFormValid) {
+                                            listOf(Primary, Color(0xFF004D1C))
+                                        } else {
+                                            listOf(
+                                                Primary.copy(alpha = 0.4f),
+                                                Color(0xFF004D1C).copy(alpha = 0.4f)
+                                            )
+                                        },
                                         start = Offset.Zero,
                                         end = Offset(Float.POSITIVE_INFINITY, 0f)
                                     ),
@@ -3795,123 +3812,6 @@ private fun containerFieldColors() = TextFieldDefaults.colors(
 )
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt">
-package software.ulpgc.cheffskiss.ui
-
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.Input
-import software.ulpgc.cheffskiss.application.LoginInput
-import software.ulpgc.cheffskiss.application.RegisterUserCommand
-import software.ulpgc.cheffskiss.domain.model.UserName
-import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
-import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
-
-sealed class AuthUiState {
-    object Idle    : AuthUiState()
-    object Loading : AuthUiState()
-    object Success : AuthUiState()
-    data class Error(val message: String) : AuthUiState()
-}
-
-class AuthenticantionViewModel : ViewModel() {
-
-    private val firebaseService = FirebaseAuthenticationService()
-    private val userNameReader  = FirebaseUserNameReader()
-
-    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
-    val uiState = _uiState.asStateFlow()
-
-    fun resetState() { _uiState.value = AuthUiState.Idle }
-
-    fun login(email: String, password: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            runCatching {
-                firebaseService.login(email, password)
-            }.fold(
-                onSuccess = { ok ->
-                    _uiState.value = if (ok) AuthUiState.Success
-                    else AuthUiState.Error("Invalid email or password")
-                },
-                onFailure = { e ->
-                    _uiState.value = AuthUiState.Error(friendlyError(e.message))
-                }
-            )
-        }
-    }
-
-    fun register(email: String, password: String, username: String,
-                 description: String?, image: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            val command = RegisterUserCommand(
-                userNameReader = userNameReader,
-                userPort = firebaseService,
-                registerUserInput = object : Input {
-                    override fun email()       = email
-                    override fun password()    = password
-                    override fun username()    = username
-                    override fun description() = description
-                    override fun image()       = image
-                }
-            )
-            runCatching { command.execute() }
-                .fold(
-                    onSuccess = { _uiState.value = AuthUiState.Success },
-                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
-                )
-        }
-    }
-    fun getCurrentUid(): String? = firebaseService.getCurrentUser()
-    private val _usernameAvailable = MutableStateFlow<Boolean?>(null)
-    val usernameAvailable: StateFlow<Boolean?> = _usernameAvailable.asStateFlow()
-
-    fun checkUsernameAvailability(username: String) {
-        if (username.length <= 3) {
-            _usernameAvailable.value = null
-            return
-        }
-        viewModelScope.launch {
-            val exists = userNameReader.exist(toUserName(username))
-            _usernameAvailable.value = !exists
-        }
-    }
-     fun isValidEmail(email: String): Boolean =
-        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    private fun toUserName(username: String): UserName { return UserName(username) }
-
-    private fun friendlyError(msg: String?) = when {
-        msg == null                    -> "Unknown error"
-        "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"
-        "WEAK_PASSWORD"        in msg  -> "Password must be at least 6 characters"
-        "INVALID_EMAIL"        in msg  -> "Invalid email format"
-        "NETWORK"              in msg  -> "No internet connection"
-        "offline"              in msg  -> "No internet connection"
-        "client is offline"    in msg  -> "No internet connection"
-        "USERNAME_ALREADY"     in msg  -> "This username is already taken"
-        "Username already"     in msg  -> "This username is already taken"
-        "INVALID_EMAIL" in msg -> "The email address is not valid"
-        "EMAIL_NOT_FOUND" in msg ||
-                "NO_SUCH_USER" in msg ||
-                "USER_NOT_FOUND" in msg   -> "No account found with this email"
-        "INVALID_PASSWORD" in msg ||
-                "WRONG_PASSWORD" in msg ||
-                "INVALID_LOGIN_CREDENTIALS" in msg -> "Incorrect password"
-        "USER_DISABLED" in msg    -> "This account has been disabled"
-        "TOO_MANY_ATTEMPTS" in msg ||
-                "TOO_MANY_REQUESTS" in msg -> "Too many failed attempts. Try again later"
-        "NETWORK_ERROR" in msg ||
-                "TIMEOUT" in msg          -> "Network error. Check your connection"
-        else                           -> msg
-    }
-}
-</file>
-
 <file path="app/build.gradle.kts">
 plugins {
     alias(libs.plugins.android.application)
@@ -3993,6 +3893,134 @@ dependencies {
 }
 </file>
 
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt">
+package software.ulpgc.cheffskiss.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.Input
+import software.ulpgc.cheffskiss.application.LoginInput
+import software.ulpgc.cheffskiss.application.LogoutUserCommand
+import software.ulpgc.cheffskiss.application.RegisterUserCommand
+import software.ulpgc.cheffskiss.domain.model.UserName
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+
+sealed class AuthUiState {
+    object Idle    : AuthUiState()
+    object Loading : AuthUiState()
+    object Success : AuthUiState()
+    data class Error(val message: String) : AuthUiState()
+}
+
+class AuthenticantionViewModel : ViewModel() {
+
+    private val firebaseService = FirebaseAuthenticationService()
+    private val userNameReader  = FirebaseUserNameReader()
+
+    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
+    val uiState = _uiState.asStateFlow()
+
+    fun resetState() { _uiState.value = AuthUiState.Idle }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            runCatching {
+                firebaseService.login(email, password)
+            }.fold(
+                onSuccess = { ok ->
+                    _uiState.value = if (ok) AuthUiState.Success
+                    else AuthUiState.Error("Invalid email or password")
+                },
+                onFailure = { e ->
+                    _uiState.value = AuthUiState.Error(friendlyError(e.message))
+                }
+            )
+        }
+    }
+
+    fun register(email: String, password: String, username: String,
+                 description: String?, image: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val command = RegisterUserCommand(
+                userNameReader = userNameReader,
+                userPort = firebaseService,
+                registerUserInput = object : Input {
+                    override fun email()       = email
+                    override fun password()    = password
+                    override fun username()    = username
+                    override fun description() = description
+                    override fun image()       = image
+                }
+            )
+            runCatching { command.execute() }
+                .fold(
+                    onSuccess = { _uiState.value = AuthUiState.Success },
+                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
+                )
+        }
+    }
+    fun logout() {
+        viewModelScope.launch {
+            val command = LogoutUserCommand(firebaseService)
+            runCatching { command.execute() }
+                .fold(
+                    onSuccess = { _uiState.value = AuthUiState.Success },
+                    onFailure = { e -> _uiState.value = AuthUiState.Error(e.message ?: "Unknown error") }
+                )
+        }
+    }
+    fun getCurrentUid(): String? = firebaseService.getCurrentUser()
+    private val _usernameAvailable = MutableStateFlow<Boolean?>(null)
+    val usernameAvailable: StateFlow<Boolean?> = _usernameAvailable.asStateFlow()
+
+    fun checkUsernameAvailability(username: String) {
+        if (username.length <= 3) {
+            _usernameAvailable.value = null
+            return
+        }
+        viewModelScope.launch {
+            val exists = userNameReader.exist(toUserName(username))
+            _usernameAvailable.value = !exists
+        }
+    }
+     fun isValidEmail(email: String): Boolean =
+        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    private fun toUserName(username: String): UserName { return UserName(username) }
+
+    private fun friendlyError(msg: String?) = when {
+        msg == null                    -> "Unknown error"
+        "EMAIL_ALREADY_IN_USE" in msg  -> "This email is already registered"
+        "WEAK_PASSWORD"        in msg  -> "Password must be at least 6 characters"
+        "INVALID_EMAIL"        in msg  -> "Invalid email format"
+        "NETWORK"              in msg  -> "No internet connection"
+        "offline"              in msg  -> "No internet connection"
+        "client is offline"    in msg  -> "No internet connection"
+        "USERNAME_ALREADY"     in msg  -> "This username is already taken"
+        "Username already"     in msg  -> "This username is already taken"
+        "INVALID_EMAIL" in msg -> "The email address is not valid"
+        "EMAIL_NOT_FOUND" in msg ||
+                "NO_SUCH_USER" in msg ||
+                "USER_NOT_FOUND" in msg   -> "No account found with this email"
+        "INVALID_PASSWORD" in msg ||
+                "WRONG_PASSWORD" in msg ||
+                "INVALID_LOGIN_CREDENTIALS" in msg -> "Incorrect password"
+        "USER_DISABLED" in msg    -> "This account has been disabled"
+        "TOO_MANY_ATTEMPTS" in msg ||
+                "TOO_MANY_REQUESTS" in msg -> "Too many failed attempts. Try again later"
+        "NETWORK_ERROR" in msg ||
+                "TIMEOUT" in msg          -> "Network error. Check your connection"
+        else                           -> msg
+    }
+}
+</file>
+
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/HomeScreen.kt">
 package software.ulpgc.cheffskiss.ui.screen
 
@@ -4004,7 +4032,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -4026,6 +4053,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -4038,6 +4068,7 @@ private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisa
 @Composable
 fun HomeRoute(
     viewModel: HomeViewModel,
+    authViewModel: AuthenticantionViewModel=viewModel(),
     onCreateRecipe: () -> Unit,
     onLibraryClick: () -> Unit,
     onLogout: () -> Unit
@@ -4049,7 +4080,9 @@ fun HomeRoute(
         authorNames = authorNames,
         onCreateRecipe = onCreateRecipe,
         onLibraryClick = onLibraryClick,
-        onLogout = onLogout
+        onLogout = {
+            authViewModel.logout()
+            onLogout() }
     )
 }
 
@@ -4228,8 +4261,9 @@ private fun HomeHeader(onLogout: () -> Unit) {
             IconButton(onClick = { }) {
                 Icon(Icons.Default.Search, contentDescription = null, tint = OnBackground)
             }
-            IconButton(onClick = onLogout) {
-                Icon(Icons.Default.Logout, contentDescription = "Logout", tint = OnBackground)
+            IconButton(onClick = onLogout
+                        ) {
+                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout", tint = OnBackground)
             }
         }
     }
@@ -4255,7 +4289,9 @@ private fun HomeSearchBar(query: String, onQueryChange: (String) -> Unit, modifi
             unfocusedTextColor = OnSurface,
             cursorColor = Primary
         ),
-        modifier = modifier.fillMaxWidth().height(52.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .height(52.dp)
     )
 }
 
@@ -4406,7 +4442,7 @@ private fun MyRecipesSection(modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Kitchen Ledger", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = Primary)
-                Icon(Icons.Default.MenuBook, null, tint = Primary, modifier = Modifier.size(20.dp))
+                Icon(Icons.AutoMirrored.Filled.MenuBook, null, tint = Primary, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.height(12.dp))
             listOf("01" to "Smoked Paprika Chicken", "02" to "Miso Ginger Broth", "03" to "Lemon Risotto").forEachIndexed { i, (num, title) ->
@@ -4517,6 +4553,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import software.ulpgc.cheffskiss.ui.screen.CreateRecipeScreen
 import software.ulpgc.cheffskiss.ui.screen.HomeRoute
 import software.ulpgc.cheffskiss.ui.screen.LibraryScreen
@@ -4531,10 +4568,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             CheffsKissTheme {
                 val navController = rememberNavController()
-
+                val startDestination = if (FirebaseAuth.getInstance().currentUser!=null){
+                    "home"
+                } else {
+                    "login"
+                }
                 NavHost(
                     navController = navController,
-                    startDestination = "login"
+                    startDestination = startDestination
                 ) {
                     composable("login") {
                         LoginScreen(

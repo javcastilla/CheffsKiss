@@ -18,7 +18,11 @@ class FirebaseUserReader: UserReader {
     private fun DocumentSnapshot.toUser(): User? {
         val idStr = id ?: return null
         return User(
-            id          = UUID.fromString(idStr),
+            id          = try {
+                UUID.fromString(idStr)
+            } catch (e: IllegalArgumentException) {
+                UUID.nameUUIDFromBytes(idStr.toByteArray(Charsets.UTF_8))
+            },
             username    = UserName(getString("username") ?: return null),
             image       = getString("image") ?: "",
             description = getString("description")

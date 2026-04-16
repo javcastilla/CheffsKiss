@@ -250,31 +250,46 @@ fun RegisterScreen(
 
                     // Botón Create Account
                     Spacer(modifier = Modifier.height(4.dp))
+                    val isFormValid = uiState !is AuthUiState.Loading
+                            && username.length > 3
+                            && usernameAvailable == true
+                            && email.isNotBlank()
+                            && viewModel.isValidEmail(email)
+                            && emailError == null
+                            && password.isNotBlank()
+                            && strength >= 2
+                            && passwordError == null
+                            && confirmPassword.isNotBlank()
+                            && password == confirmPassword
                     Button(
                         onClick = {
                             if (email.isBlank()) emailError= "Email is required"
                             if (password.isBlank()) passwordError = "Password is required"
-                            if (emailError == null && passwordError == null && passwordsMatch && password == confirmPassword) {
+                            if (isFormValid) {
                                 viewModel.register(email, password, username, null, "")
                             }
                         },
-                        enabled = uiState !is AuthUiState.Loading
-                                && username.isNotBlank()
-                                && email.isNotBlank()
-                                && password.isNotBlank()
-                                && passwordsMatch,
+                        enabled = isFormValid,
                         modifier = Modifier.fillMaxWidth().height(54.dp),
                         shape = RoundedCornerShape(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         contentPadding = PaddingValues(0.dp),
                         elevation = ButtonDefaults.buttonElevation(6.dp)
                     ) {
+
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
                                     Brush.linearGradient(
-                                        listOf(Primary, Color(0xFF004D1C)),
+                                        if (isFormValid) {
+                                            listOf(Primary, Color(0xFF004D1C))
+                                        } else {
+                                            listOf(
+                                                Primary.copy(alpha = 0.4f),
+                                                Color(0xFF004D1C).copy(alpha = 0.4f)
+                                            )
+                                        },
                                         start = Offset.Zero,
                                         end = Offset(Float.POSITIVE_INFINITY, 0f)
                                     ),
