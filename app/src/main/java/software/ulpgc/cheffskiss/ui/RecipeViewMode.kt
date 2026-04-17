@@ -7,7 +7,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.CreateRecipeCommand
 import software.ulpgc.cheffskiss.application.RecipeInput
+import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
@@ -20,7 +24,8 @@ sealed class RecipeUiState {
 }
 
 class RecipeViewModel : ViewModel() {
-
+    private val recipeReader: RecipeReader = FirebaseRecipeReader()
+    private val userNameReader = FirebaseUserNameReader()
     private val recipeService = FirebaseRecipeService()
 
     private val _uiState = MutableStateFlow<RecipeUiState>(RecipeUiState.Idle)
@@ -96,6 +101,20 @@ class RecipeViewModel : ViewModel() {
                     )
                 }
             )
+        }
+    }
+    private val _authorName = MutableStateFlow("")
+    val authorName = _authorName.asStateFlow()
+    private val _recipe = MutableStateFlow<Recipe?>(null)
+    val recipe = _recipe.asStateFlow()
+    fun loadRecipe(recipeId: String) {
+        viewModelScope.launch {
+            val result = recipeReader.getById(recipeId)
+            _recipe.value = result
+            result?.let {
+                val name = userNameReader.getUsernameByUid(it.author)
+                _authorName.value = name ?: ""
+            }
         }
     }
 }

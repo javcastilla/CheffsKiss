@@ -58,12 +58,14 @@ app/src/main/java/software/ulpgc/cheffskiss/application/port/output/RecipePort.k
 app/src/main/java/software/ulpgc/cheffskiss/application/port/output/RegisterPort.kt
 app/src/main/java/software/ulpgc/cheffskiss/application/port/output/StepPort.kt
 app/src/main/java/software/ulpgc/cheffskiss/application/RegisterUserCommand.kt
+app/src/main/java/software/ulpgc/cheffskiss/application/SaveRecipeCommand.kt
 app/src/main/java/software/ulpgc/cheffskiss/application/services/AuthenticationService.kt
 app/src/main/java/software/ulpgc/cheffskiss/application/services/GetAllRecipesQuery.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/control/Command.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/model/Ingredient.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/model/Recipe.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/model/RecipeLine.kt
+app/src/main/java/software/ulpgc/cheffskiss/domain/model/SavedRecipe.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/model/Step.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/model/User.kt
 app/src/main/java/software/ulpgc/cheffskiss/domain/model/UserName.kt
@@ -87,6 +89,7 @@ app/src/main/java/software/ulpgc/cheffskiss/ui/screen/CreateRecipeScreen.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/screen/HomeScreen.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/screen/LibraryScreen.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/screen/LoginScreen.kt
+app/src/main/java/software/ulpgc/cheffskiss/ui/screen/RecipeDetailScreen.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/screen/RegisterScreen.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Color.kt
 app/src/main/java/software/ulpgc/cheffskiss/ui/theme/Theme.kt
@@ -130,6 +133,415 @@ settings.gradle.kts
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/RecipeDetailScreen.kt">
+package software.ulpgc.cheffskiss.ui.screen
+
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults.outlinedButtonColors
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.ui.theme.*
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecipeDetailScreen(
+    recipe: Recipe,
+    authorName: String,
+    isSaved: Boolean,
+    isOwner: Boolean,
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val scrollState = rememberScrollState()
+    val checkedIngredients = remember { mutableStateListOf<Int>() }
+
+    Scaffold(
+        containerColor = Background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Recipe",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Primary
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(Surface, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.ArrowBack, null, tint = Primary, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(scrollState)
+                .padding(bottom = 32.dp)
+        ) {
+            // ── Hero Image ────────────────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(280.dp)
+                    .clip(RoundedCornerShape(24.dp))
+            ) {
+                if (recipe.image.isNotBlank()) {
+                    AsyncImage(
+                        model = recipe.image,
+                        contentDescription = recipe.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(CKSurfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Restaurant,
+                            null,
+                            tint = Outline,
+                            modifier = Modifier.size(64.dp)
+                        )
+                    }
+                }
+            }
+
+            // ── Title, Author, Tags ───────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    recipe.title,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Primary,
+                    lineHeight = 32.sp
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text("by ", fontSize = 14.sp, color = CKOnSurfaceVariant)
+                    Text(
+                        authorName,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurface
+                    )
+                }
+                if (recipe.tags.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        recipe.tags.forEach { tag ->
+                            Box(
+                                modifier = Modifier
+                                    .background(Surface, CircleShape)
+                                    .border(1.dp, CKOutlineVariant.copy(alpha = 0.5f), CircleShape)
+                                    .padding(horizontal = 12.dp, vertical = 5.dp)
+                            ) {
+                                Text(tag, fontSize = 12.sp, color = CKOnSurfaceVariant, fontWeight = FontWeight.Medium)
+                            }
+                        }
+                    }
+                }
+
+                // ── Save / Delete buttons ─────────────────────────────────────
+                Spacer(Modifier.height(16.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(
+                        onClick = onSave,
+                        shape = CircleShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Primary,
+                            contentColor = OnPrimary
+                        )
+                    ) {
+                        Icon(
+                            if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (isSaved) "Saved" else "Save", fontWeight = FontWeight.SemiBold)
+                    }
+                    if (isOwner) {
+                        OutlinedButton(
+                            onClick = onDelete,
+                            shape = CircleShape,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                Color(0xFFBA1A1A).copy(alpha = 0.5f)
+                            ),
+                            colors = outlinedButtonColors(
+                                contentColor = Color(0xFFBA1A1A),
+                                containerColor = Color.Transparent
+                            )
+                        ) {
+                            Icon(Icons.Default.Delete, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Delete", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            }
+
+            // ── Metadata Bento Grid ───────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Servings
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Surface),
+                    elevation = CardDefaults.cardElevation(1.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Default.Group, null, tint = Primary, modifier = Modifier.size(28.dp))
+                        Text(
+                            "SERVINGS",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = CKOnSurfaceVariant,
+                            letterSpacing = 0.8.sp
+                        )
+                        Text(
+                            "${recipe.servings}",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Primary
+                        )
+                    }
+                }
+                // Duration
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Surface),
+                    elevation = CardDefaults.cardElevation(1.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Default.Schedule, null, tint = Primary, modifier = Modifier.size(28.dp))
+                        Text(
+                            "TOTAL TIME",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = CKOnSurfaceVariant,
+                            letterSpacing = 0.8.sp
+                        )
+                        Text(
+                            "${recipe.duration.inWholeMinutes} min",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Primary
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            // ── Ingredients ───────────────────────────────────────────────────
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Text(
+                    "Ingredients",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Primary
+                )
+                Spacer(Modifier.height(12.dp))
+                recipe.ingredients.forEachIndexed { index, ingredient ->
+                    val checked = checkedIngredients.contains(index)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (checked) CKSurfaceVariant else Surface)
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Checkbox(
+                            checked = checked,
+                            onCheckedChange = {
+                                if (it) checkedIngredients.add(index)
+                                else checkedIngredients.remove(index)
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Primary,
+                                uncheckedColor = CKOutlineVariant,
+                                checkmarkColor = OnPrimary
+                            )
+                        )
+                        Text(
+                            ingredient,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (checked) CKOnSurfaceVariant else OnSurface,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(28.dp))
+
+            // ── Steps ─────────────────────────────────────────────────────────
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Text(
+                    "Preparation",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Primary
+                )
+                Spacer(Modifier.height(16.dp))
+
+                val sortedSteps = recipe.steps.sortedBy { it.cardinal }
+                sortedSteps.forEachIndexed { index, step ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Number badge
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    if (index == 0) Primary else Surface,
+                                    CircleShape
+                                )
+                                .border(
+                                    if (index == 0) 0.dp else 2.dp,
+                                    CKOutlineVariant.copy(alpha = 0.5f),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "${step.cardinal}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (index == 0) OnPrimary else CKOutlineVariant
+                            )
+                        }
+
+                        // Step card
+                        Card(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Surface),
+                            elevation = CardDefaults.cardElevation(1.dp)
+                        ) {
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        step.description,
+                                        fontSize = 14.sp,
+                                        color = OnSurface,
+                                        lineHeight = 22.sp
+                                    )
+                                }
+                                // Duration badge top-right
+                                if (step.duration.inWholeMinutes > 0) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .background(
+                                                CKSurfaceVariant,
+                                                RoundedCornerShape(bottomStart = 12.dp)
+                                            )
+                                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Timer,
+                                                null,
+                                                tint = Primary,
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                            Text(
+                                                "${step.duration.inWholeMinutes} min",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = Primary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+</file>
 
 <file path=".gitignore">
 *.iml
@@ -275,21 +687,37 @@ interface LogoutPort {
 }
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/RecipePort.kt">
-package software.ulpgc.cheffskiss.application.port.output
-
-import software.ulpgc.cheffskiss.domain.model.Recipe
-
-interface RecipePort {
-    suspend fun createRecipe(recipe: Recipe)
-}
-</file>
-
 <file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/StepPort.kt">
 package software.ulpgc.cheffskiss.application.port.output
 
 interface StepPort {
     fun createAStep()
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/SaveRecipeCommand.kt">
+package software.ulpgc.cheffskiss.application
+
+import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.domain.control.Command
+import software.ulpgc.cheffskiss.domain.model.SavedRecipe
+import java.util.UUID
+
+class SaveRecipeCommand(private val recipePort : RecipePort,private val saveRecipeInput:SaveRecipeInput) : Command {
+    override suspend fun execute() {
+        recipePort.saveRecipe(createSavedRecipe(saveRecipeInput))
+    }
+    private fun createSavedRecipe(saveRecipeInput:SaveRecipeInput): SavedRecipe {
+        return SavedRecipe(
+            userId = saveRecipeInput.userId(),
+            recipeId = saveRecipeInput.recipeId()
+        )
+    }
+}
+
+interface SaveRecipeInput {
+    fun recipeId(): UUID
+    fun userId(): UUID
 }
 </file>
 
@@ -374,6 +802,20 @@ enum class Measurement {
     MEDIUM,
     LARGE
 }
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/SavedRecipe.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+import kotlinx.datetime.Instant
+import java.util.UUID
+import kotlinx.datetime.Clock
+
+data class SavedRecipe(
+    val userId: UUID,
+    val recipeId: UUID,
+    val savedAt: Instant = Clock.System.now()
+)
 </file>
 
 <file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/Step.kt">
@@ -981,6 +1423,21 @@ import java.util.UUID
 
 interface CurrentUserPort {
     fun getCurrentUser(): String?
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/application/port/output/RecipePort.kt">
+package software.ulpgc.cheffskiss.application.port.output
+
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.SavedRecipe
+
+interface RecipePort {
+    suspend fun createRecipe(recipe: Recipe)
+    suspend fun deleteRecipe(recipeId: String)
+    suspend fun saveRecipe(savedRecipe: SavedRecipe)
+    suspend fun deleteSavedRecipe(savedRecipe: SavedRecipe)
+
 }
 </file>
 
@@ -1593,44 +2050,6 @@ interface RecipeInput {
 }
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseRecipeService.kt">
-package software.ulpgc.cheffskiss.infrastructure.adapter.output
-
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.tasks.await
-import software.ulpgc.cheffskiss.application.port.output.RecipePort
-import software.ulpgc.cheffskiss.domain.model.Recipe
-
-class FirebaseRecipeService : RecipePort {
-    override suspend fun createRecipe(recipe: Recipe) {
-        Firebase.firestore.collection("recipes")
-            .document(recipe.id.toString())
-            .set(recipe.toMap()).await()
-    }
-
-    private fun Recipe.toMap(): Map<String, Any?> = mapOf(
-        "id"          to id.toString(),
-        "author"      to author,
-        "title"       to title,
-        "description" to description,
-        "servings"     to servings,
-        "duration"    to duration.inWholeSeconds,   // Long
-        "ingredients" to ingredients,               // List<String> — Firestore lo soporta
-        "steps"       to steps.map { step ->
-            mapOf(
-                "id"          to step.id.toString(),
-                "description" to step.description,
-                "duration"    to step.duration.inWholeSeconds,
-                "cardinal"    to step.cardinal
-            )
-        },
-        "tags"        to tags,
-        "image"       to image
-    )
-}
-</file>
-
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/RecipeViewMode.kt">
 package software.ulpgc.cheffskiss.ui
 
@@ -1641,7 +2060,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.CreateRecipeCommand
 import software.ulpgc.cheffskiss.application.RecipeInput
+import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
@@ -1654,7 +2077,8 @@ sealed class RecipeUiState {
 }
 
 class RecipeViewModel : ViewModel() {
-
+    private val recipeReader: RecipeReader = FirebaseRecipeReader()
+    private val userNameReader = FirebaseUserNameReader()
     private val recipeService = FirebaseRecipeService()
 
     private val _uiState = MutableStateFlow<RecipeUiState>(RecipeUiState.Idle)
@@ -1730,6 +2154,20 @@ class RecipeViewModel : ViewModel() {
                     )
                 }
             )
+        }
+    }
+    private val _authorName = MutableStateFlow("")
+    val authorName = _authorName.asStateFlow()
+    private val _recipe = MutableStateFlow<Recipe?>(null)
+    val recipe = _recipe.asStateFlow()
+    fun loadRecipe(recipeId: String) {
+        viewModelScope.launch {
+            val result = recipeReader.getById(recipeId)
+            _recipe.value = result
+            result?.let {
+                val name = userNameReader.getUsernameByUid(it.author)
+                _authorName.value = name ?: ""
+            }
         }
     }
 }
@@ -2067,26 +2505,6 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 </file>
 
-<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/Recipe.kt">
-package software.ulpgc.cheffskiss.domain.model
-
-import java.util.UUID
-import kotlin.time.Duration
-
-data class Recipe(
-    val id: UUID,
-    val author: String,
-    val title: String,
-    val description: String,
-    val duration: Duration,
-    val ingredients: List<String>,
-    val steps: List<Step>,
-    val tags: List<String>,
-    val image: String,
-    val servings: Int,
-)
-</file>
-
 <file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/input/FirebaseRecipeReader.kt">
 package software.ulpgc.cheffskiss.infrastructure.adapter.input
 
@@ -2097,6 +2515,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.datetime.Instant
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
@@ -2205,6 +2624,95 @@ class FirebaseUserNameReader : UserNameReader {
         return snapshot.documents.firstOrNull()?.id ?:""
     }
 }
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseRecipeService.kt">
+package software.ulpgc.cheffskiss.infrastructure.adapter.output
+
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.SavedRecipe
+
+class FirebaseRecipeService : RecipePort {
+    override suspend fun createRecipe(recipe: Recipe) {
+        Firebase.firestore.collection("recipes")
+            .document(recipe.id.toString())
+            .set(recipe.toMap()).await()
+    }
+
+    override suspend fun deleteRecipe(recipeId: String) {
+        Firebase.firestore.collection("recipes")
+            .document(recipeId)
+            .delete().await()
+
+    }
+
+    override suspend fun saveRecipe(savedRecipe:SavedRecipe) {
+        Firebase.firestore
+            .collection("savedRecipes")
+            .document("${savedRecipe.userId}_${savedRecipe.recipeId}")
+            .set(savedRecipe.toMap()).await()
+    }
+
+    override suspend fun deleteSavedRecipe(savedRecipe: SavedRecipe) {
+        Firebase.firestore
+            .collection("savedRecipes")
+            .document("${savedRecipe.userId}_${savedRecipe.recipeId}")
+            .delete().await()
+
+    }
+
+    private fun Recipe.toMap(): Map<String, Any?> = mapOf(
+        "id"          to id.toString(),
+        "author"      to author,
+        "title"       to title,
+        "description" to description,
+        "servings"     to servings,
+        "duration"    to duration.inWholeSeconds,   // Long
+        "ingredients" to ingredients,               // List<String> — Firestore lo soporta
+        "steps"       to steps.map { step ->
+            mapOf(
+                "id"          to step.id.toString(),
+                "description" to step.description,
+                "duration"    to step.duration.inWholeSeconds,
+                "cardinal"    to step.cardinal
+            )
+        },
+        "tags"        to tags,
+        "image"       to image
+    )
+    private fun SavedRecipe.toMap(): Map<String, Any?> = mapOf(
+        "userId" to userId,
+        "recipeId" to recipeId.toString(),
+        "savedAt" to savedAt.toString()
+    )
+}
+</file>
+
+<file path="app/src/main/java/software/ulpgc/cheffskiss/domain/model/Recipe.kt">
+package software.ulpgc.cheffskiss.domain.model
+
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import java.util.UUID
+import kotlin.time.Duration
+
+data class Recipe(
+    val id: UUID,
+    val author: String,
+    val title: String,
+    val description: String,
+    val duration: Duration,
+    val ingredients: List<String>,
+    val steps: List<Step>,
+    val tags: List<String>,
+    val image: String,
+    val servings: Int,
+    val createdAt: Instant = Clock.System.now()
+)
 </file>
 
 <file path="app/src/main/java/software/ulpgc/cheffskiss/infrastructure/adapter/output/FirebaseAuthenticationService.kt">
@@ -3596,87 +4104,6 @@ private fun CRStepItem(number: Int, isFirst: Boolean, step: StepRow, onChange: (
 }
 </file>
 
-<file path="app/build.gradle.kts">
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    id("com.google.gms.google-services")
-}
-
-android {
-    namespace = "software.ulpgc.cheffskiss"
-    compileSdk = 36
-
-    defaultConfig {
-        applicationId = "software.ulpgc.cheffskiss"
-        minSdk = 24
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
-}
-
-dependencies {
-    // AndroidX Core
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-
-    // Compose BOM (gestiona versiones automáticamente)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    implementation("androidx.compose.material:material-icons-extended")
-
-    // Lifecycle + ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
-
-    implementation("androidx.navigation:navigation-compose:2.8.9")
-
-    implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("io.coil-kt:coil-compose:2.6.0")
-    implementation("com.google.android.material:material:1.12.0")
-    implementation(libs.coil.compose)
-    implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore")
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-}
-</file>
-
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/AuthenticantionViewModel.kt">
 package software.ulpgc.cheffskiss.ui
 
@@ -3805,6 +4232,88 @@ class AuthenticantionViewModel : ViewModel() {
 }
 </file>
 
+<file path="app/build.gradle.kts">
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
+}
+
+android {
+    namespace = "software.ulpgc.cheffskiss"
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "software.ulpgc.cheffskiss"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    // AndroidX Core
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+
+    // Compose BOM (gestiona versiones automáticamente)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Lifecycle + ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+
+    implementation("androidx.navigation:navigation-compose:2.8.9")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+
+    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation(libs.coil.compose)
+    implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+</file>
+
 <file path="app/src/main/java/software/ulpgc/cheffskiss/ui/screen/HomeScreen.kt">
 package software.ulpgc.cheffskiss.ui.screen
 
@@ -3855,7 +4364,8 @@ fun HomeRoute(
     authViewModel: AuthenticantionViewModel=viewModel(),
     onCreateRecipe: () -> Unit,
     onLibraryClick: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onRecipeClick: (Recipe) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val authorNames by viewModel.authorNames.collectAsState()
@@ -3866,7 +4376,8 @@ fun HomeRoute(
         onLibraryClick = onLibraryClick,
         onLogout = {
             authViewModel.logout()
-            onLogout() }
+            onLogout() },
+        onRecipeClick = onRecipeClick
     )
 }
 
@@ -3876,7 +4387,8 @@ fun HomeScreen(
     authorNames: Map<String, String>,
     onCreateRecipe: () -> Unit,
     onLibraryClick: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onRecipeClick: (Recipe) -> Unit
 ) {
     var selectedTag by remember { mutableStateOf("All") }
     var searchQuery by remember { mutableStateOf("") }
@@ -4014,7 +4526,8 @@ fun HomeScreen(
                 RecipeItemCard(
                     recipe = recipe,
                     authorName = authorNames[recipe.author] ?: "...",
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                    onRecipeClick = onRecipeClick
                 )
             }
 
@@ -4167,10 +4680,12 @@ private fun FeaturedBanner(modifier: Modifier = Modifier) {
 private fun RecipeItemCard(
     recipe: Recipe,
     authorName: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRecipeClick: (Recipe) -> Unit
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
+        onClick = {onRecipeClick(recipe)},
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Surface),
         elevation = CardDefaults.cardElevation(2.dp)
@@ -4331,17 +4846,24 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
+import software.ulpgc.cheffskiss.ui.HomeViewModel
+import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.screen.CreateRecipeScreen
 import software.ulpgc.cheffskiss.ui.screen.HomeRoute
 import software.ulpgc.cheffskiss.ui.screen.LibraryScreen
 import software.ulpgc.cheffskiss.ui.screen.LoginScreen
+import software.ulpgc.cheffskiss.ui.screen.RecipeDetailScreen
 import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
 import software.ulpgc.cheffskiss.ui.theme.CheffsKissTheme
 
@@ -4397,8 +4919,10 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("login") {
                                     popUpTo(0) { inclusive = true }
                                 }
-                            }
-                        )
+                            },
+                            onRecipeClick = { recipe ->
+                                navController.navigate("recipe_detail/${recipe.id}")
+                            })
                     }
 
                     composable("library") {
@@ -4427,7 +4951,31 @@ class MainActivity : ComponentActivity() {
                             onSaveDraft = { navController.popBackStack() }
                         )
                     }
-                }
+                    composable(
+                        route = "recipe_detail/{recipeId}",
+                        arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
+                        val viewModel: RecipeViewModel = viewModel()
+                        val recipe by viewModel.recipe.collectAsState()        // ← ahora existe
+                        val authorName by viewModel.authorName.collectAsState() // ← ahora existe
+
+                        LaunchedEffect(recipeId) {
+                            viewModel.loadRecipe(recipeId)
+                        }
+
+                        recipe?.let {
+                            RecipeDetailScreen(
+                                recipe = it,
+                                authorName = authorName,
+                                isSaved = false,
+                                isOwner = false,
+                                onBack = { navController.popBackStack() },
+                                onSave = { },
+                                onDelete = { navController.popBackStack() }
+                            )
+                        }
+                    }                }
             }
         }
     }

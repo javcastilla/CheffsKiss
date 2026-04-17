@@ -47,7 +47,8 @@ fun HomeRoute(
     authViewModel: AuthenticantionViewModel=viewModel(),
     onCreateRecipe: () -> Unit,
     onLibraryClick: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onRecipeClick: (Recipe) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val authorNames by viewModel.authorNames.collectAsState()
@@ -58,7 +59,8 @@ fun HomeRoute(
         onLibraryClick = onLibraryClick,
         onLogout = {
             authViewModel.logout()
-            onLogout() }
+            onLogout() },
+        onRecipeClick = onRecipeClick
     )
 }
 
@@ -68,7 +70,8 @@ fun HomeScreen(
     authorNames: Map<String, String>,
     onCreateRecipe: () -> Unit,
     onLibraryClick: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onRecipeClick: (Recipe) -> Unit
 ) {
     var selectedTag by remember { mutableStateOf("All") }
     var searchQuery by remember { mutableStateOf("") }
@@ -206,7 +209,8 @@ fun HomeScreen(
                 RecipeItemCard(
                     recipe = recipe,
                     authorName = authorNames[recipe.author] ?: "...",
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                    onRecipeClick = onRecipeClick
                 )
             }
 
@@ -359,10 +363,12 @@ private fun FeaturedBanner(modifier: Modifier = Modifier) {
 private fun RecipeItemCard(
     recipe: Recipe,
     authorName: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRecipeClick: (Recipe) -> Unit
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
+        onClick = {onRecipeClick(recipe)},
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Surface),
         elevation = CardDefaults.cardElevation(2.dp)
