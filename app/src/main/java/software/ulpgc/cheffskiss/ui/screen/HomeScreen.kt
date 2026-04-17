@@ -1,11 +1,17 @@
 package software.ulpgc.cheffskiss.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.*
@@ -21,6 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.flow.distinctUntilChanged
+import software.ulpgc.cheffskiss.domain.model.MealSlot
+import software.ulpgc.cheffskiss.ui.ActivePlanDay
 import software.ulpgc.cheffskiss.ui.HomeUiState
 import software.ulpgc.cheffskiss.ui.HomeViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -31,34 +40,52 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
 
-private val tags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisanal")
+private data class FilterTag(val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
 
-// ──────────────────── Screen principal ────────────────────
+private val filterTags = listOf(
+    FilterTag("All",       Icons.Default.GridView),
+    FilterTag("Vegan",     Icons.Default.Eco),
+    FilterTag("Protein",   Icons.Default.FitnessCenter),
+    FilterTag("Dessert",   Icons.Default.Cake),
+    FilterTag("Quick",     Icons.Default.Bolt),
+    FilterTag("Artisanal", Icons.Default.AutoFixHigh)
+)
+
+// ──────────────────── Route ────────────────────
 @Composable
 fun HomeRoute(
     viewModel: HomeViewModel,
-    authViewModel: AuthenticantionViewModel=viewModel(),
+    authViewModel: AuthenticantionViewModel = viewModel(),
     onCreateRecipe: () -> Unit,
     onLibraryClick: () -> Unit,
-    onLogout: () -> Unit
+    onExploreClick: () -> Unit = {},
+    onLogout: () -> Unit,
+    onRecipeClick: (Recipe) -> Unit,
+    onViewAll: () -> Unit = {},
+    onMealPlanClick: (planId: String) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val authorNames by viewModel.authorNames.collectAsState()
     HomeScreen(
-        state = state,
-        authorNames = authorNames,
+        state          = state,
+        authorNames    = authorNames,
         onCreateRecipe = onCreateRecipe,
         onLibraryClick = onLibraryClick,
-        onLogout = {
-            authViewModel.logout()
-            onLogout() }
+        onExploreClick = onExploreClick,
+        onLogout       = { authViewModel.logout(); onLogout() },
+        onRecipeClick  = onRecipeClick,
+        onToggleSave   = viewModel::toggleSave,
+        onRetry        = viewModel::retryLoad,
+        onViewAll      = onViewAll,
+        onMealPlanClick = onMealPlanClick
     )
 }
 
@@ -68,152 +95,144 @@ fun HomeScreen(
     authorNames: Map<String, String>,
     onCreateRecipe: () -> Unit,
     onLibraryClick: () -> Unit,
-    onLogout: () -> Unit
+    onExploreClick: () -> Unit = {},
+    onLogout: () -> Unit,
+    onRecipeClick: (Recipe) -> Unit,
+    onToggleSave: (Recipe) -> Unit,
+    onRetry: () -> Unit,
+    onViewAll: () -> Unit = {},
+    onMealPlanClick: (planId: String) -> Unit = {}
 ) {
     var selectedTag by remember { mutableStateOf("All") }
     var searchQuery by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    var fabVisible by remember { mutableStateOf(true) }
+    LaunchedEffect(listState) {
+        var prevIndex  = 0
+        var prevOffset = 0
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .distinctUntilChanged()
+            .collect { (index, offset) ->
+                fabVisible = index < prevIndex || (index == prevIndex && offset <= prevOffset)
+                prevIndex  = index
+                prevOffset = offset
+            }
+    }
 
     Scaffold(
         containerColor = Background,
-        // ── Bottom Navigation Bar ──
         bottomBar = {
             HomeBottomBar(
-                currentRoute = "home",
-                onHomeClick = {},
+                currentRoute  = "home",
+                onHomeClick   = {},
+                onExploreClick = onExploreClick,
                 onCreateClick = onCreateRecipe,
-                onSavedClick = onLibraryClick
+                onSavedClick  = onLibraryClick
             )
         },
-        // ── FAB Create ──
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onCreateRecipe,
-                containerColor = Primary,
-                contentColor = OnPrimary,
-                shape = CircleShape,
-                modifier = Modifier.size(60.dp)
+            AnimatedVisibility(
+                visible = fabVisible,
+                enter   = scaleIn() + fadeIn(),
+                exit    = scaleOut() + fadeOut()
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Create recipe", modifier = Modifier.size(28.dp))
+                FloatingActionButton(
+                    onClick        = onCreateRecipe,
+                    containerColor = Primary,
+                    contentColor   = OnPrimary,
+                    shape          = CircleShape,
+                    modifier       = Modifier.size(56.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "New recipe", modifier = Modifier.size(28.dp))
+                }
             }
-        },
-        floatingActionButtonPosition = FabPosition.Center
+        }
     ) { padding ->
 
         if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Primary)
             }
             return@Scaffold
         }
 
         if (state.error != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = state.error, style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = { /* TODO: retry button */ }) {
-                        Text("Reintentar")
-                    }
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Icon(Icons.Default.WifiOff, null, tint = CKOutlineVariant, modifier = Modifier.size(48.dp))
+                    Text(state.error, style = MaterialTheme.typography.titleMedium, color = OnSurface)
+                    Button(
+                        onClick = onRetry,
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                    ) { Text("Retry") }
                 }
             }
             return@Scaffold
         }
 
-        val recipes = state.recipes
+        val filtered = state.recipes.filter { recipe ->
+            (searchQuery.isBlank() || recipe.title.contains(searchQuery, ignoreCase = true)) &&
+            (selectedTag == "All" || recipe.tags.any { it.equals(selectedTag, ignoreCase = true) })
+        }
 
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
+            state   = listState,
+            modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-
-            // ── Header ──
-            item { HomeHeader(onLogout) }
-
-            // ── Search bar ──
-            item {
-                HomeSearchBar(
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                )
-            }
-
-            // ── Tag chips ──
-            item {
-                TagChipRow(
-                    tags = tags,
-                    selected = selectedTag,
-                    onSelect = { selectedTag = it },
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-
-            // ── Featured banner ──
-            item { FeaturedBanner(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) }
-
-            // ── Section title ──
-            item {
-                Row(
+            stickyHeader(key = "header") {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .background(Background)
                 ) {
-                    Text(
-                        "Fresh Recommendations",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 18.sp,
-                        color = OnBackground
+                    HomeHeader(onLogout)
+                    HomeSearchBar(
+                        query         = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        modifier      = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                     )
-                    Text(
-                        "View all",
-                        fontSize = 12.sp,
-                        color = Primary,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { }
+                    TagChipRow(
+                        tags     = filterTags,
+                        selected = selectedTag,
+                        onSelect = { selectedTag = it },
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
             }
-
-            // ── Recipe cards ──
-            val filtered = recipes.filter { recipe ->
-                // Filtro por nombre (search)
-                val matchesSearch = searchQuery.isBlank() ||
-                        recipe.title.contains(searchQuery, ignoreCase = true)
-
-                // Filtro por tag (simplificado, ya que tu Recipe no tiene 'tag')
-                val matchesTag = selectedTag == "All" ||
-                        // TODO: si más adelante añades campo 'tag' a Recipe, aquí lo usas
-                        true // por ahora muestra todas
-
-                matchesSearch && matchesTag
+            item {
+                if (state.activePlanDay != null) {
+                    ActivePlanBanner(
+                        planDay  = state.activePlanDay,
+                        onClick  = { onMealPlanClick(state.activePlanDay.planId) },
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                    )
+                } else {
+                    FeaturedBanner(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp))
+                }
             }
-
-            items(filtered) { recipe ->
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Fresh Recommendations", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = OnBackground)
+                    Text("View all", fontSize = 12.sp, color = Primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onViewAll() })
+                }
+            }
+            items(filtered, key = { it.id }) { recipe ->
                 RecipeItemCard(
-                    recipe = recipe,
-                    authorName = authorNames[recipe.author] ?: "...",
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+                    recipe      = recipe,
+                    authorName  = authorNames[recipe.author] ?: "...",
+                    isSaved     = recipe.id.toString() in state.savedRecipeIds,
+                    isOwn       = recipe.author == state.currentUserId,
+                    onSave      = { onToggleSave(recipe) },
+                    onRecipeClick = onRecipeClick,
+                    modifier    = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
                 )
             }
-
-            // ── My Recipes ledger ──
-            item { MyRecipesSection(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) }
-
-            // ── CTA Banner ──
             item { CtaBanner(onClick = onCreateRecipe, modifier = Modifier.padding(20.dp)) }
         }
     }
@@ -223,9 +242,7 @@ fun HomeScreen(
 @Composable
 private fun HomeHeader(onLogout: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -233,14 +250,8 @@ private fun HomeHeader(onLogout: () -> Unit) {
             Text("CheffsKiss", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = Primary, letterSpacing = (-0.5).sp)
             Text("Good evening, Chef 👋", fontSize = 13.sp, color = CKOnSurfaceVariant)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            IconButton(onClick = { }) {
-                Icon(Icons.Default.Search, contentDescription = null, tint = OnBackground)
-            }
-            IconButton(onClick = onLogout
-                        ) {
-                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout", tint = OnBackground)
-            }
+        IconButton(onClick = onLogout) {
+            Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout", tint = OnBackground)
         }
     }
 }
@@ -252,47 +263,53 @@ private fun HomeSearchBar(query: String, onQueryChange: (String) -> Unit, modifi
         value = query,
         onValueChange = onQueryChange,
         placeholder = { Text("Search the archives…", fontSize = 14.sp, color = CKOutlineVariant) },
-        leadingIcon = { Icon(Icons.Default.Search, null, tint = CKOutlineVariant) },
+        leadingIcon  = { Icon(Icons.Default.Search, null, tint = CKOutlineVariant) },
         trailingIcon = { Icon(Icons.Default.Tune, null, tint = Outline) },
         singleLine = true,
         shape = RoundedCornerShape(50.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Primary,
-            unfocusedBorderColor = Color.Transparent,
+            focusedBorderColor    = Primary,
+            unfocusedBorderColor  = Color.Transparent,
             focusedContainerColor = Surface,
             unfocusedContainerColor = Surface,
-            focusedTextColor = OnSurface,
-            unfocusedTextColor = OnSurface,
-            cursorColor = Primary
+            focusedTextColor      = OnSurface,
+            unfocusedTextColor    = OnSurface,
+            cursorColor           = Primary
         ),
-        modifier = modifier
-            .fillMaxWidth()
-            .height(52.dp)
+        modifier = modifier.fillMaxWidth().height(52.dp)
     )
 }
 
 // ──────────────────── Tag Chips ────────────────────
 @Composable
-private fun TagChipRow(tags: List<String>, selected: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun TagChipRow(tags: List<FilterTag>, selected: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
     ) {
         items(tags) { tag ->
-            val active = tag == selected
-            Box(
+            val active = tag.label == selected
+            Row(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(if (active) Primary else Surface)
-                    .clickable { onSelect(tag) }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .background(if (active) CKPrimary else Surface)
+                    .clickable { onSelect(tag.label) }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
+                Icon(
+                    imageVector = tag.icon,
+                    contentDescription = null,
+                    tint = if (active) androidx.compose.ui.graphics.Color.White else CKOnSurfaceVariant,
+                    modifier = Modifier.size(14.dp)
+                )
                 Text(
-                    tag,
+                    tag.label,
                     fontSize = 13.sp,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
-                    color = if (active) OnPrimary else CKOnSurfaceVariant
+                    color = if (active) androidx.compose.ui.graphics.Color.White else CKOnSurfaceVariant
                 )
             }
         }
@@ -315,18 +332,13 @@ private fun FeaturedBanner(modifier: Modifier = Modifier) {
                 )
             )
     ) {
-        // Decoración circular
         Box(
             modifier = Modifier
                 .size(160.dp)
                 .offset(x = 200.dp, y = (-30).dp)
                 .background(Color.White.copy(alpha = 0.05f), CircleShape)
         )
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(20.dp)
-        ) {
+        Column(modifier = Modifier.align(Alignment.BottomStart).padding(20.dp)) {
             Row(
                 modifier = Modifier
                     .background(CKSecondary.copy(alpha = 0.2f), CircleShape)
@@ -338,7 +350,7 @@ private fun FeaturedBanner(modifier: Modifier = Modifier) {
                 Text("FEATURED SEASONAL", fontSize = 10.sp, color = CKSecondary, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(8.dp))
-            Text("Arroz Negro\ncon Alioli", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = Color.White, lineHeight = 26.sp)
+            Text("Black Rice\nwith Aioli", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = Color.White, lineHeight = 26.sp)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -354,17 +366,125 @@ private fun FeaturedBanner(modifier: Modifier = Modifier) {
     }
 }
 
+// ──────────────────── Active Plan Banner ────────────────────
+@Composable
+private fun ActivePlanBanner(
+    planDay: ActivePlanDay,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    androidx.compose.material3.Card(
+        modifier  = modifier.fillMaxWidth(),
+        onClick   = onClick,
+        shape     = RoundedCornerShape(20.dp),
+        colors    = androidx.compose.material3.CardDefaults.cardColors(containerColor = Surface),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    planDay.todayName,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = OnSurface
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(planDay.planName, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CKOnSurfaceVariant)
+                    Icon(Icons.Default.ChevronRight, null, tint = CKOutlineVariant, modifier = Modifier.size(16.dp))
+                }
+            }
 
+            if (planDay.slots.isEmpty()) {
+                Text("No slots planned for today", fontSize = 13.sp, color = CKOnSurfaceVariant)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    planDay.slots.take(4).forEach { slot ->
+                        val color = SLOT_COLORS.getOrElse(slot.colorIndex) { SLOT_COLORS[0] }
+                        val recipeTitle = slot.recipeId?.let { planDay.recipeTitles[it.toString()] }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Background),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Color bar
+                            Box(
+                                modifier = Modifier
+                                    .width(4.dp)
+                                    .height(44.dp)
+                                    .background(color, RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            // Time
+                            Text(
+                                slot.startTime,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = color,
+                                modifier = Modifier.width(36.dp)
+                            )
+                            // Name + recipe
+                            Column(modifier = Modifier.weight(1f).padding(vertical = 10.dp)) {
+                                Text(
+                                    slot.name,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = OnSurface,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                                if (recipeTitle != null) {
+                                    Text(
+                                        recipeTitle,
+                                        fontSize = 11.sp,
+                                        color = CKOnSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.width(8.dp))
+                        }
+                    }
+                    if (planDay.slots.size > 4) {
+                        Text(
+                            "+${planDay.slots.size - 4} more",
+                            fontSize = 11.sp,
+                            color = CKOnSurfaceVariant,
+                            modifier = Modifier.padding(start = 14.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ──────────────────── Recipe Card ────────────────────
 @Composable
 private fun RecipeItemCard(
     recipe: Recipe,
     authorName: String,
+    isSaved: Boolean,
+    isOwn: Boolean,
+    onSave: () -> Unit,
+    onRecipeClick: (Recipe) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Surface),
+        modifier  = modifier.fillMaxWidth(),
+        onClick   = { onRecipeClick(recipe) },
+        shape     = RoundedCornerShape(16.dp),
+        colors    = CardDefaults.cardColors(containerColor = Surface),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
@@ -372,7 +492,7 @@ private fun RecipeItemCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Placeholder imagen
+            // Thumbnail
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -380,11 +500,22 @@ private fun RecipeItemCard(
                     .background(CKSurfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Restaurant, null, tint = Outline, modifier = Modifier.size(28.dp))
+                if (recipe.image.isNotBlank()) {
+                    AsyncImage(
+                        model = recipe.image,
+                        contentDescription = recipe.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(Icons.Default.Restaurant, null, tint = Outline, modifier = Modifier.size(28.dp))
+                }
             }
+
+            // Info
             Column(modifier = Modifier.weight(1f)) {
                 Text(recipe.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(" $authorName", fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(authorName, fontSize = 12.sp, color = CKOnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -393,52 +524,21 @@ private fun RecipeItemCard(
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                         Icon(Icons.Default.People, null, tint = Outline, modifier = Modifier.size(12.dp))
-                        Text("4 servings", fontSize = 11.sp, color = Outline)
+                        Text("${recipe.servings} servings", fontSize = 11.sp, color = Outline)
                     }
                 }
             }
-            Icon(Icons.Default.ChevronRight, null, tint = CKOutlineVariant)
-        }
-    }
-}
 
-// ──────────────────── My Recipes Section ────────────────────
-@Composable
-private fun MyRecipesSection(modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Surface),
-        elevation = CardDefaults.cardElevation(2.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Kitchen Ledger", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = Primary)
-                Icon(Icons.AutoMirrored.Filled.MenuBook, null, tint = Primary, modifier = Modifier.size(20.dp))
-            }
-            Spacer(Modifier.height(12.dp))
-            listOf("01" to "Smoked Paprika Chicken", "02" to "Miso Ginger Broth", "03" to "Lemon Risotto").forEachIndexed { i, (num, title) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(num, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = CKOutlineVariant)
-                        Column {
-                            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = OnSurface)
-                            Text("MODIFIED OCT ${10 + i}", fontSize = 10.sp, color = CKOutlineVariant, letterSpacing = 0.5.sp)
-                        }
-                    }
-                    Icon(Icons.Default.Edit, null, tint = CKOutlineVariant, modifier = Modifier.size(16.dp))
+            // Bookmark button (hidden for own recipes)
+            if (!isOwn) {
+                IconButton(onClick = onSave, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        imageVector = if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        contentDescription = if (isSaved) "Remove from saved" else "Save recipe",
+                        tint = if (isSaved) Primary else CKOutlineVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
-                if (i < 2) HorizontalDivider(color = CKSurfaceVariant, thickness = 0.5.dp)
             }
         }
     }
@@ -470,45 +570,5 @@ private fun CtaBanner(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 Text("Start Entry", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
-    }
-}
-
-// ──────────────────── Bottom Bar ────────────────────
-@Composable
-private fun HomeBottomBar(onCreateRecipe: () -> Unit) {
-    NavigationBar(containerColor = Surface, tonalElevation = 8.dp) {
-        NavigationBarItem(
-            selected = true,
-            onClick = {},
-            icon = { Icon(Icons.Default.Home, null) },
-            label = { Text("Home", fontSize = 11.sp) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Primary,
-                selectedTextColor = Primary,
-                indicatorColor = Primary.copy(alpha = 0.1f),
-                unselectedIconColor = CKOutlineVariant
-            )
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.Explore, null) },
-            label = { Text("Explore", fontSize = 11.sp) },
-            colors = NavigationBarItemDefaults.colors(unselectedIconColor = CKOutlineVariant, unselectedTextColor = CKOutlineVariant)
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = onCreateRecipe,
-            icon = { Icon(Icons.Default.AddCircle, null) },
-            label = { Text("Create", fontSize = 11.sp) },
-            colors = NavigationBarItemDefaults.colors(unselectedIconColor = CKOutlineVariant, unselectedTextColor = CKOutlineVariant)
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.Bookmark, null) },
-            label = { Text("Saved", fontSize = 11.sp) },
-            colors = NavigationBarItemDefaults.colors(unselectedIconColor = CKOutlineVariant, unselectedTextColor = CKOutlineVariant)
-        )
     }
 }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.datetime.Instant
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
@@ -81,10 +82,11 @@ class FirebaseRecipeReader : RecipeReader {
     private fun Any?.toStep(): Step? {
         val map = this as? Map<String, Any> ?: return null
         return Step(
-            id = UUID.fromString(map["id"] as? String ?: return null),
+            id          = UUID.fromString(map["id"] as? String ?: return null),
             description = map["description"] as? String ?: "",
-            duration = ((map["duration"] as? Long) ?: 0L).seconds,
-            cardinal = ((map["cardinal"] as? Long) ?: 0L).toInt()
+            duration    = ((map["duration"] as? Long) ?: 0L).seconds,
+            cardinal    = ((map["cardinal"] as? Long) ?: 0L).toInt(),
+            image       = map["image"] as? String ?: ""
         )
     }
 }
