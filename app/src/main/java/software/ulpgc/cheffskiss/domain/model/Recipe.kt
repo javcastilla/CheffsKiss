@@ -1,5 +1,7 @@
 package software.ulpgc.cheffskiss.domain.model
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import java.util.UUID
 import kotlin.time.Duration
 
@@ -14,4 +16,5 @@ data class Recipe(
     val tags: List<String>,
     val image: String,
     val servings: Int,
+    val createdAt: Instant = Clock.System.now()
 )

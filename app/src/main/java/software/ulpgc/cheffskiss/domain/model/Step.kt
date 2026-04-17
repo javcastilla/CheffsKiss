@@ -7,5 +7,6 @@ data class Step(
     val id: UUID,
     val description: String,
     val duration: Duration,
-    val cardinal: Int
+    val cardinal: Int,
+    val image: String = ""
 )

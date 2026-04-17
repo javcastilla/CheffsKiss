@@ -43,7 +43,7 @@ import kotlin.time.Duration.Companion.minutes
 
 // ── Models ────────────────────────────────────────────────────────────────────
 data class IngredientRow(val id: Int, val name: String = "", val amount: String = "", val unit: String = "UNIT")
-data class StepRow(val id: Int, val description: String = "", val duration: String = "")
+data class StepRow(val id: Int, val description: String = "", val duration: String = "", val imageUri: Uri? = null, val existingImageUrl: String? = null)
 val unitOptions = listOf("UNIT","GRAM","KG","ML","LITRE","CUP","TBSP","TSP","SLICE","PINCH")
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -86,18 +86,26 @@ fun CreateRecipeScreen(
             val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
             val mappedSteps = steps.mapIndexed { index, stepRow ->
                 Step(
-                    id = UUID.randomUUID(),
+                    id          = UUID.randomUUID(),
                     description = stepRow.description,
-                    duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
-                    cardinal = index + 1
+                    duration    = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
+                    cardinal    = index + 1,
+                    image       = ""  // will be set by ViewModel after upload
                 )
             }
+            val stepImageUris = steps.map { it.imageUri }
             viewModel.createRecipe(
-                authorId = authorId,
-                title = title, description = description,
-                servings = servings, hours = hours, minutes = minutes,
-                ingredients = mappedIngredients, steps = mappedSteps,
-                tags = tags.toList(), image = coverImageUri?.toString() ?: ""
+                authorId      = authorId,
+                title         = title,
+                description   = description,
+                servings      = servings,
+                hours         = hours,
+                minutes       = minutes,
+                ingredients   = mappedIngredients,
+                steps         = mappedSteps,
+                stepImageUris = stepImageUris,
+                tags          = tags.toList(),
+                imageUri      = coverImageUri
             )
         }
     }
@@ -376,9 +384,9 @@ fun CreateRecipeScreen(
 // ── Top Bar ───────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CRTopBar(onBack: () -> Unit, onSaveDraft: () -> Unit) {
+internal fun CRTopBar(title: String = "New Recipe", onBack: () -> Unit, onSaveDraft: () -> Unit = {}) {
     TopAppBar(
-        title = { Text("New Recipe", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = OnSurface) },
+        title = { Text(title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = OnSurface) },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Box(
@@ -396,7 +404,7 @@ private fun CRTopBar(onBack: () -> Unit, onSaveDraft: () -> Unit) {
 
 // ── Bottom Bar ────────────────────────────────────────────────────────────────
 @Composable
-private fun CRBottomBar(onSaveDraft: () -> Unit, onPublish: () -> Unit, isLoading: Boolean) {
+internal fun CRBottomBar(onSaveDraft: () -> Unit, onPublish: () -> Unit, isLoading: Boolean, publishLabel: String = "Publish Recipe") {
     Surface(
         color = Background.copy(alpha = 0.95f),
         tonalElevation = 0.dp,
@@ -428,7 +436,7 @@ private fun CRBottomBar(onSaveDraft: () -> Unit, onPublish: () -> Unit, isLoadin
                 } else {
                     Icon(Icons.Default.Publish, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Publish Recipe", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(publishLabel, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
         }
@@ -437,7 +445,7 @@ private fun CRBottomBar(onSaveDraft: () -> Unit, onPublish: () -> Unit, isLoadin
 
 // ── Cover Photo ───────────────────────────────────────────────────────────────
 @Composable
-private fun CoverPhotoCard(imageUri: Uri?, onClick: () -> Unit) {
+internal fun CoverPhotoCard(imageUri: Uri?, existingUrl: String? = null, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -448,10 +456,10 @@ private fun CoverPhotoCard(imageUri: Uri?, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        if (imageUri != null) {
-            AsyncImage(model = imageUri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-        } else {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        when {
+            imageUri != null -> AsyncImage(model = imageUri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            !existingUrl.isNullOrBlank() -> AsyncImage(model = existingUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            else -> Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(
                     modifier = Modifier.size(56.dp).background(CKSurfaceVariant, CircleShape),
                     contentAlignment = Alignment.Center
@@ -465,7 +473,7 @@ private fun CoverPhotoCard(imageUri: Uri?, onClick: () -> Unit) {
 
 // ── Section Card ──────────────────────────────────────────────────────────────
 @Composable
-private fun CRCard(
+internal fun CRCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     content: @Composable ColumnScope.() -> Unit
@@ -488,7 +496,7 @@ private fun CRCard(
 
 // ── Field with Icon ───────────────────────────────────────────────────────────
 @Composable
-private fun CRFieldWithIcon(
+internal fun CRFieldWithIcon(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     content: @Composable () -> Unit
@@ -499,7 +507,7 @@ private fun CRFieldWithIcon(
     }
 }
 @Composable
-private fun CRTextField(
+internal fun CRTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
@@ -529,7 +537,7 @@ private fun CRTextField(
 }
 // ── Small Circle Button ───────────────────────────────────────────────────────
 @Composable
-private fun SmallCircleButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+internal fun SmallCircleButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
     Box(
         modifier = Modifier.size(36.dp).background(Background, CircleShape).clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -538,7 +546,7 @@ private fun SmallCircleButton(icon: androidx.compose.ui.graphics.vector.ImageVec
 
 // ── Tag Chip ──────────────────────────────────────────────────────────────────
 @Composable
-private fun CRTagChip(tag: String, onRemove: () -> Unit) {
+internal fun CRTagChip(tag: String, onRemove: () -> Unit) {
     Row(
         modifier = Modifier.background(Primary, CircleShape).padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -552,7 +560,7 @@ private fun CRTagChip(tag: String, onRemove: () -> Unit) {
 
 // ── Dashed Add Button ─────────────────────────────────────────────────────────
 @Composable
-private fun DashedAddButton(label: String, onClick: () -> Unit) {
+internal fun DashedAddButton(label: String, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -568,55 +576,121 @@ private fun DashedAddButton(label: String, onClick: () -> Unit) {
 
 // ── Step Item ─────────────────────────────────────────────────────────────────
 @Composable
-private fun CRStepItem(number: Int, isFirst: Boolean, step: StepRow, onChange: (StepRow) -> Unit, onRemove: () -> Unit) {
+internal fun CRStepItem(number: Int, isFirst: Boolean, step: StepRow, onChange: (StepRow) -> Unit, onRemove: () -> Unit) {
+    val imageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { onChange(step.copy(imageUri = it)) }
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Number badge
         Box(
-            modifier = Modifier.size(28.dp).background(if (isFirst) Primary else Background, CircleShape)
+            modifier = Modifier.size(28.dp)
+                .background(if (isFirst) Primary else Background, CircleShape)
                 .border(if (isFirst) 0.dp else 2.dp, CKOutlineVariant.copy(alpha = 0.5f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Text("$number", fontSize = 11.sp, fontWeight = FontWeight.Bold,
                 color = if (isFirst) OnPrimary else CKOutlineVariant)
         }
+
         // Step content card
         Column(
             modifier = Modifier.weight(1f).background(Background, RoundedCornerShape(16.dp)).padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Description field
             TextField(
                 value = step.description,
                 onValueChange = { onChange(step.copy(description = it)) },
                 placeholder = { Text("Describe this step...", fontSize = 13.sp, color = CKOutlineVariant) },
                 modifier = Modifier.fillMaxWidth(), minLines = 2,
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = OnSurface, unfocusedTextColor = OnSurface
+                    focusedContainerColor   = Color.Transparent, unfocusedContainerColor   = Color.Transparent,
+                    focusedIndicatorColor   = Color.Transparent, unfocusedIndicatorColor   = Color.Transparent,
+                    focusedTextColor        = OnSurface,         unfocusedTextColor         = OnSurface
                 )
             )
+
+            // Step image — preview or picker button
+            val displayImage: Any? = step.imageUri ?: step.existingImageUrl?.takeIf { it.isNotBlank() }
+            if (displayImage != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                ) {
+                    AsyncImage(
+                        model = displayImage,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    // Remove button
+                    IconButton(
+                        onClick = { onChange(step.copy(imageUri = null, existingImageUrl = null)) },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp)
+                            .size(28.dp)
+                            .background(Color.Black.copy(alpha = 0.45f), CircleShape)
+                    ) {
+                        Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(14.dp))
+                    }
+                }
+            } else {
+                // Add photo button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Surface)
+                        .clickable { imageLauncher.launch("image/*") }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Default.AddAPhoto, null, tint = CKOutlineVariant, modifier = Modifier.size(16.dp))
+                    Text("Add photo (optional)", fontSize = 12.sp, color = CKOutlineVariant, fontWeight = FontWeight.Medium)
+                }
+            }
+
             HorizontalDivider(color = CKOutlineVariant.copy(alpha = 0.2f))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+
+            // Time row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Icon(Icons.Default.Timer, null, tint = CKOutlineVariant, modifier = Modifier.size(14.dp))
                     Text("Step Time", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CKOutlineVariant)
                 }
                 Row(
-                    modifier = Modifier.background(Surface, CircleShape).border(1.dp, CKOutlineVariant.copy(alpha = 0.3f), CircleShape).padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier
+                        .background(Surface, CircleShape)
+                        .border(1.dp, CKOutlineVariant.copy(alpha = 0.3f), CircleShape)
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     BasicTextField(
                         value = step.duration,
                         onValueChange = { onChange(step.copy(duration = it)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = OnSurface, textAlign = TextAlign.Center),
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                            color = OnSurface, textAlign = TextAlign.Center
+                        ),
                         modifier = Modifier.width(36.dp),
                         decorationBox = { inner ->
-                            if (step.duration.isEmpty()) Text("0", fontSize = 12.sp, color = CKOutlineVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                            if (step.duration.isEmpty())
+                                Text("0", fontSize = 12.sp, color = CKOutlineVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                             else inner()
                         }
                     )
@@ -624,6 +698,7 @@ private fun CRStepItem(number: Int, isFirst: Boolean, step: StepRow, onChange: (
                 }
             }
         }
+
         // Delete button
         IconButton(onClick = onRemove, modifier = Modifier.size(28.dp).padding(top = 4.dp)) {
             Icon(Icons.Outlined.DeleteOutline, null, tint = CKOutlineVariant, modifier = Modifier.size(18.dp))
