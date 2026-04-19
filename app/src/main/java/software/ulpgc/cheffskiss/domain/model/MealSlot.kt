@@ -8,14 +8,14 @@ data class MealSlot(
     val name: String,
     val startTime: SlotTime,
     val endTime: SlotTime,
-    val recipeId: UUID? = null,
-    val colorIndex: Int = 0
+    val colorIndex: Int = 0,
+    val recipeId: UUID? = null
 ) {
     init {
-        require(name.isNotBlank())
-        require(endTime > startTime)
+        require(name.isNotBlank()) { "Slot name cannot be blank" }
+        require(startTime < endTime) { "Start time must be before end time" }
     }
 
     fun overlapsWith(other: MealSlot): Boolean =
-        this.startTime < other.endTime && other.startTime < this.endTime
+        startTime < other.endTime && other.startTime < endTime
 }

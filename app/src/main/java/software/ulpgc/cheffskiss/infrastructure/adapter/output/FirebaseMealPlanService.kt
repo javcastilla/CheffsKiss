@@ -11,7 +11,8 @@ import kotlinx.datetime.Instant
 import software.ulpgc.cheffskiss.application.port.output.MealPlanPort
 import software.ulpgc.cheffskiss.domain.model.MealPlan
 import software.ulpgc.cheffskiss.domain.model.MealSlot
-import software.ulpgc.cheffskiss.domain.model.Weekday
+import software.ulpgc.cheffskiss.domain.model.vo.SlotTime
+import software.ulpgc.cheffskiss.domain.model.vo.Weekday
 import java.util.UUID
 
 class FirebaseMealPlanService : MealPlanPort {
@@ -69,22 +70,22 @@ class FirebaseMealPlanService : MealPlanPort {
     // ── Mappers ───────────────────────────────────────────────────────────────
 
     private fun MealPlan.toMap(): Map<String, Any?> = mapOf(
-        "id"        to id.toString(),
-        "userId"    to userId.toString(),
-        "name"      to name,
-        "isActive"  to isActive,
+        "id" to id.toString(),
+        "userId" to userId.toString(),
+        "name" to name,
+        "isActive" to isActive,
         "createdAt" to createdAt.toString(),
-        "days"      to days.map { (day, slots) ->
+        "days" to days.map { (day, slots) ->
             day.name to slots.map { it.toMap() }
         }.toMap()
     )
 
     private fun MealSlot.toMap(): Map<String, Any?> = mapOf(
-        "id"         to id.toString(),
-        "name"       to name,
-        "startTime"  to startTime,
-        "endTime"    to endTime,
-        "recipeId"   to recipeId?.toString(),
+        "id" to id.toString(),
+        "name" to name,
+        "startTime" to startTime.toString(),
+        "endTime" to endTime.toString(),
+        "recipeId" to recipeId?.toString(),
         "colorIndex" to colorIndex
     )
 
@@ -115,8 +116,8 @@ class FirebaseMealPlanService : MealPlanPort {
         MealSlot(
             id         = UUID.fromString(get("id") as? String ?: return null),
             name       = get("name") as? String ?: "",
-            startTime  = get("startTime") as? String ?: "08:00",
-            endTime    = get("endTime") as? String ?: "09:00",
+            startTime = SlotTime.fromHHmm(get("startTime") as? String ?: "08:00"),
+            endTime   = SlotTime.fromHHmm(get("endTime")   as? String ?: "09:00"),
             recipeId   = (get("recipeId") as? String)?.let { UUID.fromString(it) },
             colorIndex = when (val raw = get("colorIndex")) {
                 is Long   -> raw.toInt()

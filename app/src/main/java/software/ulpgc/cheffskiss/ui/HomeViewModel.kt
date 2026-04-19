@@ -18,7 +18,7 @@ import software.ulpgc.cheffskiss.application.services.GetMealPlansQuery
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.MealSlot
 import software.ulpgc.cheffskiss.domain.model.Recipe
-import software.ulpgc.cheffskiss.domain.model.Weekday
+import software.ulpgc.cheffskiss.domain.model.vo.Weekday
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
