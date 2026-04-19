@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.model.MealPlan
 import software.ulpgc.cheffskiss.domain.model.MealSlot
@@ -12,6 +13,7 @@ import software.ulpgc.cheffskiss.domain.model.vo.SlotTime
 import software.ulpgc.cheffskiss.domain.model.vo.Weekday
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseMealPlanService
 import java.util.UUID
 
@@ -43,7 +45,8 @@ data class MealPlanDetailUiState(
 
 class MealPlanDetailViewModel(
     private val mealPlanRepository: MealPlanRepository = FirebaseMealPlanService(),
-    private val recipeReader: RecipeReader = FirebaseRecipeReader()
+    private val recipeReader: RecipeReader = FirebaseRecipeReader(),
+    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MealPlanDetailUiState())
@@ -52,27 +55,30 @@ class MealPlanDetailViewModel(
     fun load(planId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val uuid = UUID.fromString(planId)
-            // Derive userId from planId is not possible directly;
-            // we load all plans and find ours.
-            // Instead we subscribe to the flow and pick the matching plan.
-            mealPlanRepository.getMealPlans(uuid).catch { e ->
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
-            }.collect { plans ->
-                val plan = plans.firstOrNull { it.id == uuid }
-                    ?: plans.firstOrNull() // fallback: first plan if id matches userId
-                _uiState.update { it.copy(plan = plan, isLoading = false) }
-                if (plan != null) resolveRecipeTitles(plan)
+            val planUuid = UUID.fromString(planId)
+            val uid = currentUserPort.getCurrentUser() ?: run {
+                _uiState.update { it.copy(isLoading = false, error = "No authenticated user") }
+                return@launch
             }
+            val userUuid = UUID.nameUUIDFromBytes(uid.toByteArray())
+            mealPlanRepository.getMealPlans(userUuid)
+                .catch { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
+                .collect { plans ->
+                    val plan = plans.firstOrNull { it.id == planUuid }
+                    _uiState.update { it.copy(plan = plan, isLoading = false) }
+                    if (plan != null) {
+                        resolveRecipeTitles(plan)
+                        loadAvailableRecipes()
+                    }
+                }
         }
-        loadAvailableRecipes()
     }
 
     private fun loadAvailableRecipes() {
         viewModelScope.launch {
-            recipeReader.getAll().catch { }.collect { recipes ->
-                _uiState.update { it.copy(availableRecipes = recipes) }
-            }
+            recipeReader.getAll()
+                .catch { }
+                .collect { recipes -> _uiState.update { it.copy(availableRecipes = recipes) } }
         }
     }
 
@@ -82,18 +88,14 @@ class MealPlanDetailViewModel(
             .toSet()
         if (ids.isEmpty()) return
         viewModelScope.launch {
-            val titles = ids.associateWith { id ->
-                recipeReader.getById(id)?.title ?: ""
-            }
+            val titles = ids.associateWith { id -> recipeReader.getById(id)?.title ?: "" }
             _uiState.update { it.copy(recipeTitles = it.recipeTitles + titles) }
         }
     }
 
-    // ── Day selection ─────────────────────────────────────────────────────────
-
-    fun selectDay(day: Weekday) = _uiState.update { it.copy(selectedDay = day) }
-
-    // ── Active toggle ─────────────────────────────────────────────────────────
+    fun selectDay(day: Weekday) {
+        _uiState.update { it.copy(selectedDay = day) }
+    }
 
     fun toggleActive() {
         val plan = _uiState.value.plan ?: return
@@ -101,126 +103,125 @@ class MealPlanDetailViewModel(
         save(updated)
     }
 
-    // ── Slot form ─────────────────────────────────────────────────────────────
-
-    fun openAddSlot() = _uiState.update {
-        it.copy(slotForm = SlotFormState(isVisible = true))
+    fun openAddSlot() {
+        _uiState.update { it.copy(slotForm = SlotFormState(isVisible = true)) }
     }
 
-    fun openEditSlot(slot: MealSlot) = _uiState.update {
-        it.copy(
-            slotForm = SlotFormState(
-                isVisible      = true,
-                editingSlotId  = slot.id,
-                name           = slot.name,
-                startTime      = slot.startTime.toString(),
-                endTime        = slot.endTime.toString(),
-                colorIndex     = slot.colorIndex,
-                selectedRecipeId    = slot.recipeId,
-                selectedRecipeTitle = slot.recipeId?.toString()
-                    ?.let { id -> it.recipeTitles[id] } ?: ""
+    fun openEditSlot(slot: MealSlot) {
+        _uiState.update {
+            it.copy(
+                slotForm = SlotFormState(
+                    isVisible = true,
+                    editingSlotId = slot.id,
+                    name = slot.name,
+                    startTime = slot.startTime.toString(),
+                    endTime = slot.endTime.toString(),
+                    colorIndex = slot.colorIndex,
+                    selectedRecipeId = slot.recipeId,
+                    selectedRecipeTitle = slot.recipeId?.toString()
+                        ?.let { id -> it.recipeTitles[id] } ?: ""
+                )
             )
-        )
+        }
     }
 
-    fun closeSlotForm() = _uiState.update {
-        it.copy(slotForm = SlotFormState())
+    fun closeSlotForm() {
+        _uiState.update { it.copy(slotForm = SlotFormState()) }
     }
 
-    fun onSlotNameChange(name: String) = _uiState.update {
-        it.copy(slotForm = it.slotForm.copy(name = name, nameError = null))
+    fun onSlotNameChange(name: String) {
+        _uiState.update { it.copy(slotForm = it.slotForm.copy(name = name, nameError = null)) }
     }
 
-    fun onSlotStartTimeChange(time: String) = _uiState.update {
-        it.copy(slotForm = it.slotForm.copy(startTime = time, timeError = null))
+    fun onSlotStartTimeChange(time: String) {
+        _uiState.update { it.copy(slotForm = it.slotForm.copy(startTime = time, timeError = null)) }
     }
 
-    fun onSlotEndTimeChange(time: String) = _uiState.update {
-        it.copy(slotForm = it.slotForm.copy(endTime = time, timeError = null))
+    fun onSlotEndTimeChange(time: String) {
+        _uiState.update { it.copy(slotForm = it.slotForm.copy(endTime = time, timeError = null)) }
     }
 
-    fun onSlotColorChange(index: Int) = _uiState.update {
-        it.copy(slotForm = it.slotForm.copy(colorIndex = index))
+    fun onSlotColorChange(index: Int) {
+        _uiState.update { it.copy(slotForm = it.slotForm.copy(colorIndex = index)) }
     }
 
-    // ── Recipe picker ─────────────────────────────────────────────────────────
-
-    fun openRecipePicker() = _uiState.update {
-        it.copy(slotForm = it.slotForm.copy(isRecipePickerVisible = true))
+    fun openRecipePicker() {
+        _uiState.update { it.copy(slotForm = it.slotForm.copy(isRecipePickerVisible = true)) }
     }
 
-    fun closeRecipePicker() = _uiState.update {
-        it.copy(slotForm = it.slotForm.copy(isRecipePickerVisible = false))
+    fun closeRecipePicker() {
+        _uiState.update { it.copy(slotForm = it.slotForm.copy(isRecipePickerVisible = false)) }
     }
 
-    fun onRecipePickerQueryChange(query: String) = _uiState.update {
-        it.copy(slotForm = it.slotForm.copy(recipePickerQuery = query))
+    fun onRecipePickerQueryChange(query: String) {
+        _uiState.update { it.copy(slotForm = it.slotForm.copy(recipePickerQuery = query)) }
     }
 
-    fun selectRecipe(recipe: Recipe?) = _uiState.update {
-        it.copy(
-            slotForm = it.slotForm.copy(
-                selectedRecipeId    = recipe?.id,
-                selectedRecipeTitle = recipe?.title ?: "",
-                isRecipePickerVisible = false
+    fun selectRecipe(recipe: Recipe?) {
+        _uiState.update {
+            it.copy(
+                slotForm = it.slotForm.copy(
+                    selectedRecipeId = recipe?.id,
+                    selectedRecipeTitle = recipe?.title ?: "",
+                    isRecipePickerVisible = false,
+                    recipePickerQuery = ""
+                )
             )
-        )
+        }
     }
-
-    // ── Save slot ─────────────────────────────────────────────────────────────
 
     fun saveSlot() {
-        val state = _uiState.value
-        val plan  = state.plan ?: return
-        val form  = state.slotForm
+        val form = _uiState.value.slotForm
+        val plan = _uiState.value.plan ?: return
 
-        // Validate
         if (form.name.isBlank()) {
-            _uiState.update { it.copy(slotForm = form.copy(nameError = "Name is required")) }
-            return
-        }
-        val startTime = runCatching { SlotTime.fromHHmm(form.startTime) }.getOrNull()
-        val endTime   = runCatching { SlotTime.fromHHmm(form.endTime) }.getOrNull()
-        if (startTime == null || endTime == null || startTime >= endTime) {
-            _uiState.update { it.copy(slotForm = form.copy(timeError = "Enter valid times (HH:MM), start before end")) }
+            _uiState.update { it.copy(slotForm = it.slotForm.copy(nameError = "Name is required")) }
             return
         }
 
-        val day = state.selectedDay
-        val slot = MealSlot(
-            id         = form.editingSlotId ?: UUID.randomUUID(),
-            name       = form.name.trim(),
-            startTime  = startTime,
-            endTime    = endTime,
+        val start = SlotTime.fromHHmm(form.startTime)
+        val end = SlotTime.fromHHmm(form.endTime)
+
+        if (start >= end) {
+            _uiState.update { it.copy(slotForm = it.slotForm.copy(timeError = "Invalid time range")) }
+            return
+        }
+
+        val day = _uiState.value.selectedDay
+        val currentSlots = plan.days[day] ?: emptyList()
+
+        val newSlot = MealSlot(
+            id = form.editingSlotId ?: UUID.randomUUID(),
+            name = form.name,
+            startTime = start,
+            endTime = end,
             colorIndex = form.colorIndex,
-            recipeId   = form.selectedRecipeId
+            recipeId = form.selectedRecipeId
         )
 
-        _uiState.update { it.copy(isSaving = true) }
-        val updated = try {
-            if (form.editingSlotId != null) plan.updateSlot(day, slot)
-            else                            plan.addSlot(day, slot)
-        } catch (e: IllegalArgumentException) {
-            _uiState.update { it.copy(isSaving = false, slotForm = form.copy(timeError = e.message)) }
-            return
+        val updatedSlots = if (form.editingSlotId != null) {
+            currentSlots.map { if (it.id == form.editingSlotId) newSlot else it }
+        } else {
+            currentSlots + newSlot
         }
-        save(updated)
-        _uiState.update { it.copy(slotForm = SlotFormState()) }
+
+        val updatedPlan = plan.copy(days = plan.days + (day to updatedSlots))
+        save(updatedPlan)
     }
 
     fun deleteSlot(slot: MealSlot) {
         val plan = _uiState.value.plan ?: return
-        val day  = _uiState.value.selectedDay
-        save(plan.removeSlot(day, slot.id))
+        val day = _uiState.value.selectedDay
+        val updatedSlots = (plan.days[day] ?: emptyList()).filter { it.id != slot.id }
+        val updatedPlan = plan.copy(days = plan.days + (day to updatedSlots))
+        save(updatedPlan)
     }
 
-    // ── Internal save ─────────────────────────────────────────────────────────
-
-    private fun save(updated: MealPlan) {
+    private fun save(plan: MealPlan) {
         viewModelScope.launch {
-            runCatching { mealPlanRepository.updateMealPlan(updated) }
-                .onSuccess { _uiState.update { it.copy(plan = updated, isSaving = false) } }
-                .onFailure { e -> _uiState.update { it.copy(isSaving = false, error = e.message) } }
+            _uiState.update { it.copy(isSaving = true) }
+            mealPlanRepository.updateMealPlan(plan)
+            _uiState.update { it.copy(plan = plan, isSaving = false, slotForm = SlotFormState()) }
         }
     }
 }
