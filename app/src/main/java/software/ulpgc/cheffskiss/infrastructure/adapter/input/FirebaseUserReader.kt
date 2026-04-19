@@ -31,8 +31,17 @@ class FirebaseUserReader: UserReader {
 
 
     override suspend fun getByUid(uid: String): User? {
-        android.util.Log.d("UserReader", "uid buscado: $uid")
-        val snapshot = Firebase.firestore.collection("Users").document(uid).get().await()
+        val javaUuid = try {
+            UUID.fromString(uid)
+        } catch (e: IllegalArgumentException) {
+            UUID.nameUUIDFromBytes(uid.toByteArray(Charsets.UTF_8))
+        }
+
+        val snapshot = Firebase.firestore
+            .collection("Users")
+            .document(javaUuid.toString())
+            .get().await()
+
         return snapshot.toUser()
     }
 
