@@ -10,42 +10,41 @@ import kotlinx.datetime.Instant
 import software.ulpgc.cheffskiss.application.port.output.RecipePort
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.SavedRecipe
+import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
 import java.util.UUID
 
 class FirebaseRecipeService : RecipePort {
 
+    private val db = Firebase.firestore
+
     // ── Authored recipes ──────────────────────────────────────────────────────
 
-    override suspend fun createRecipe(recipe: Recipe) {
-        Firebase.firestore
-            .collection("recipes")
+    override suspend fun createRecipe(recipe: Recipe, lines: List<RecipeLine>, steps: List<Step>) {
+        db.collection("recipes")
             .document(recipe.id.toString())
-            .set(recipe.toMap())
+            .set(recipe.toMap(lines, steps))
             .await()
     }
 
-    override suspend fun updateRecipe(recipe: Recipe) {
-        Firebase.firestore
-            .collection("recipes")
+    override suspend fun updateRecipe(recipe: Recipe, lines: List<RecipeLine>, steps: List<Step>) {
+        db.collection("recipes")
             .document(recipe.id.toString())
-            .set(recipe.toMap())
+            .set(recipe.toMap(lines, steps))
             .await()
     }
 
     override suspend fun deleteRecipe(recipeId: String) {
-        Firebase.firestore
-            .collection("recipes")
+        db.collection("recipes")
             .document(recipeId)
             .delete()
             .await()
     }
 
-    // ── Saved recipes — path: users/{userUuid}/savedRecipes/{recipeId} ────────
-    // userId en SavedRecipe ya es UUID (convertido por el Command con nameUUIDFromBytes)
+    // ── Saved recipes ─────────────────────────────────────────────────────────
 
     override suspend fun saveRecipe(savedRecipe: SavedRecipe) {
-        Firebase.firestore
-            .collection("userLibrary")
+        db.collection("userLibrary")
             .document(savedRecipe.userId.toString())
             .collection("savedRecipes")
             .document(savedRecipe.recipeId.toString())
@@ -54,8 +53,7 @@ class FirebaseRecipeService : RecipePort {
     }
 
     override suspend fun deleteSavedRecipe(savedRecipe: SavedRecipe) {
-        Firebase.firestore
-            .collection("userLibrary")
+        db.collection("userLibrary")
             .document(savedRecipe.userId.toString())
             .collection("savedRecipes")
             .document(savedRecipe.recipeId.toString())
@@ -64,11 +62,8 @@ class FirebaseRecipeService : RecipePort {
     }
 
     override fun getSavedRecipes(userId: String): Flow<List<SavedRecipe>> = callbackFlow {
-        // Convertir Firebase UID → UUID para construir el path correcto
         val userUuid = UUID.nameUUIDFromBytes(userId.toByteArray())
-
-        val listener = Firebase.firestore
-            .collection("userLibrary")
+        val listener = db.collection("userLibrary")
             .document(userUuid.toString())
             .collection("savedRecipes")
             .addSnapshotListener { snapshot, error ->
@@ -91,24 +86,33 @@ class FirebaseRecipeService : RecipePort {
 
     // ── Mappers ───────────────────────────────────────────────────────────────
 
-    private fun Recipe.toMap(): Map<String, Any?> = mapOf(
+    private fun Recipe.toMap(lines: List<RecipeLine>, steps: List<Step>): Map<String, Any?> = mapOf(
         "id"          to id.toString(),
         "author"      to author,
         "title"       to title,
         "description" to description,
         "servings"    to servings,
         "duration"    to duration.inWholeSeconds,
-        "ingredients" to ingredients,
+        "tags"        to tags,
+        "image"       to image,
+        "createdAt"   to createdAt.toString(),
+        "lines"       to lines.map { line ->
+            mapOf(
+                "id"           to line.id.toString(),
+                "ingredientId" to line.ingredientId.toString(),
+                "amount"       to line.amount,
+                "measurement"  to line.measurement.name
+            )
+        },
         "steps"       to steps.map { step ->
             mapOf(
                 "id"          to step.id.toString(),
                 "description" to step.description,
                 "duration"    to step.duration.inWholeSeconds,
-                "cardinal"    to step.cardinal
+                "cardinal"    to step.cardinal,
+                "image"       to step.image
             )
-        },
-        "tags"  to tags,
-        "image" to image
+        }
     )
 
     private fun SavedRecipe.toMap(): Map<String, Any?> = mapOf(

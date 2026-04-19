@@ -12,6 +12,8 @@ import software.ulpgc.cheffskiss.application.CreateRecipeCommand
 import software.ulpgc.cheffskiss.application.RecipeInput
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.domain.model.vo.Measurement
+import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
 import software.ulpgc.cheffskiss.application.port.output.ImageStoragePort
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.LocalImageStorage
@@ -34,6 +36,32 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     val uiState = _uiState.asStateFlow()
 
     fun resetState() { _uiState.value = RecipeUiState.Idle }
+
+    // ── Text → RecipeLine ─────────────────────────────────────────────────────
+    // "200 KILO harina" → RecipeLine(ingredientId = nameUUID("harina"), amount=200, KILO)
+    // Si no hay cantidad/unidad reconocibles, amount=1, UNIT
+
+    private fun parseLines(ingredients: List<String>): List<RecipeLine> =
+        ingredients.map { raw ->
+            val parts = raw.trim().split("\\s+".toRegex())
+            val amount = parts.getOrNull(0)?.toIntOrNull()
+            val measurement = parts.getOrNull(1)
+                ?.uppercase()
+                ?.let { runCatching { Measurement.valueOf(it) }.getOrNull() }
+            val nameTokens = when {
+                amount != null && measurement != null -> parts.drop(2)
+                amount != null                        -> parts.drop(1)
+                else                                  -> parts
+            }
+            val name = nameTokens.joinToString(" ").ifBlank { raw.trim() }
+            RecipeLine(
+                ingredientId = UUID.nameUUIDFromBytes(name.lowercase().toByteArray()),
+                amount       = amount ?: 1,
+                measurement  = measurement ?: Measurement.UNIT
+            )
+        }
+
+    // ── Create ────────────────────────────────────────────────────────────────
 
     fun createRecipe(
         authorId: String,
@@ -69,9 +97,13 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
 
                 val stepsWithImages = steps.mapIndexed { idx, step ->
                     val uri = stepImageUris.getOrNull(idx)
-                    if (uri != null) imageStorage.save(uri, recipeId.toString(), "step_$idx.jpg")
-                    step
+                    val url = if (uri != null)
+                        imageStorage.save(uri, recipeId.toString(), "step_$idx.jpg")
+                    else step.image
+                    step.copy(image = url)
                 }
+
+                val lines = parseLines(ingredients)
 
                 val input = object : RecipeInput {
                     override fun id()          = recipeId
@@ -80,7 +112,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                     override fun description() = description
                     override fun servings()    = servings
                     override fun duration()    = totalMinutes.minutes
-                    override fun ingredients() = ingredients
+                    override fun lines()       = lines
                     override fun steps()       = stepsWithImages
                     override fun tags()        = tags
                     override fun image()       = coverUrl
@@ -92,6 +124,8 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
             )
         }
     }
+
+    // ── Update ────────────────────────────────────────────────────────────────
 
     fun updateRecipe(
         recipeId: UUID,
@@ -123,30 +157,32 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
             runCatching {
                 val totalMinutes = ((hours.toIntOrNull() ?: 0) * 60 + (minutes.toIntOrNull() ?: 0)).toLong()
 
-                val coverUrl = if (imageUri != null) {
+                val coverUrl = if (imageUri != null)
                     imageStorage.save(imageUri, recipeId.toString(), "cover.jpg")
-                } else existingImageUrl
+                else existingImageUrl
 
                 val stepsWithImages = steps.mapIndexed { idx, step ->
                     val uri = stepImageUris.getOrNull(idx)
-                    if (uri != null) imageStorage.save(uri, recipeId.toString(), "step_$idx.jpg")
-                    step
+                    val url = if (uri != null)
+                        imageStorage.save(uri, recipeId.toString(), "step_$idx.jpg")
+                    else step.image
+                    step.copy(image = url)
                 }
 
-                val updated = Recipe(
+                val lines = parseLines(ingredients)
+
+                val recipe = Recipe(
                     id          = recipeId,
                     author      = authorId,
                     title       = title,
                     description = description,
                     servings    = servings,
                     duration    = totalMinutes.minutes,
-                    ingredients = ingredients,
-                    steps       = stepsWithImages,
                     tags        = tags,
                     image       = coverUrl,
                     createdAt   = createdAt
                 )
-                recipeService.updateRecipe(updated)
+                recipeService.updateRecipe(recipe, lines, stepsWithImages)
             }.fold(
                 onSuccess = { _uiState.value = RecipeUiState.Success },
                 onFailure = { e -> _uiState.value = RecipeUiState.Error(e.message ?: "Error updating recipe") }

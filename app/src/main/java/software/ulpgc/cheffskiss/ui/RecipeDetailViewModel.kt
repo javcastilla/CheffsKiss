@@ -2,7 +2,10 @@ package software.ulpgc.cheffskiss.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.SaveRecipeCommand
 import software.ulpgc.cheffskiss.application.SaveRecipeInput
@@ -11,6 +14,8 @@ import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.output.RecipePort
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
@@ -23,19 +28,22 @@ class RecipeDetailViewModel(
     private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
 ) : ViewModel() {
 
+    private val firebaseReader = recipeReader as FirebaseRecipeReader
     private val userNameReader = FirebaseUserNameReader()
 
-    private val _recipe = MutableStateFlow<Recipe?>(null)
-    val recipe: StateFlow<Recipe?> = _recipe.asStateFlow()
-
+    private val _recipe     = MutableStateFlow<Recipe?>(null)
     private val _authorName = MutableStateFlow("")
-    val authorName: StateFlow<String> = _authorName.asStateFlow()
+    private val _isSaved    = MutableStateFlow(false)
+    private val _isOwner    = MutableStateFlow(false)
+    private val _lines      = MutableStateFlow<List<RecipeLine>>(emptyList())
+    private val _steps      = MutableStateFlow<List<Step>>(emptyList())
 
-    private val _isSaved = MutableStateFlow(false)
-    val isSaved: StateFlow<Boolean> = _isSaved.asStateFlow()
-
-    private val _isOwner = MutableStateFlow(false)
-    val isOwner: StateFlow<Boolean> = _isOwner.asStateFlow()
+    val recipe:     StateFlow<Recipe?>          = _recipe.asStateFlow()
+    val authorName: StateFlow<String>           = _authorName.asStateFlow()
+    val isSaved:    StateFlow<Boolean>          = _isSaved.asStateFlow()
+    val isOwner:    StateFlow<Boolean>          = _isOwner.asStateFlow()
+    val lines:      StateFlow<List<RecipeLine>> = _lines.asStateFlow()
+    val steps:      StateFlow<List<Step>>       = _steps.asStateFlow()
 
     private val currentUid: String? get() = currentUserPort.getCurrentUser()
 
@@ -43,9 +51,22 @@ class RecipeDetailViewModel(
         viewModelScope.launch {
             val r = recipeReader.getById(recipeId) ?: return@launch
             _recipe.value = r
-            _isOwner.value = (currentUid == r.author)
+            _isOwner.value = currentUid == r.author
+
             val name = userNameReader.getUsernameByUid(r.author)
             _authorName.value = if (name.isNullOrBlank()) "Unknown" else name
+
+            launch {
+                firebaseReader.linesOf(r)
+                    .catch { }
+                    .collect { _lines.value = it }
+            }
+            launch {
+                firebaseReader.stepsOf(r)
+                    .catch { }
+                    .collect { _steps.value = it }
+            }
+
             observeIsSaved(recipeId)
         }
     }
@@ -55,9 +76,7 @@ class RecipeDetailViewModel(
         viewModelScope.launch {
             GetSavedRecipesQuery(recipePort)(uid)
                 .catch { }
-                .collect { saved ->
-                    _isSaved.value = saved.any { it.recipeId.toString() == recipeId }
-                }
+                .collect { saved -> _isSaved.value = saved.any { it.recipeId.toString() == recipeId } }
         }
     }
 
@@ -66,9 +85,7 @@ class RecipeDetailViewModel(
         val r = _recipe.value ?: return
         val uid = currentUid ?: return
         val currentlySaved = _isSaved.value
-
-        _isSaved.value = !currentlySaved // optimistic
-
+        _isSaved.value = !currentlySaved
         viewModelScope.launch {
             runCatching {
                 if (currentlySaved) {
@@ -76,12 +93,10 @@ class RecipeDetailViewModel(
                 } else {
                     SaveRecipeCommand(recipePort, object : SaveRecipeInput {
                         override fun recipeId() = r.id
-                        override fun userId()   = uid
+                        override fun userId() = uid
                     }).execute()
                 }
-            }.onFailure {
-                _isSaved.value = currentlySaved // rollback
-            }
+            }.onFailure { _isSaved.value = currentlySaved }
         }
     }
 
