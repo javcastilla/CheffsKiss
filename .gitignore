@@ -14,5 +14,6 @@
 .cxx
 local.properties
 google-services.json
+repomix.**
 .idea
 .idea/**
