@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
-import software.ulpgc.cheffskiss.application.CreateRecipeCommand
-import software.ulpgc.cheffskiss.application.RecipeInput
+import software.ulpgc.cheffskiss.application.control.CreateRecipeCommand
+import software.ulpgc.cheffskiss.application.control.RecipeInput
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.vo.Measurement

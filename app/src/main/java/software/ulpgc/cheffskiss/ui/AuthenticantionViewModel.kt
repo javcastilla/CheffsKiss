@@ -6,10 +6,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.Input
-import software.ulpgc.cheffskiss.application.LoginInput
-import software.ulpgc.cheffskiss.application.LogoutUserCommand
-import software.ulpgc.cheffskiss.application.RegisterUserCommand
+import software.ulpgc.cheffskiss.application.control.Input
+import software.ulpgc.cheffskiss.application.control.LogoutUserCommand
+import software.ulpgc.cheffskiss.application.control.RegisterUserCommand
 import software.ulpgc.cheffskiss.domain.model.UserName
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService

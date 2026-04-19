@@ -7,9 +7,9 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.SaveRecipeCommand
-import software.ulpgc.cheffskiss.application.SaveRecipeInput
-import software.ulpgc.cheffskiss.application.UnsaveRecipeCommand
+import software.ulpgc.cheffskiss.application.control.SaveRecipeCommand
+import software.ulpgc.cheffskiss.application.control.SaveRecipeInput
+import software.ulpgc.cheffskiss.application.control.UnsaveRecipeCommand
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.application.port.RecipeRepository

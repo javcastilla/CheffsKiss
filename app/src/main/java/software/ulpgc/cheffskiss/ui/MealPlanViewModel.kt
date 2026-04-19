@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.CreateMealPlanCommand
-import software.ulpgc.cheffskiss.application.DeleteMealPlanCommand
-import software.ulpgc.cheffskiss.application.SetActiveMealPlanCommand
+import software.ulpgc.cheffskiss.application.control.CreateMealPlanCommand
+import software.ulpgc.cheffskiss.application.control.DeleteMealPlanCommand
+import software.ulpgc.cheffskiss.application.control.SetActiveMealPlanCommand
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.application.services.GetMealPlansQuery
