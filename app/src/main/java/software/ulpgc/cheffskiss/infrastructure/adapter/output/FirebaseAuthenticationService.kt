@@ -24,17 +24,21 @@ class FirebaseAuthenticationService :Authenticator, Registrator, LogoutClient , 
             .createUserWithEmailAndPassword(email, password)
             .await().user?.uid ?: error("No UID returned")
 
-        Firebase.firestore.collection("Username")
-            .document(username).set(userNameHashMap(userId)).await()
-
-        Firebase.firestore.collection("Users")
-            .document(userId).set(userHashMap(email, description, image, username)).await()
-
-        return try {
+        val javaUuid = try {
             UUID.fromString(userId)
         } catch (e: IllegalArgumentException) {
             UUID.nameUUIDFromBytes(userId.toByteArray(Charsets.UTF_8))
         }
+
+        Firebase.firestore.collection("Username")
+            .document(username)
+            .set(userNameHashMap(userId)).await()
+
+        Firebase.firestore.collection("Users")
+            .document(javaUuid.toString())
+            .set(userHashMap(email, description, image, username)).await()
+
+        return javaUuid
     }
 
     private fun userHashMap(
