@@ -18,9 +18,9 @@ import java.util.UUID
 class FirebaseMealPlanService : MealPlanRepository {
 
     private fun plansCollection(userId: UUID) = Firebase.firestore
-        .collection("users")
+        .collection("Users")
         .document(userId.toString())
-        .collection("mealPlans")
+        .collection("MealPlans")
 
     // ── CRUD ─────────────────────────────────────────────────────────────────
 

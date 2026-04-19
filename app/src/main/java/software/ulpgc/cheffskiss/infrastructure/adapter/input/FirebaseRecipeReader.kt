@@ -23,8 +23,8 @@ import kotlin.time.Duration.Companion.seconds
 class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, IngredientStore {
 
     private val db          = Firebase.firestore
-    private val recipes     = db.collection("recipes")
-    private val ingredients = db.collection("ingredients")
+    private val recipes     = db.collection("Recipes")
+    private val ingredients = db.collection("Ingredients")
 
     // ── RecipeReader ──────────────────────────────────────────────────────────
 

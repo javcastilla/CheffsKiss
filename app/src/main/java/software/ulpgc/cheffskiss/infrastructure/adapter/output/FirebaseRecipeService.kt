@@ -21,21 +21,21 @@ class FirebaseRecipeService : RecipeRepository {
     // ── Authored recipes ──────────────────────────────────────────────────────
 
     override suspend fun createRecipe(recipe: Recipe, lines: List<RecipeLine>, steps: List<Step>) {
-        db.collection("recipes")
+        db.collection("Recipes")
             .document(recipe.id.toString())
             .set(recipe.toMap(lines, steps))
             .await()
     }
 
     override suspend fun updateRecipe(recipe: Recipe, lines: List<RecipeLine>, steps: List<Step>) {
-        db.collection("recipes")
+        db.collection("Recipes")
             .document(recipe.id.toString())
             .set(recipe.toMap(lines, steps))
             .await()
     }
 
     override suspend fun deleteRecipe(recipeId: String) {
-        db.collection("recipes")
+        db.collection("Recipes")
             .document(recipeId)
             .delete()
             .await()
@@ -44,18 +44,18 @@ class FirebaseRecipeService : RecipeRepository {
     // ── Saved recipes ─────────────────────────────────────────────────────────
 
     override suspend fun saveRecipe(savedRecipe: SavedRecipe) {
-        db.collection("userLibrary")
+        db.collection("UserLibrary")
             .document(savedRecipe.userId.toString())
-            .collection("savedRecipes")
+            .collection("SavedRecipes")
             .document(savedRecipe.recipeId.toString())
             .set(savedRecipe.toMap())
             .await()
     }
 
     override suspend fun deleteSavedRecipe(savedRecipe: SavedRecipe) {
-        db.collection("userLibrary")
+        db.collection("UserLibrary")
             .document(savedRecipe.userId.toString())
-            .collection("savedRecipes")
+            .collection("SavedRecipes")
             .document(savedRecipe.recipeId.toString())
             .delete()
             .await()
@@ -63,9 +63,9 @@ class FirebaseRecipeService : RecipeRepository {
 
     override fun getSavedRecipes(userId: String): Flow<List<SavedRecipe>> = callbackFlow {
         val userUuid = UUID.nameUUIDFromBytes(userId.toByteArray())
-        val listener = db.collection("userLibrary")
+        val listener = db.collection("UserLibrary")
             .document(userUuid.toString())
-            .collection("savedRecipes")
+            .collection("SavedRecipes")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) { close(error); return@addSnapshotListener }
                 val saved = snapshot?.documents?.mapNotNull { doc ->
