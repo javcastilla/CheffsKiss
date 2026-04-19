@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.domain.model.Ingredient
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
@@ -32,6 +33,7 @@ import software.ulpgc.cheffskiss.ui.theme.*
 fun RecipeDetailScreen(
     recipe: Recipe,
     lines: List<RecipeLine>,
+    ingredients: Map<String, Ingredient>,
     steps: List<Step>,
     authorName: String,
     isSaved: Boolean,
@@ -237,7 +239,7 @@ fun RecipeDetailScreen(
                                 )
                             )
                             Text(
-                                "${line.amount} ${line.measurement.name.lowercase()}",
+                                "${line.amount} ${line.measurement.name.lowercase()} of ${ingredients[line.ingredientId.toString()]?.name}",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = if (checked) CKOnSurfaceVariant else OnSurface

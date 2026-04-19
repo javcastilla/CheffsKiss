@@ -3,11 +3,12 @@ package software.ulpgc.cheffskiss.ui.screen
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,112 +17,149 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.*
-import androidx.compose.material3.ButtonDefaults.outlinedButtonColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.google.firebase.auth.FirebaseAuth
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.IngredientViewModel
 import software.ulpgc.cheffskiss.ui.RecipeUiState
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
+import software.ulpgc.cheffskiss.ui.components.DurationPickerDialog
+import software.ulpgc.cheffskiss.ui.components.IngredientSearchField
 import software.ulpgc.cheffskiss.ui.theme.*
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
-// ── Models ────────────────────────────────────────────────────────────────────
-data class IngredientRow(val id: Int, val name: String = "", val amount: String = "", val unit: String = "UNIT")
-data class StepRow(val id: Int, val description: String = "", val duration: String = "", val imageUri: Uri? = null, val existingImageUrl: String? = null)
-val unitOptions = listOf("UNIT","GRAM","KG","ML","LITRE","CUP","TBSP","TSP","SLICE","PINCH")
+// ── Screen ───────────────────────────────────────────────────────────────────
 
-// ── Screen ────────────────────────────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateRecipeScreen(
-    viewModel: RecipeViewModel = viewModel(),
-    authViewModel: AuthenticantionViewModel = viewModel(),
     onBack: () -> Unit,
     onPublishSuccess: () -> Unit,
-    onSaveDraft: () -> Unit
+    onSaveDraft: () -> Unit,
+    viewModel: RecipeViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var coverImageUri by remember { mutableStateOf<Uri?>(null) }
+    val uiState by viewModel.uiState.collectAsState()
+
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val authorId = currentUser?.uid ?: ""
+
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var servings by remember { mutableIntStateOf(4) }
+    var servings by remember { mutableIntStateOf(2) }
     var hours by remember { mutableStateOf("") }
     var minutes by remember { mutableStateOf("") }
+    var coverImageUri by remember { mutableStateOf<Uri?>(null) }
     var tagInput by remember { mutableStateOf("") }
-    val tags = remember { mutableStateListOf("Vegetarian", "Dessert") }
-    val ingredients = remember { mutableStateListOf(IngredientRow(0), IngredientRow(1)) }
-    val steps = remember { mutableStateListOf(StepRow(0)) }
-    var nextIngredId by remember { mutableIntStateOf(2) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val tags = remember { mutableStateListOf<String>() }
+    val ingredients = remember { mutableStateListOf<IngredientRow>().also { it.addIngredientRow(0) } }
+    val steps = remember { mutableStateListOf<StepRow>().also { it.addStepRow(0) } }
+    var nextIngredId by remember { mutableIntStateOf(1) }
     var nextStepId by remember { mutableIntStateOf(1) }
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { coverImageUri = it }
     }
 
-    LaunchedEffect(uiState) {
-        if (uiState is RecipeUiState.Success) {
-            viewModel.resetState()
-            onPublishSuccess()
-        }
-    }
-
-    val handlePublish = {
-        val authorId = authViewModel.getCurrentUid()
-        if (authorId != null) {
-            val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
-            val mappedSteps = steps.mapIndexed { index, stepRow ->
-                Step(
-                    id          = UUID.randomUUID(),
-                    description = stepRow.description,
-                    duration    = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
-                    cardinal    = index + 1,
-                    image       = stepRow.existingImageUrl ?: ""
-                )
-            }
-            val stepImageUris = steps.map { it.imageUri }
-            viewModel.createRecipe(
-                authorId      = authorId,
-                title         = title,
-                description   = description,
-                servings      = servings,
-                hours         = hours,
-                minutes       = minutes,
-                ingredients   = mappedIngredients,
-                steps         = mappedSteps,
-                stepImageUris = stepImageUris,
-                tags          = tags.toList(),
-                imageUri      = coverImageUri
-            )
-        }
-    }
-
     val snackbarHostState = remember { SnackbarHostState() }
+
     LaunchedEffect(uiState) {
-        if (uiState is RecipeUiState.Error) {
-            snackbarHostState.showSnackbar((uiState as RecipeUiState.Error).message)
+        when (uiState) {
+            is RecipeUiState.Success -> {
+                viewModel.resetState()
+                onPublishSuccess()
+            }
+            is RecipeUiState.Error -> {
+                snackbarHostState.showSnackbar((uiState as RecipeUiState.Error).message)
+                viewModel.resetState()
+            }
+            else -> Unit
         }
+    }
+
+    val durationLabel = buildString {
+        val h = hours.toIntOrNull() ?: 0
+        val m = minutes.toIntOrNull() ?: 0
+        if (h > 0) append("${h}h ")
+        if (m > 0) append("${m}m")
+        if (h == 0 && m == 0) append("Set duration")
+    }.trim()
+
+    if (showTimePicker) {
+        DurationPickerDialog(
+            hours = hours.toIntOrNull() ?: 0,
+            minutes = minutes.toIntOrNull() ?: 0,
+            onConfirm = { h, m ->
+                hours = if (h > 0) h.toString() else ""
+                minutes = if (m > 0) m.toString() else ""
+                showTimePicker = false
+            },
+            onDismiss = { showTimePicker = false }
+        )
     }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Background,
-        topBar = { CRTopBar(onBack = onBack, onSaveDraft = onSaveDraft) },
-        bottomBar = { CRBottomBar(onSaveDraft = onSaveDraft, onPublish = handlePublish, isLoading = uiState is RecipeUiState.Loading) }
+        topBar = {
+            CRTopBar(title = "New Recipe", onBack = onBack)
+        },
+        bottomBar = {
+            CRBottomBar(
+                onSaveDraft = onSaveDraft,
+                onPublish = {
+                    val mappedIngredients = ingredients
+                        .filter { it.name.isNotBlank() }
+                        .map {
+                            val ingredientId = it.ingredientId
+                                ?: throw IllegalArgumentException("Select a valid ingredient from the list")
+                            "${it.amount};${it.unit};$ingredientId"
+                        }
+
+                    val mappedSteps = steps.filter { it.description.isNotBlank() }
+                    val stepImageUris = mappedSteps.map { it.imageUri }
+
+                    viewModel.createRecipe(
+                        authorId = authorId,
+                        title = title,
+                        description = description,
+                        servings = servings,
+                        hours = hours,
+                        minutes = minutes,
+                        ingredients = mappedIngredients,
+                        steps = mappedSteps.mapIndexed { index, stepRow ->
+                            Step(
+                                id = UUID.randomUUID(),
+                                description = stepRow.description,
+                                duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
+                                cardinal = index + 1,
+                                image = stepRow.existingImageUrl ?: ""
+                            )
+                        },
+                        stepImageUris = stepImageUris,
+                        tags = tags.toList(),
+                        imageUri = coverImageUri
+                    )
+                },
+                isLoading = uiState is RecipeUiState.Loading
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -131,11 +169,14 @@ fun CreateRecipeScreen(
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Cover Photo
+            CoverPhotoCard(
+                imageUri = coverImageUri,
+                existingUrl = null,
+                onClick = { galleryLauncher.launch("image/*") }
+            )
 
-            // ── Cover Photo ──────────────────────────────────────────────────
-            CoverPhotoCard(imageUri = coverImageUri, onClick = { galleryLauncher.launch("image/*") })
-
-            // ── Basic Details ────────────────────────────────────────────────
+            // Basic Details
             CRCard(icon = Icons.Default.Info, title = "Basic Details") {
                 CRFieldWithIcon(icon = Icons.Default.RestaurantMenu, label = "Recipe Title") {
                     CRTextField(
@@ -153,136 +194,101 @@ fun CreateRecipeScreen(
                         value = description,
                         onValueChange = { description = it },
                         placeholder = "Share a little story about this recipe...",
-                        minLines = 3, maxLines = 5,
+                        minLines = 3,
+                        maxLines = 5,
                         leadingIcon = {
                             Icon(Icons.Default.Description, null, tint = CKOutlineVariant, modifier = Modifier.size(18.dp))
                         }
                     )
                 }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    // Servings
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            "Servings",
-                            fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CKOnSurfaceVariant
-                        )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Servings", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CKOnSurfaceVariant)
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp)
-                                .background(Surface, CircleShape)
-                                .padding(horizontal = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .background(Background, CircleShape)
+                                .padding(horizontal = 8.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             SmallCircleButton(icon = Icons.Default.Remove) { if (servings > 1) servings-- }
-                            Text("$servings", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = OnSurface)
+                            Text(servings.toString(), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = OnSurface)
                             SmallCircleButton(icon = Icons.Default.Add) { servings++ }
                         }
                     }
-
-                    // Duration
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            "Duration",
-                            fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CKOnSurfaceVariant
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            CRTextField(
-                                value = hours, onValueChange = { hours = it },
-                                placeholder = "0h", singleLine = true,
-                                keyboardType = KeyboardType.Number,
-                                modifier = Modifier.weight(1f)
-                            )
-                            CRTextField(
-                                value = minutes, onValueChange = { minutes = it },
-                                placeholder = "0m", singleLine = true,
-                                keyboardType = KeyboardType.Number,
-                                modifier = Modifier.weight(1f)
-                            )
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Duration", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CKOnSurfaceVariant)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Background, CircleShape)
+                                .clip(CircleShape)
+                                .clickable { showTimePicker = true }
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(Icons.Default.Timer, null, tint = CKOutlineVariant, modifier = Modifier.size(16.dp))
+                            Text(durationLabel, fontSize = 13.sp, color = if (durationLabel == "Set duration") CKOutlineVariant else OnSurface)
                         }
                     }
                 }
             }
 
-            // ── Tags ─────────────────────────────────────────────────────────
-            CRCard(icon = Icons.Default.Sell, title = "Tags") {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth().animateContentSize(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    tags.forEach { tag ->
+            // Tags
+            CRCard(icon = Icons.Default.Label, title = "Tags") {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(tags) { tag ->
                         CRTagChip(tag = tag, onRemove = { tags.remove(tag) })
                     }
-                    Row(
-                        modifier = Modifier
-                            .background(CKSurfaceVariant.copy(alpha = 0.5f), CircleShape)
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(Icons.Default.Add, null, tint = CKOutlineVariant, modifier = Modifier.size(14.dp))
-                        BasicTextField(
-                            value = tagInput,
-                            onValueChange = { tagInput = it },
-                            singleLine = true,
-                            textStyle = androidx.compose.ui.text.TextStyle(
-                                fontSize = 12.sp,
-                                color = OnSurface,
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = androidx.compose.ui.text.input.ImeAction.Done
-                            ),
-                            keyboardActions = androidx.compose.foundation.text.KeyboardActions(
-                                onDone = {
-                                    if (tagInput.isNotBlank()) {
-                                        tags.add(tagInput.trim())
-                                        tagInput = ""
-                                    }
-                                }
-                            ),
-                            modifier = Modifier.widthIn(min = 60.dp, max = 120.dp),
-                            decorationBox = { inner ->
-                                Box {
-                                    inner()
-                                    // Placeholder encima, solo visible si está vacío
-                                    if (tagInput.isEmpty()) {
-                                        Text(
-                                            "Add tag...",
-                                            fontSize = 12.sp,
-                                            color = CKOutlineVariant,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Background, CircleShape)
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Default.Add, null, tint = CKOutlineVariant, modifier = Modifier.size(16.dp))
+                    BasicTextField(
+                        value = tagInput,
+                        onValueChange = { tagInput = it },
+                        singleLine = true,
+                        textStyle = TextStyle(fontSize = 13.sp, color = OnSurface),
+                        keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                        keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                            onDone = {
+                                if (tagInput.isNotBlank()) {
+                                    tags.add(tagInput.trim())
+                                    tagInput = ""
                                 }
                             }
-                        )
-                    }
+                        ),
+                        modifier = Modifier.widthIn(min = 60.dp, max = 120.dp),
+                        decorationBox = { inner ->
+                            Box {
+                                if (tagInput.isEmpty()) Text("Add tag...", fontSize = 12.sp, color = CKOutlineVariant, fontWeight = FontWeight.SemiBold)
+                                inner()
+                            }
+                        }
+                    )
                 }
             }
 
-            // ── Ingredients ──────────────────────────────────────────────────
+            // Ingredients
             CRCard(icon = Icons.Default.ShoppingBasket, title = "Ingredients") {
-                ingredients.forEach { ingredient ->
+                ingredients.forEachIndexed { index, ingredient ->
+                    val ingredientViewModel: IngredientViewModel = viewModel(key = "ingr_vm_$index")
+                    var fieldValue by remember(ingredient.id) { mutableStateOf(ingredient.name) }
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                     ) {
                         Icon(Icons.Default.DragIndicator, null, tint = CKOutlineVariant, modifier = Modifier.size(20.dp))
 
-                        // Amount — ancho fijo pequeño
                         Box(
                             modifier = Modifier
                                 .width(72.dp)
@@ -291,36 +297,33 @@ fun CreateRecipeScreen(
                         ) {
                             BasicTextField(
                                 value = ingredient.amount,
-                                onValueChange = { ingredients[ingredients.indexOf(ingredient)] = ingredient.copy(amount = it) },
+                                onValueChange = { ingredients[index] = ingredient.copy(amount = it) },
                                 singleLine = true,
-                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 13.sp, color = OnSurface, fontWeight = FontWeight.Medium),
-                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                textStyle = TextStyle(fontSize = 13.sp, color = OnSurface, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center),
                                 decorationBox = { inner ->
-                                    if (ingredient.amount.isEmpty())
-                                        Text("Amt", fontSize = 13.sp, color = CKOutlineVariant)
-                                    else inner()
+                                    if (ingredient.amount.isEmpty()) Text("Amt", fontSize = 13.sp, color = CKOutlineVariant) else inner()
                                 }
                             )
                         }
 
-                        // Ingredient name — ocupa el resto
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .background(Background, CircleShape)
-                                .padding(horizontal = 14.dp, vertical = 12.dp)
-                        ) {
-                            BasicTextField(
-                                value = ingredient.name,
-                                onValueChange = { ingredients[ingredients.indexOf(ingredient)] = ingredient.copy(name = it) },
-                                singleLine = true,
-                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 13.sp, color = OnSurface, fontWeight = FontWeight.Medium),
+                        Box(modifier = Modifier.weight(1f)) {
+                            IngredientSearchField(
+                                value = fieldValue,
+                                onValueChange = { v ->
+                                    fieldValue = v
+                                    ingredients[index] = ingredient.copy(name = v, ingredientId = null)
+                                },
+                                onIngredientSelected = { selected ->
+                                    fieldValue = selected.name
+                                    ingredients[index] = ingredient.copy(
+                                        name = selected.name,
+                                        ingredientId = selected.id.toString()
+                                    )
+                                },
+                                placeholder = "Ingredient",
                                 modifier = Modifier.fillMaxWidth(),
-                                decorationBox = { inner ->
-                                    if (ingredient.name.isEmpty())
-                                        Text("Ingredient", fontSize = 13.sp, color = CKOutlineVariant)
-                                    else inner()
-                                }
+                                ingredientViewModel = ingredientViewModel
                             )
                         }
 
@@ -333,14 +336,15 @@ fun CreateRecipeScreen(
                     }
                 }
                 DashedAddButton(label = "Add Ingredient") {
-                    ingredients.add(IngredientRow(nextIngredId++))
+                    ingredients.addIngredientRow(nextIngredId++)
                 }
             }
-            // ── Instructions ─────────────────────────────────────────────────
+
+            // Instructions
             CRCard(icon = Icons.Default.FormatListNumbered, title = "Instructions") {
                 Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
                     steps.forEachIndexed { index, step ->
-                        CRStepItem(
+                        CreateStepItem(
                             number = index + 1,
                             isFirst = index == 0,
                             step = step,
@@ -357,226 +361,40 @@ fun CreateRecipeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier
+                                .size(28.dp)
                                 .border(2.dp, CKOutlineVariant.copy(alpha = 0.5f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("${steps.size + 1}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = CKOutlineVariant)
+                            Text((steps.size + 1).toString(), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = CKOutlineVariant)
                         }
                         OutlinedButton(
-                            onClick = { steps.add(StepRow(nextStepId++)) },
+                            onClick = { steps.addStepRow(nextStepId++) },
                             modifier = Modifier.weight(1f).height(64.dp),
                             shape = RoundedCornerShape(16.dp),
                             border = androidx.compose.foundation.BorderStroke(2.dp, CKOutlineVariant.copy(alpha = 0.4f)),
-                            colors = outlinedButtonColors(contentColor = CKOutlineVariant, containerColor = Color.Transparent)
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = CKOutlineVariant, containerColor = Color.Transparent)
                         ) {
                             Icon(Icons.Default.Add, null, modifier = Modifier.size(28.dp))
                         }
                     }
                 }
-            }
-
-            Spacer(Modifier.height(8.dp))
-        }
-    }
-}
-
-// ── Top Bar ───────────────────────────────────────────────────────────────────
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun CRTopBar(title: String = "New Recipe", onBack: () -> Unit, onSaveDraft: () -> Unit = {}) {
-    TopAppBar(
-        title = { Text(title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = OnSurface) },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Box(
-                    modifier = Modifier.size(36.dp).background(Surface, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Default.Close, null, tint = OnSurface, modifier = Modifier.size(20.dp)) }
-            }
-        },
-        actions = {
-            IconButton(onClick = {}) {}
-        },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Background.copy(alpha = 0.95f))
-    )
-}
-
-// ── Bottom Bar ────────────────────────────────────────────────────────────────
-@Composable
-internal fun CRBottomBar(onSaveDraft: () -> Unit, onPublish: () -> Unit, isLoading: Boolean, publishLabel: String = "Publish Recipe") {
-    Surface(
-        color = Background.copy(alpha = 0.95f),
-        tonalElevation = 0.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp).navigationBarsPadding(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            OutlinedButton(
-                onClick = onSaveDraft,
-                modifier = Modifier.weight(1f).height(52.dp),
-                shape = CircleShape,
-                colors = outlinedButtonColors(containerColor = Surface, contentColor = Primary),
-                border = androidx.compose.foundation.BorderStroke(1.dp, CKOutlineVariant.copy(alpha = 0.5f))
-            ) {
-                Text("Save Draft", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            }
-            Button(
-                onClick = onPublish,
-                modifier = Modifier.weight(2f).height(52.dp),
-                shape = CircleShape,
-                enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = Primary, contentColor = OnPrimary),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(color = OnPrimary, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                } else {
-                    Icon(Icons.Default.Publish, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(publishLabel, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                }
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
 }
 
-// ── Cover Photo ───────────────────────────────────────────────────────────────
-@Composable
-internal fun CoverPhotoCard(imageUri: Uri?, existingUrl: String? = null, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(4f / 3f)
-            .clip(RoundedCornerShape(24.dp))
-            .background(Surface)
-            .border(2.dp, CKOutlineVariant.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        when {
-            imageUri != null -> AsyncImage(model = imageUri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-            !existingUrl.isNullOrBlank() -> AsyncImage(model = existingUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-            else -> Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(
-                    modifier = Modifier.size(56.dp).background(CKSurfaceVariant, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) { Icon(Icons.Default.AddAPhoto, null, tint = Primary, modifier = Modifier.size(26.dp)) }
-                Text("Add Recipe Photo", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface)
-                Text("High quality images perform better", fontSize = 12.sp, color = CKOnSurfaceVariant)
-            }
-        }
-    }
-}
+// ── Step item ────────────────────────────────────────────────────────────────
 
-// ── Section Card ──────────────────────────────────────────────────────────────
 @Composable
-internal fun CRCard(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
+private fun CreateStepItem(
+    number: Int,
+    isFirst: Boolean,
+    step: StepRow,
+    onChange: (StepRow) -> Unit,
+    onRemove: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(icon, null, tint = Primary, modifier = Modifier.size(20.dp))
-                Text(title, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurface)
-            }
-            content()
-        }
-    }
-}
-
-// ── Field with Icon ───────────────────────────────────────────────────────────
-@Composable
-internal fun CRFieldWithIcon(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    content: @Composable () -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CKOnSurfaceVariant)
-        content()
-    }
-}
-@Composable
-internal fun CRTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    modifier: Modifier = Modifier,
-    singleLine: Boolean = false,
-    minLines: Int = 1,
-    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    fillWidth: Boolean = true,
-    leadingIcon: @Composable (() -> Unit)? = null
-) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder, fontSize = 13.sp, color = CKOutlineVariant) },
-        singleLine = singleLine, minLines = minLines, maxLines = maxLines,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        leadingIcon = leadingIcon,
-        modifier = if (fillWidth) modifier.fillMaxWidth() else modifier,
-        shape = if (singleLine) CircleShape else RoundedCornerShape(20.dp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Background, unfocusedContainerColor = Background,
-            focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
-            focusedTextColor = OnSurface, unfocusedTextColor = OnSurface
-        )
-    )
-}
-// ── Small Circle Button ───────────────────────────────────────────────────────
-@Composable
-internal fun SmallCircleButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier.size(36.dp).background(Background, CircleShape).clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) { Icon(icon, null, tint = OnSurface, modifier = Modifier.size(16.dp)) }
-}
-
-// ── Tag Chip ──────────────────────────────────────────────────────────────────
-@Composable
-internal fun CRTagChip(tag: String, onRemove: () -> Unit) {
-    Row(
-        modifier = Modifier.background(Primary, CircleShape).padding(horizontal = 12.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(tag, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = OnPrimary)
-        Icon(Icons.Default.Close, null, tint = OnPrimary.copy(alpha = 0.8f),
-            modifier = Modifier.size(14.dp).clickable(onClick = onRemove))
-    }
-}
-
-// ── Dashed Add Button ─────────────────────────────────────────────────────────
-@Composable
-internal fun DashedAddButton(label: String, onClick: () -> Unit) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-        shape = CircleShape,
-        border = androidx.compose.foundation.BorderStroke(2.dp, CKOutlineVariant.copy(alpha = 0.4f)),
-        colors = outlinedButtonColors(contentColor = CKOutlineVariant, containerColor = Color.Transparent)
-    ) {
-        Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(6.dp))
-        Text(label, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-    }
-}
-
-// ── Step Item ─────────────────────────────────────────────────────────────────
-@Composable
-internal fun CRStepItem(number: Int, isFirst: Boolean, step: StepRow, onChange: (StepRow) -> Unit, onRemove: () -> Unit) {
     val imageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { onChange(step.copy(imageUri = it)) }
     }
@@ -585,64 +403,50 @@ internal fun CRStepItem(number: Int, isFirst: Boolean, step: StepRow, onChange: 
         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Number badge
         Box(
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier
+                .size(28.dp)
                 .background(if (isFirst) Primary else Background, CircleShape)
                 .border(if (isFirst) 0.dp else 2.dp, CKOutlineVariant.copy(alpha = 0.5f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text("$number", fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                color = if (isFirst) OnPrimary else CKOutlineVariant)
+            Text(number.toString(), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (isFirst) OnPrimary else CKOutlineVariant)
         }
 
-        // Step content card
         Column(
             modifier = Modifier.weight(1f).background(Background, RoundedCornerShape(16.dp)).padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Description field
             TextField(
                 value = step.description,
                 onValueChange = { onChange(step.copy(description = it)) },
                 placeholder = { Text("Describe this step...", fontSize = 13.sp, color = CKOutlineVariant) },
-                modifier = Modifier.fillMaxWidth(), minLines = 2,
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 2,
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor   = Color.Transparent, unfocusedContainerColor   = Color.Transparent,
-                    focusedIndicatorColor   = Color.Transparent, unfocusedIndicatorColor   = Color.Transparent,
-                    focusedTextColor        = OnSurface,         unfocusedTextColor         = OnSurface
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedTextColor = OnSurface,
+                    unfocusedTextColor = OnSurface
                 )
             )
 
-            // Step image — preview or picker button
             val displayImage: Any? = step.imageUri ?: step.existingImageUrl?.takeIf { it.isNotBlank() }
             if (displayImage != null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                ) {
-                    AsyncImage(
-                        model = displayImage,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                    // Remove button
+                Box(modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(12.dp))) {
+                    AsyncImage(model = displayImage, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                     IconButton(
                         onClick = { onChange(step.copy(imageUri = null, existingImageUrl = null)) },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(4.dp)
-                            .size(28.dp)
-                            .background(Color.Black.copy(alpha = 0.45f), CircleShape)
+                        modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
                     ) {
-                        Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(14.dp))
+                        Box(modifier = Modifier.size(28.dp).background(Color.Black.copy(alpha = 0.45f), CircleShape)) {
+                            Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(14.dp).align(Alignment.Center))
+                        }
                     }
                 }
             } else {
-                // Add photo button
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -660,7 +464,6 @@ internal fun CRStepItem(number: Int, isFirst: Boolean, step: StepRow, onChange: 
 
             HorizontalDivider(color = CKOutlineVariant.copy(alpha = 0.2f))
 
-            // Time row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -668,7 +471,7 @@ internal fun CRStepItem(number: Int, isFirst: Boolean, step: StepRow, onChange: 
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Icon(Icons.Default.Timer, null, tint = CKOutlineVariant, modifier = Modifier.size(14.dp))
-                    Text("Step Time", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CKOutlineVariant)
+                    Text("Step time", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CKOutlineVariant)
                 }
                 Row(
                     modifier = Modifier
@@ -683,25 +486,211 @@ internal fun CRStepItem(number: Int, isFirst: Boolean, step: StepRow, onChange: 
                         onValueChange = { onChange(step.copy(duration = it)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        textStyle = androidx.compose.ui.text.TextStyle(
-                            fontSize = 12.sp, fontWeight = FontWeight.Bold,
-                            color = OnSurface, textAlign = TextAlign.Center
-                        ),
+                        textStyle = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = OnSurface, textAlign = TextAlign.Center),
                         modifier = Modifier.width(36.dp),
                         decorationBox = { inner ->
-                            if (step.duration.isEmpty())
-                                Text("0", fontSize = 12.sp, color = CKOutlineVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                            else inner()
+                            if (step.duration.isEmpty()) Text("0", fontSize = 12.sp, color = CKOutlineVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) else inner()
                         }
                     )
                     Text("min", fontSize = 11.sp, color = CKOutlineVariant)
                 }
+                IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Default.Delete, null, tint = CKOutlineVariant, modifier = Modifier.size(18.dp))
+                }
             }
         }
+    }
+}
 
-        // Delete button
-        IconButton(onClick = onRemove, modifier = Modifier.size(28.dp).padding(top = 4.dp)) {
-            Icon(Icons.Outlined.DeleteOutline, null, tint = CKOutlineVariant, modifier = Modifier.size(18.dp))
+// ── Shared UI components ─────────────────────────────────────────────────────
+
+@Composable
+fun CoverPhotoCard(imageUri: Uri?, existingUrl: String?, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Surface)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        val model: Any? = imageUri ?: existingUrl?.takeIf { it.isNotBlank() }
+        if (model != null) {
+            AsyncImage(model = model, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)))
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Default.AddAPhoto, null, tint = if (model != null) Color.White else CKOutlineVariant, modifier = Modifier.size(32.dp))
+            Text(
+                if (model != null) "Change cover photo" else "Add cover photo",
+                fontSize = 13.sp,
+                color = if (model != null) Color.White else CKOutlineVariant,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
+fun CRCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(icon, null, tint = Primary, modifier = Modifier.size(18.dp))
+                Text(title, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Primary)
+            }
+            HorizontalDivider(color = CKOutlineVariant.copy(alpha = 0.3f))
+            content()
+        }
+    }
+}
+
+@Composable
+fun CRFieldWithIcon(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    content: @Composable () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CKOnSurfaceVariant)
+        content()
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CRTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    singleLine: Boolean = false,
+    minLines: Int = 1,
+    maxLines: Int = Int.MAX_VALUE,
+    leadingIcon: @Composable (() -> Unit)? = null
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, fontSize = 13.sp, color = CKOutlineVariant) },
+        singleLine = singleLine,
+        minLines = minLines,
+        maxLines = maxLines,
+        leadingIcon = leadingIcon,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Background,
+            unfocusedContainerColor = Background,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedTextColor = OnSurface,
+            unfocusedTextColor = OnSurface,
+            cursorColor = Primary
+        )
+    )
+}
+
+@Composable
+fun SmallCircleButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier.size(36.dp).background(Background, CircleShape).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, null, tint = Primary, modifier = Modifier.size(18.dp))
+    }
+}
+
+@Composable
+fun CRTagChip(tag: String, onRemove: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .background(Primary.copy(alpha = 0.12f), CircleShape)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(tag, fontSize = 12.sp, color = Primary, fontWeight = FontWeight.SemiBold)
+        Icon(Icons.Default.Close, null, tint = Primary, modifier = Modifier.size(12.dp).clickable(onClick = onRemove))
+    }
+}
+
+@Composable
+fun DashedAddButton(label: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .border(1.dp, CKOutlineVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(Icons.Default.Add, null, tint = CKOutlineVariant, modifier = Modifier.size(16.dp))
+        Text(label, fontSize = 13.sp, color = CKOutlineVariant, fontWeight = FontWeight.Medium)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CRTopBar(title: String, onBack: () -> Unit) {
+    TopAppBar(
+        title = { Text(title, fontWeight = FontWeight.Bold, fontSize = 17.sp, color = OnBackground) },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.ArrowBack, null, tint = OnBackground)
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
+    )
+}
+
+@Composable
+fun CRBottomBar(
+    onSaveDraft: () -> Unit,
+    onPublish: () -> Unit,
+    isLoading: Boolean,
+    publishLabel: String = "Publish Recipe"
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Background)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .navigationBarsPadding(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        OutlinedButton(
+            onClick = onSaveDraft,
+            modifier = Modifier.weight(1f).height(52.dp),
+            shape = RoundedCornerShape(14.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, CKOutlineVariant.copy(alpha = 0.5f)),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = CKOnSurfaceVariant)
+        ) {
+            Text("Save Draft", fontWeight = FontWeight.SemiBold)
+        }
+        Button(
+            onClick = onPublish,
+            enabled = !isLoading,
+            modifier = Modifier.weight(2f).height(52.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Primary, contentColor = OnPrimary)
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = OnPrimary, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            } else {
+                Text(publishLabel, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

@@ -1,67 +1,39 @@
 package software.ulpgc.cheffskiss.ui
 
-import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
-import software.ulpgc.cheffskiss.application.control.CreateRecipeCommand
-import software.ulpgc.cheffskiss.application.control.RecipeInput
+import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.vo.Measurement
 import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
-import software.ulpgc.cheffskiss.application.port.ImageStorage
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
-import software.ulpgc.cheffskiss.infrastructure.adapter.output.LocalImageStorage
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
 sealed class RecipeUiState {
-    object Idle    : RecipeUiState()
-    object Loading : RecipeUiState()
-    object Success : RecipeUiState()
+    data object Idle : RecipeUiState()
+    data object Loading : RecipeUiState()
+    data object Success : RecipeUiState()
     data class Error(val message: String) : RecipeUiState()
 }
 
-class RecipeViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val recipeService: FirebaseRecipeService = FirebaseRecipeService()
-    private val imageStorage: ImageStorage       = LocalImageStorage(application)
+class RecipeViewModel(
+    private val recipeRepository: RecipeRepository = FirebaseRecipeService()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<RecipeUiState>(RecipeUiState.Idle)
-    val uiState = _uiState.asStateFlow()
+    val uiState: StateFlow<RecipeUiState> = _uiState.asStateFlow()
 
-    fun resetState() { _uiState.value = RecipeUiState.Idle }
-
-    // ── Text → RecipeLine ─────────────────────────────────────────────────────
-    // "200 KILO harina" → RecipeLine(ingredientId = nameUUID("harina"), amount=200, KILO)
-    // Si no hay cantidad/unidad reconocibles, amount=1, UNIT
-
-    private fun parseLines(ingredients: List<String>): List<RecipeLine> =
-        ingredients.map { raw ->
-            val parts = raw.trim().split("\\s+".toRegex())
-            val amount = parts.getOrNull(0)?.toIntOrNull()
-            val measurement = parts.getOrNull(1)
-                ?.uppercase()
-                ?.let { runCatching { Measurement.valueOf(it) }.getOrNull() }
-            val nameTokens = when {
-                amount != null && measurement != null -> parts.drop(2)
-                amount != null                        -> parts.drop(1)
-                else                                  -> parts
-            }
-            val name = nameTokens.joinToString(" ").ifBlank { raw.trim() }
-            RecipeLine(
-                ingredientId = UUID.nameUUIDFromBytes(name.lowercase().toByteArray()),
-                amount       = amount ?: 1,
-                measurement  = measurement ?: Measurement.UNIT
-            )
-        }
-
-    // ── Create ────────────────────────────────────────────────────────────────
+    fun resetState() {
+        _uiState.value = RecipeUiState.Idle
+    }
 
     fun createRecipe(
         authorId: String,
@@ -72,63 +44,62 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         minutes: String,
         ingredients: List<String>,
         steps: List<Step>,
-        stepImageUris: List<Uri?> = emptyList(),
+        stepImageUris: List<Uri?>,
         tags: List<String>,
         imageUri: Uri?
     ) {
-        when {
-            title.isBlank()       -> { _uiState.value = RecipeUiState.Error("The title have to be filled"); return }
-            description.isBlank() -> { _uiState.value = RecipeUiState.Error("The description have to be filled"); return }
-            (hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0") ->
-            { _uiState.value = RecipeUiState.Error("Indicate the recipe duration"); return }
-            ingredients.isEmpty() -> { _uiState.value = RecipeUiState.Error("The ingredients have to be filled with at least one ingredient"); return }
-            steps.isEmpty()       -> { _uiState.value = RecipeUiState.Error("The steps have to be filled with at least one step"); return }
+        val trimmedTitle = title.trim()
+        if (trimmedTitle.isBlank()) {
+            _uiState.value = RecipeUiState.Error("Recipe title is required")
+            return
         }
+        if (authorId.isBlank()) {
+            _uiState.value = RecipeUiState.Error("You must be logged in to create a recipe")
+            return
+        }
+
+        val validIngredients = ingredients.filter { line ->
+            val parts = line.split("|")
+            parts.size >= 3 && parts.last().isNotBlank()
+        }
+
+        val validSteps = steps.filter { it.description.isNotBlank() }
 
         viewModelScope.launch {
             _uiState.value = RecipeUiState.Loading
-            runCatching {
-                val recipeId     = UUID.randomUUID()
-                val totalMinutes = ((hours.toIntOrNull() ?: 0) * 60 + (minutes.toIntOrNull() ?: 0)).toLong()
+            try {
+                val h = hours.toLongOrNull() ?: 0L
+                val m = minutes.toLongOrNull() ?: 0L
+                val duration = (h * 60 + m).minutes
 
-                val coverUrl = imageUri?.let {
-                    imageStorage.save(it, recipeId.toString(), "cover.jpg")
-                } ?: ""
+                val lines = validIngredients.map { line -> parseIngredientLine(line) }
 
-                val stepsWithImages = steps.mapIndexed { idx, step ->
-                    val uri = stepImageUris.getOrNull(idx)
-                    val url = if (uri != null)
-                        imageStorage.save(uri, recipeId.toString(), "step_$idx.jpg")
-                    else step.image
-                    step.copy(image = url)
+                val recipe = Recipe(
+                    id = UUID.randomUUID(),
+                    author = authorId,
+                    title = trimmedTitle,
+                    description = description.trim(),
+                    duration = duration,
+                    tags = tags.filter { it.isNotBlank() },
+                    image = "",
+                    servings = servings
+                )
+
+                val uploadedSteps = validSteps.mapIndexed { index, step ->
+                    val uri = stepImageUris.getOrNull(index)
+                    step.copy(image = uri?.toString() ?: step.image)
                 }
 
-                val lines = parseLines(ingredients)
-
-                val input = object : RecipeInput {
-                    override fun id()          = recipeId
-                    override fun author()      = authorId
-                    override fun title()       = title
-                    override fun description() = description
-                    override fun servings()    = servings
-                    override fun duration()    = totalMinutes.minutes
-                    override fun lines()       = lines
-                    override fun steps()       = stepsWithImages
-                    override fun tags()        = tags
-                    override fun image()       = coverUrl
-                }
-                CreateRecipeCommand(recipeService, input).execute()
-            }.fold(
-                onSuccess = { _uiState.value = RecipeUiState.Success },
-                onFailure = { e -> _uiState.value = RecipeUiState.Error(e.message ?: "Error publishing the recipe") }
-            )
+                recipeRepository.createRecipe(recipe, lines, uploadedSteps)
+                _uiState.value = RecipeUiState.Success
+            } catch (e: Exception) {
+                _uiState.value = RecipeUiState.Error(e.message ?: "Unknown error creating recipe")
+            }
         }
     }
 
-    // ── Update ────────────────────────────────────────────────────────────────
-
     fun updateRecipe(
-        recipeId: UUID,
+        recipeId: String,
         authorId: String,
         title: String,
         description: String,
@@ -137,56 +108,78 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         minutes: String,
         ingredients: List<String>,
         steps: List<Step>,
-        stepImageUris: List<Uri?> = emptyList(),
+        stepImageUris: List<Uri?>,
         tags: List<String>,
         imageUri: Uri?,
-        existingImageUrl: String = "",
+        existingImageUrl: String,
         createdAt: Instant
     ) {
-        when {
-            title.isBlank()       -> { _uiState.value = RecipeUiState.Error("The title have to be filled"); return }
-            description.isBlank() -> { _uiState.value = RecipeUiState.Error("The description have to be filled"); return }
-            (hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0") ->
-            { _uiState.value = RecipeUiState.Error("Indicate the recipe duration"); return }
-            ingredients.isEmpty() -> { _uiState.value = RecipeUiState.Error("Add at least one ingredient"); return }
-            steps.isEmpty()       -> { _uiState.value = RecipeUiState.Error("Add at least one step"); return }
+        val trimmedTitle = title.trim()
+        if (trimmedTitle.isBlank()) {
+            _uiState.value = RecipeUiState.Error("Recipe title is required")
+            return
         }
+
+        val validIngredients = ingredients.filter { line ->
+            val parts = line.split("|")
+            parts.size >= 3 && parts.last().isNotBlank()
+        }
+
+        val validSteps = steps.filter { it.description.isNotBlank() }
 
         viewModelScope.launch {
             _uiState.value = RecipeUiState.Loading
-            runCatching {
-                val totalMinutes = ((hours.toIntOrNull() ?: 0) * 60 + (minutes.toIntOrNull() ?: 0)).toLong()
+            try {
+                val h = hours.toLongOrNull() ?: 0L
+                val m = minutes.toLongOrNull() ?: 0L
+                val duration = (h * 60 + m).minutes
 
-                val coverUrl = if (imageUri != null)
-                    imageStorage.save(imageUri, recipeId.toString(), "cover.jpg")
-                else existingImageUrl
-
-                val stepsWithImages = steps.mapIndexed { idx, step ->
-                    val uri = stepImageUris.getOrNull(idx)
-                    val url = if (uri != null)
-                        imageStorage.save(uri, recipeId.toString(), "step_$idx.jpg")
-                    else step.image
-                    step.copy(image = url)
-                }
-
-                val lines = parseLines(ingredients)
+                val lines = validIngredients.map { line -> parseIngredientLine(line) }
 
                 val recipe = Recipe(
-                    id          = recipeId,
-                    author      = authorId,
-                    title       = title,
-                    description = description,
-                    servings    = servings,
-                    duration    = totalMinutes.minutes,
-                    tags        = tags,
-                    image       = coverUrl,
-                    createdAt   = createdAt
+                    id = UUID.fromString(recipeId),
+                    author = authorId,
+                    title = trimmedTitle,
+                    description = description.trim(),
+                    duration = duration,
+                    tags = tags.filter { it.isNotBlank() },
+                    image = existingImageUrl,
+                    servings = servings,
+                    createdAt = createdAt
                 )
-                recipeService.updateRecipe(recipe, lines, stepsWithImages)
-            }.fold(
-                onSuccess = { _uiState.value = RecipeUiState.Success },
-                onFailure = { e -> _uiState.value = RecipeUiState.Error(e.message ?: "Error updating recipe") }
-            )
+
+                val uploadedSteps = validSteps.mapIndexed { index, step ->
+                    val uri = stepImageUris.getOrNull(index)
+                    step.copy(image = uri?.toString() ?: step.image)
+                }
+
+                recipeRepository.updateRecipe(recipe, lines, uploadedSteps)
+                _uiState.value = RecipeUiState.Success
+            } catch (e: Exception) {
+                _uiState.value = RecipeUiState.Error(e.message ?: "Unknown error updating recipe")
+            }
         }
+    }
+
+    private fun parseIngredientLine(line: String): RecipeLine {
+        val parts = line.split(";", limit = 4)
+
+        val amount = parts.getOrNull(0)?.toDoubleOrNull()?.toInt() ?: 1
+        val measurement = parts.getOrNull(1)
+            ?.uppercase()
+            ?.let { runCatching { Measurement.valueOf(it) }.getOrNull() }
+            ?: Measurement.UNIT
+
+        val ingredientIdRaw = parts.getOrNull(2)?.trim()
+            ?: throw IllegalArgumentException("Ingredient ID is missing")
+
+        val ingredientId = runCatching { UUID.fromString(ingredientIdRaw) }.getOrNull()
+            ?: throw IllegalArgumentException("Invalid ingredient ID: $ingredientIdRaw")
+
+        return RecipeLine(
+            ingredientId = ingredientId,
+            amount = amount,
+            measurement = measurement
+        )
     }
 }

@@ -1,5 +1,15 @@
 package software.ulpgc.cheffskiss.domain.model.vo
 
 enum class Measurement {
-    UNIT, KILO, LITER, LB
+    UNIT,
+    GRAM,
+    KG,
+    ML,
+    LITER,
+    CUP,
+    TBSP,
+    TSP,
+    SLICE,
+    PINCH,
+    LB
 }

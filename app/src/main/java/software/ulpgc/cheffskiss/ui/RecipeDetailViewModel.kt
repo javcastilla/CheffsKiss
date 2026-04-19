@@ -2,29 +2,36 @@ package software.ulpgc.cheffskiss.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.control.SaveRecipeCommand
 import software.ulpgc.cheffskiss.application.control.SaveRecipeInput
 import software.ulpgc.cheffskiss.application.control.UnsaveRecipeCommand
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
+import software.ulpgc.cheffskiss.application.port.IngredientRepository
 import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
+import software.ulpgc.cheffskiss.domain.model.Ingredient
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseIngredientRepository
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
+import java.util.UUID
 
 class RecipeDetailViewModel(
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
     private val recipeRepository: RecipeRepository = FirebaseRecipeService(),
+    private val ingredientRepository: IngredientRepository = FirebaseIngredientRepository(),
     private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
 ) : ViewModel() {
 
@@ -37,12 +44,14 @@ class RecipeDetailViewModel(
     private val _isOwner    = MutableStateFlow(false)
     private val _lines      = MutableStateFlow<List<RecipeLine>>(emptyList())
     private val _steps      = MutableStateFlow<List<Step>>(emptyList())
+    private val _ingredients = MutableStateFlow<Map<String, Ingredient>>(emptyMap())
 
     val recipe:     StateFlow<Recipe?>          = _recipe.asStateFlow()
     val authorName: StateFlow<String>           = _authorName.asStateFlow()
     val isSaved:    StateFlow<Boolean>          = _isSaved.asStateFlow()
     val isOwner:    StateFlow<Boolean>          = _isOwner.asStateFlow()
     val lines:      StateFlow<List<RecipeLine>> = _lines.asStateFlow()
+    val ingredients:      StateFlow<Map<String, Ingredient>> = _ingredients.asStateFlow()
     val steps:      StateFlow<List<Step>>       = _steps.asStateFlow()
 
     private val currentUid: String? get() = currentUserPort.getCurrentUser()
@@ -59,7 +68,10 @@ class RecipeDetailViewModel(
             launch {
                 firebaseReader.linesOf(r)
                     .catch { }
-                    .collect { _lines.value = it }
+                    .collectLatest { loadedLines ->
+                        _lines.value = loadedLines
+                        loadIngredientsForLines(loadedLines)
+                    }
             }
             launch {
                 firebaseReader.stepsOf(r)
@@ -69,6 +81,32 @@ class RecipeDetailViewModel(
 
             observeIsSaved(recipeId)
         }
+    }
+
+    private suspend fun loadIngredientsForLines(lines: List<RecipeLine>) {
+        if (lines.isEmpty()) {
+            _ingredients.value = emptyMap()
+            return
+        }
+
+        val loaded = buildMap {
+            lines.forEach { line ->
+                val ingredient = ingredientRepository.getById(line.ingredientId.toString())
+                if (ingredient != null) {
+                    put(line.ingredientId.toString(), ingredient)
+                }
+            }
+        }
+
+        _ingredients.value = loaded
+    }
+
+    fun ingredientOf(line: RecipeLine): Ingredient? {
+        return _ingredients.value[line.ingredientId.toString()]
+    }
+
+    fun ingredientNameOf(line: RecipeLine): String {
+        return _ingredients.value[line.ingredientId.toString()]?.name ?: "Unknown ingredient"
     }
 
     private fun observeIsSaved(recipeId: String) {
