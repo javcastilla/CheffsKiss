@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.port.output.MealPlanPort
+import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.model.MealPlan
 import software.ulpgc.cheffskiss.domain.model.MealSlot
 import software.ulpgc.cheffskiss.domain.model.Recipe
@@ -42,7 +42,7 @@ data class MealPlanDetailUiState(
 )
 
 class MealPlanDetailViewModel(
-    private val mealPlanPort: MealPlanPort = FirebaseMealPlanService(),
+    private val mealPlanRepository: MealPlanRepository = FirebaseMealPlanService(),
     private val recipeReader: RecipeReader = FirebaseRecipeReader()
 ) : ViewModel() {
 
@@ -56,7 +56,7 @@ class MealPlanDetailViewModel(
             // Derive userId from planId is not possible directly;
             // we load all plans and find ours.
             // Instead we subscribe to the flow and pick the matching plan.
-            mealPlanPort.getMealPlans(uuid).catch { e ->
+            mealPlanRepository.getMealPlans(uuid).catch { e ->
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
             }.collect { plans ->
                 val plan = plans.firstOrNull { it.id == uuid }
@@ -218,7 +218,7 @@ class MealPlanDetailViewModel(
 
     private fun save(updated: MealPlan) {
         viewModelScope.launch {
-            runCatching { mealPlanPort.updateMealPlan(updated) }
+            runCatching { mealPlanRepository.updateMealPlan(updated) }
                 .onSuccess { _uiState.update { it.copy(plan = updated, isSaving = false) } }
                 .onFailure { e -> _uiState.update { it.copy(isSaving = false, error = e.message) } }
         }

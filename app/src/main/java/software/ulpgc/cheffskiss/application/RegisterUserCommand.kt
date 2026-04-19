@@ -1,14 +1,13 @@
 package software.ulpgc.cheffskiss.application
 
-import software.ulpgc.cheffskiss.application.port.output.RegisterPort
+import software.ulpgc.cheffskiss.application.port.Registrator
 import software.ulpgc.cheffskiss.domain.control.Command
 import software.ulpgc.cheffskiss.domain.model.UserName
 import software.ulpgc.cheffskiss.domain.port.input.UserNameReader
-import java.util.UUID
 
 class RegisterUserCommand(
     private val userNameReader: UserNameReader,
-    private val userPort: RegisterPort,
+    private val userPort: Registrator,
     private val registerUserInput: Input)
     : Command {
 

@@ -1,13 +1,13 @@
 package software.ulpgc.cheffskiss.application
 
-import software.ulpgc.cheffskiss.application.port.output.MealPlanPort
+import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.control.Command
 import software.ulpgc.cheffskiss.domain.model.MealPlan
 import software.ulpgc.cheffskiss.domain.model.vo.Weekday
 import java.util.UUID
 
 class CreateMealPlanCommand(
-    private val port: MealPlanPort,
+    private val port: MealPlanRepository,
     private val userId: String,
     private val name: String
 ) : Command {

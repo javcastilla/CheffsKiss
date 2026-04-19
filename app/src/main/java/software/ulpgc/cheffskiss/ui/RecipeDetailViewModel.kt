@@ -10,8 +10,8 @@ import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.SaveRecipeCommand
 import software.ulpgc.cheffskiss.application.SaveRecipeInput
 import software.ulpgc.cheffskiss.application.UnsaveRecipeCommand
-import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
-import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.application.port.CurrentUserPort
+import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
@@ -24,7 +24,7 @@ import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeSer
 
 class RecipeDetailViewModel(
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
-    private val recipePort: RecipePort = FirebaseRecipeService(),
+    private val recipeRepository: RecipeRepository = FirebaseRecipeService(),
     private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
 ) : ViewModel() {
 
@@ -74,7 +74,7 @@ class RecipeDetailViewModel(
     private fun observeIsSaved(recipeId: String) {
         val uid = currentUid ?: return
         viewModelScope.launch {
-            GetSavedRecipesQuery(recipePort)(uid)
+            GetSavedRecipesQuery(recipeRepository)(uid)
                 .catch { }
                 .collect { saved -> _isSaved.value = saved.any { it.recipeId.toString() == recipeId } }
         }
@@ -89,9 +89,9 @@ class RecipeDetailViewModel(
         viewModelScope.launch {
             runCatching {
                 if (currentlySaved) {
-                    UnsaveRecipeCommand(recipePort, uid, r.id).execute()
+                    UnsaveRecipeCommand(recipeRepository, uid, r.id).execute()
                 } else {
-                    SaveRecipeCommand(recipePort, object : SaveRecipeInput {
+                    SaveRecipeCommand(recipeRepository, object : SaveRecipeInput {
                         override fun recipeId() = r.id
                         override fun userId() = uid
                     }).execute()
@@ -103,7 +103,7 @@ class RecipeDetailViewModel(
     fun deleteRecipe(onDone: () -> Unit) {
         val r = _recipe.value ?: return
         viewModelScope.launch {
-            runCatching { recipePort.deleteRecipe(r.id.toString()) }
+            runCatching { recipeRepository.deleteRecipe(r.id.toString()) }
                 .onSuccess { onDone() }
         }
     }

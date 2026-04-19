@@ -10,9 +10,9 @@ import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.SaveRecipeCommand
 import software.ulpgc.cheffskiss.application.SaveRecipeInput
 import software.ulpgc.cheffskiss.application.UnsaveRecipeCommand
-import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
-import software.ulpgc.cheffskiss.application.port.output.MealPlanPort
-import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.application.port.CurrentUserPort
+import software.ulpgc.cheffskiss.application.port.MealPlanRepository
+import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
 import software.ulpgc.cheffskiss.application.services.GetMealPlansQuery
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
@@ -48,8 +48,8 @@ data class HomeUiState(
 
 class HomeViewModel(
     private val getAllRecipesQuery: GetAllRecipesQuery = GetAllRecipesQuery(FirebaseRecipeReader()),
-    private val recipePort: RecipePort = FirebaseRecipeService(),
-    private val mealPlanPort: MealPlanPort = FirebaseMealPlanService(),
+    private val recipeRepository: RecipeRepository = FirebaseRecipeService(),
+    private val mealPlanRepository: MealPlanRepository = FirebaseMealPlanService(),
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
     private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
 ) : ViewModel() {
@@ -90,7 +90,7 @@ class HomeViewModel(
     private fun observeSavedRecipes() {
         val uid = currentUserPort.getCurrentUser() ?: return
         viewModelScope.launch {
-            GetSavedRecipesQuery(recipePort)(uid)
+            GetSavedRecipesQuery(recipeRepository)(uid)
                 .catch { }
                 .collect { savedList ->
                     _uiState.update { it.copy(savedRecipeIds = savedList.map { s -> s.recipeId.toString() }.toSet()) }
@@ -104,7 +104,7 @@ class HomeViewModel(
         val todayWeekday = LocalDate.now().dayOfWeek.toWeekday()
 
         viewModelScope.launch {
-            GetMealPlansQuery(mealPlanPort)(userUuid)
+            GetMealPlansQuery(mealPlanRepository)(userUuid)
                 .catch { }
                 .collect { plans ->
                     val active = plans.firstOrNull { it.isActive }
@@ -152,9 +152,9 @@ class HomeViewModel(
         viewModelScope.launch {
             runCatching {
                 if (currentlySaved) {
-                    UnsaveRecipeCommand(recipePort, uid, recipe.id).execute()
+                    UnsaveRecipeCommand(recipeRepository, uid, recipe.id).execute()
                 } else {
-                    SaveRecipeCommand(recipePort, object : SaveRecipeInput {
+                    SaveRecipeCommand(recipeRepository, object : SaveRecipeInput {
                         override fun recipeId() = recipe.id
                         override fun userId()   = uid
                     }).execute()
