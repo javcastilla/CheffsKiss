@@ -426,7 +426,7 @@ private fun ActivePlanBanner(
                             Spacer(Modifier.width(10.dp))
                             // Time
                             Text(
-                                slot.startTime,
+                                slot.startTime.toString(),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = color,

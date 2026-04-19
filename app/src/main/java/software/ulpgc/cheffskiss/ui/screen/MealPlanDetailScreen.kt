@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import software.ulpgc.cheffskiss.domain.model.MealSlot
 import software.ulpgc.cheffskiss.domain.model.Recipe
-import software.ulpgc.cheffskiss.domain.model.Weekday
+import software.ulpgc.cheffskiss.domain.model.vo.Weekday
 import software.ulpgc.cheffskiss.ui.MealPlanDetailViewModel
 import software.ulpgc.cheffskiss.ui.SlotFormState
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -292,7 +292,7 @@ private fun SlotCard(
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 Text(
-                    slot.startTime,
+                    slot.startTime.toString(),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = color,
@@ -305,7 +305,7 @@ private fun SlotCard(
                         .background(color.copy(alpha = 0.4f))
                 )
                 Text(
-                    slot.endTime,
+                    slot.endTime.toString(),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Normal,
                     color = color.copy(alpha = 0.7f),

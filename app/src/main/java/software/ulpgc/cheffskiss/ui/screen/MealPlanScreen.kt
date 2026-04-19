@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import software.ulpgc.cheffskiss.domain.model.MealPlan
-import software.ulpgc.cheffskiss.domain.model.Weekday
+import software.ulpgc.cheffskiss.domain.model.vo.Weekday
 import software.ulpgc.cheffskiss.ui.MealPlanUiState
 import software.ulpgc.cheffskiss.ui.MealPlanViewModel
 import software.ulpgc.cheffskiss.ui.theme.*

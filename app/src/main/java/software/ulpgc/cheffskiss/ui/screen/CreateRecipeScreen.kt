@@ -90,7 +90,7 @@ fun CreateRecipeScreen(
                     description = stepRow.description,
                     duration    = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
                     cardinal    = index + 1,
-                    image       = ""  // will be set by ViewModel after upload
+                    image       = stepRow.existingImageUrl ?: ""
                 )
             }
             val stepImageUris = steps.map { it.imageUri }
