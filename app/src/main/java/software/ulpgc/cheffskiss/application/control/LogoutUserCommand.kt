@@ -1,4 +1,4 @@
-package software.ulpgc.cheffskiss.application
+package software.ulpgc.cheffskiss.application.control
 
 import software.ulpgc.cheffskiss.application.port.LogoutClient
 import software.ulpgc.cheffskiss.domain.control.Command
