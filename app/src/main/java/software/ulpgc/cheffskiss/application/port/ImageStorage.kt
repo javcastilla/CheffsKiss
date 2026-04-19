@@ -1,8 +1,8 @@
-package software.ulpgc.cheffskiss.application.port.output
+package software.ulpgc.cheffskiss.application.port
 
 import android.net.Uri
 
-interface ImageStoragePort {
+interface ImageStorage {
     /**
      * Persists the image at [uri] under the given [name] and returns
      * a stable URI string that Coil can load across sessions.

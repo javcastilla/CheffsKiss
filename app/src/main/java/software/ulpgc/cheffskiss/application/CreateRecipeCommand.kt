@@ -1,6 +1,6 @@
 package software.ulpgc.cheffskiss.application
 
-import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.domain.control.Command
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
@@ -9,7 +9,7 @@ import java.util.UUID
 import kotlin.time.Duration
 
 class CreateRecipeCommand(
-    private val recipePort: RecipePort,
+    private val recipeRepository: RecipeRepository,
     private val recipeInput: RecipeInput
 ) : Command {
     override suspend fun execute() {
@@ -23,7 +23,7 @@ class CreateRecipeCommand(
             image       = recipeInput.image(),
             servings    = recipeInput.servings()
         )
-        recipePort.createRecipe(recipe, recipeInput.lines(), recipeInput.steps())
+        recipeRepository.createRecipe(recipe, recipeInput.lines(), recipeInput.steps())
     }
 }
 

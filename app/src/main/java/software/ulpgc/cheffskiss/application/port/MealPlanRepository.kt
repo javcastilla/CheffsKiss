@@ -1,10 +1,10 @@
-package software.ulpgc.cheffskiss.application.port.output
+package software.ulpgc.cheffskiss.application.port
 
 import kotlinx.coroutines.flow.Flow
 import software.ulpgc.cheffskiss.domain.model.MealPlan
 import java.util.UUID
 
-interface MealPlanPort {
+interface MealPlanRepository {
     suspend fun createMealPlan(mealPlan: MealPlan)
     suspend fun updateMealPlan(mealPlan: MealPlan)
     suspend fun deleteMealPlan(planId: UUID, userId: UUID)

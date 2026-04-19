@@ -14,7 +14,7 @@ import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.vo.Measurement
 import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
-import software.ulpgc.cheffskiss.application.port.output.ImageStoragePort
+import software.ulpgc.cheffskiss.application.port.ImageStorage
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.LocalImageStorage
 import java.util.UUID
@@ -30,7 +30,7 @@ sealed class RecipeUiState {
 class RecipeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val recipeService: FirebaseRecipeService = FirebaseRecipeService()
-    private val imageStorage: ImageStoragePort       = LocalImageStorage(application)
+    private val imageStorage: ImageStorage       = LocalImageStorage(application)
 
     private val _uiState = MutableStateFlow<RecipeUiState>(RecipeUiState.Idle)
     val uiState = _uiState.asStateFlow()

@@ -8,14 +8,14 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import software.ulpgc.cheffskiss.application.port.output.MealPlanPort
+import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.model.MealPlan
 import software.ulpgc.cheffskiss.domain.model.MealSlot
 import software.ulpgc.cheffskiss.domain.model.vo.SlotTime
 import software.ulpgc.cheffskiss.domain.model.vo.Weekday
 import java.util.UUID
 
-class FirebaseMealPlanService : MealPlanPort {
+class FirebaseMealPlanService : MealPlanRepository {
 
     private fun plansCollection(userId: UUID) = Firebase.firestore
         .collection("users")

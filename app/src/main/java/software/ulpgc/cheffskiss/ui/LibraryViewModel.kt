@@ -7,8 +7,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
-import software.ulpgc.cheffskiss.application.port.output.RecipePort
+import software.ulpgc.cheffskiss.application.port.CurrentUserPort
+import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
@@ -27,7 +27,7 @@ data class LibraryUiState(
 
 class LibraryViewModel(
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
-    private val recipePort: RecipePort = FirebaseRecipeService(),
+    private val recipeRepository: RecipeRepository = FirebaseRecipeService(),
     private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
 ) : ViewModel() {
 
@@ -64,7 +64,7 @@ class LibraryViewModel(
 
     private fun observeSavedRecipes(uid: String) {
         viewModelScope.launch {
-            GetSavedRecipesQuery(recipePort)(uid)
+            GetSavedRecipesQuery(recipeRepository)(uid)
                 .catch { /* no bloquear si falla saved */ }
                 .collect { savedList ->
                     val recipes = coroutineScope {

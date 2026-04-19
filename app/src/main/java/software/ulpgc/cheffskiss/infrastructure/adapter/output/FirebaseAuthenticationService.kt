@@ -3,17 +3,15 @@ package software.ulpgc.cheffskiss.infrastructure.adapter.output
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
-import software.ulpgc.cheffskiss.application.port.output.LoginPort
-import software.ulpgc.cheffskiss.application.port.output.LogoutPort
-import software.ulpgc.cheffskiss.application.port.output.RegisterPort
-import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
+import software.ulpgc.cheffskiss.application.port.Authenticator
+import software.ulpgc.cheffskiss.application.port.LogoutClient
+import software.ulpgc.cheffskiss.application.port.Registrator
+import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 
 import kotlinx.coroutines.tasks.await
-import software.ulpgc.cheffskiss.domain.model.User
-import software.ulpgc.cheffskiss.domain.port.output.UserRepository
 import java.util.UUID
 
-class FirebaseAuthenticationService :LoginPort, RegisterPort, LogoutPort , CurrentUserPort {
+class FirebaseAuthenticationService :Authenticator, Registrator, LogoutClient , CurrentUserPort {
 
     override suspend fun register(
         email: String,

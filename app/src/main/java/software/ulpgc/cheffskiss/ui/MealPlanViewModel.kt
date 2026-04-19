@@ -7,8 +7,8 @@ import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.CreateMealPlanCommand
 import software.ulpgc.cheffskiss.application.DeleteMealPlanCommand
 import software.ulpgc.cheffskiss.application.SetActiveMealPlanCommand
-import software.ulpgc.cheffskiss.application.port.output.CurrentUserPort
-import software.ulpgc.cheffskiss.application.port.output.MealPlanPort
+import software.ulpgc.cheffskiss.application.port.CurrentUserPort
+import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.application.services.GetMealPlansQuery
 import software.ulpgc.cheffskiss.domain.model.MealPlan
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
@@ -26,7 +26,7 @@ data class MealPlanUiState(
 )
 
 class MealPlanViewModel(
-    private val port: MealPlanPort = FirebaseMealPlanService(),
+    private val port: MealPlanRepository = FirebaseMealPlanService(),
     private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
 ) : ViewModel() {
 

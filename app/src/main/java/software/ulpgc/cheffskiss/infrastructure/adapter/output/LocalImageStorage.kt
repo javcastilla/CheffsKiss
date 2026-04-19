@@ -5,10 +5,10 @@ import android.net.Uri
 import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import software.ulpgc.cheffskiss.application.port.output.ImageStoragePort
+import software.ulpgc.cheffskiss.application.port.ImageStorage
 import java.io.File
 
-class LocalImageStorage(private val context: Context) : ImageStoragePort {
+class LocalImageStorage(private val context: Context) : ImageStorage {
 
     private fun dir(folder: String): File =
         File(context.filesDir, "recipe_images/$folder").also { it.mkdirs() }
