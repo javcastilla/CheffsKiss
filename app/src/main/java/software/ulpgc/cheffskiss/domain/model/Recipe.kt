@@ -10,21 +10,16 @@ data class Recipe(
     val author: String,
     val title: String,
     val description: String,
-    val duration: Duration,
-    val ingredients: List<String>,
-    val steps: List<Step>,
-    val tags: List<String>,
-    val image: String,
     val servings: Int,
+    val duration: Duration,
+    val tags: List<String> = emptyList(),
+    val image: String = "",
     val createdAt: Instant = Clock.System.now()
 ) {
     init {
-        require(author.isNotBlank()) { "Author cannot be blank" }
-        require(title.isNotBlank()) { "Title cannot be blank" }
+        require(title.isNotBlank())       { "Title cannot be blank" }
         require(description.isNotBlank()) { "Description cannot be blank" }
-        require(duration > Duration.ZERO) { "Duration must be positive" }
-        require(ingredients.isNotEmpty()) { "Recipe must have at least one ingredient" }
-        require(steps.isNotEmpty()) { "Recipe must have at least one step" }
-        require(servings > 0) { "Servings must be greater than zero" }
+        require(servings > 0)             { "Servings must be greater than zero" }
+        require(duration.isPositive())    { "Duration must be positive" }
     }
 }

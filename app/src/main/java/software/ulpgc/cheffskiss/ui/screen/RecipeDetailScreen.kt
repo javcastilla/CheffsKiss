@@ -1,6 +1,5 @@
 package software.ulpgc.cheffskiss.ui.screen
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -24,12 +23,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
 import software.ulpgc.cheffskiss.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeDetailScreen(
     recipe: Recipe,
+    lines: List<RecipeLine>,
+    steps: List<Step>,
     authorName: String,
     isSaved: Boolean,
     isOwner: Boolean,
@@ -39,26 +42,19 @@ fun RecipeDetailScreen(
     onEdit: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
-    val checkedIngredients = remember { mutableStateListOf<Int>() }
+    val checkedLines = remember { mutableStateListOf<Int>() }
 
     Scaffold(
         containerColor = Background,
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "Recipe",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = OnSurface
-                    )
+                    Text("Recipe", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = OnSurface)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .background(Surface, CircleShape),
+                            modifier = Modifier.size(36.dp).background(Surface, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(Icons.Default.ArrowBack, null, tint = OnSurface, modifier = Modifier.size(20.dp))
@@ -94,18 +90,13 @@ fun RecipeDetailScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .background(CKSurfaceVariant, CircleShape),
+                                modifier = Modifier.size(56.dp).background(CKSurfaceVariant, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(Icons.Default.Restaurant, null, tint = Primary, modifier = Modifier.size(26.dp))
@@ -126,7 +117,6 @@ fun RecipeDetailScreen(
                     Text("by ", fontSize = 13.sp, color = CKOnSurfaceVariant)
                     Text(authorName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = OnSurface)
                 }
-
                 if (recipe.tags.isNotEmpty()) {
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
@@ -135,18 +125,14 @@ fun RecipeDetailScreen(
                     ) {
                         recipe.tags.forEach { tag ->
                             Box(
-                                modifier = Modifier
-                                    .background(Primary, CircleShape)
-                                    .padding(horizontal = 12.dp, vertical = 5.dp)
+                                modifier = Modifier.background(Primary, CircleShape).padding(horizontal = 12.dp, vertical = 5.dp)
                             ) {
                                 Text(tag, fontSize = 12.sp, color = OnPrimary, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
                 }
-
                 HorizontalDivider(color = CKOutlineVariant.copy(alpha = 0.3f))
-
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (!isOwner) {
                         Button(
@@ -158,8 +144,7 @@ fun RecipeDetailScreen(
                         ) {
                             Icon(
                                 if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                null,
-                                modifier = Modifier.size(16.dp)
+                                null, modifier = Modifier.size(16.dp)
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(if (isSaved) "Saved" else "Save", fontWeight = FontWeight.Bold, fontSize = 14.sp)
@@ -202,9 +187,7 @@ fun RecipeDetailScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     MetaStatItem(
@@ -228,107 +211,101 @@ fun RecipeDetailScreen(
 
             // ── Ingredients ───────────────────────────────────────────────────
             DetailCard(icon = Icons.Default.ShoppingBasket, title = "Ingredients") {
-                recipe.ingredients.forEachIndexed { index, ingredient ->
-                    val checked = checkedIngredients.contains(index)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(if (checked) CKSurfaceVariant else Background)
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Checkbox(
-                            checked = checked,
-                            onCheckedChange = {
-                                if (it) checkedIngredients.add(index)
-                                else checkedIngredients.remove(index)
-                            },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = Primary,
-                                uncheckedColor = CKOutlineVariant,
-                                checkmarkColor = OnPrimary
+                if (lines.isEmpty()) {
+                    Text("No ingredients added", fontSize = 13.sp, color = CKOnSurfaceVariant)
+                } else {
+                    lines.forEachIndexed { index, line ->
+                        val checked = checkedLines.contains(index)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (checked) CKSurfaceVariant else Background)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Checkbox(
+                                checked = checked,
+                                onCheckedChange = {
+                                    if (it) checkedLines.add(index) else checkedLines.remove(index)
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = Primary,
+                                    uncheckedColor = CKOutlineVariant,
+                                    checkmarkColor = OnPrimary
+                                )
                             )
-                        )
-                        Text(
-                            ingredient,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = if (checked) CKOnSurfaceVariant else OnSurface,
-                        )
+                            Text(
+                                "${line.amount} ${line.measurement.name.lowercase()}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (checked) CKOnSurfaceVariant else OnSurface
+                            )
+                        }
                     }
                 }
             }
 
             // ── Steps ─────────────────────────────────────────────────────────
             DetailCard(icon = Icons.Default.FormatListNumbered, title = "Preparation") {
-                val sortedSteps = recipe.steps.sortedBy { it.cardinal }
-                sortedSteps.forEachIndexed { index, step ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = if (index < sortedSteps.lastIndex) 12.dp else 0.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // Number badge
-                        Box(
+                val sortedSteps = steps.sortedBy { it.cardinal }
+                if (sortedSteps.isEmpty()) {
+                    Text("No steps added", fontSize = 13.sp, color = CKOnSurfaceVariant)
+                } else {
+                    sortedSteps.forEachIndexed { index, step ->
+                        Row(
                             modifier = Modifier
-                                .size(28.dp)
-                                .background(if (index == 0) Primary else Background, CircleShape)
-                                .border(
-                                    if (index == 0) 0.dp else 2.dp,
-                                    CKOutlineVariant.copy(alpha = 0.5f),
-                                    CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(bottom = if (index < sortedSteps.lastIndex) 12.dp else 0.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text(
-                                "${step.cardinal}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (index == 0) OnPrimary else CKOutlineVariant
-                            )
-                        }
-
-                        // Step card
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .background(Background, RoundedCornerShape(16.dp))
-                                .padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                step.description,
-                                fontSize = 14.sp,
-                                color = OnSurface,
-                                lineHeight = 22.sp
-                            )
-                            if (step.image.isNotBlank()) {
-                                AsyncImage(
-                                    model = step.image,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(160.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .background(if (index == 0) Primary else Background, CircleShape)
+                                    .border(
+                                        if (index == 0) 0.dp else 2.dp,
+                                        CKOutlineVariant.copy(alpha = 0.5f),
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "${step.cardinal}",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (index == 0) OnPrimary else CKOutlineVariant
                                 )
                             }
-                            if (step.duration.inWholeMinutes > 0) {
-                                HorizontalDivider(color = CKOutlineVariant.copy(alpha = 0.2f))
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(Icons.Default.Timer, null, tint = CKOutlineVariant, modifier = Modifier.size(12.dp))
-                                    Text(
-                                        "${step.duration.inWholeMinutes} min",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = CKOutlineVariant
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(Background, RoundedCornerShape(16.dp))
+                                    .padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(step.description, fontSize = 14.sp, color = OnSurface, lineHeight = 22.sp)
+                                if (step.image.isNotBlank()) {
+                                    AsyncImage(
+                                        model = step.image,
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(160.dp)
+                                            .clip(RoundedCornerShape(10.dp))
                                     )
+                                }
+                                if (step.duration.inWholeMinutes > 0) {
+                                    HorizontalDivider(color = CKOutlineVariant.copy(alpha = 0.2f))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(Icons.Default.Timer, null, tint = CKOutlineVariant, modifier = Modifier.size(12.dp))
+                                        Text("${step.duration.inWholeMinutes} min", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CKOutlineVariant)
+                                    }
                                 }
                             }
                         }
@@ -341,7 +318,6 @@ fun RecipeDetailScreen(
     }
 }
 
-// ── Section Card ──────────────────────────────────────────────────────────────
 @Composable
 private fun DetailCard(
     icon: ImageVector,
@@ -364,7 +340,6 @@ private fun DetailCard(
     }
 }
 
-// ── Meta Stat ─────────────────────────────────────────────────────────────────
 @Composable
 private fun MetaStatItem(modifier: Modifier = Modifier, icon: ImageVector, label: String, value: String) {
     Column(

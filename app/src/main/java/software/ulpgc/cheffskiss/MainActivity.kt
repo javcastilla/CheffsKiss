@@ -25,9 +25,9 @@ import software.ulpgc.cheffskiss.ui.LibraryViewModel
 import software.ulpgc.cheffskiss.ui.MealPlanDetailViewModel
 import software.ulpgc.cheffskiss.ui.MealPlanViewModel
 import software.ulpgc.cheffskiss.ui.RecipeDetailViewModel
+import software.ulpgc.cheffskiss.ui.ExploreViewModel
 import software.ulpgc.cheffskiss.ui.theme.CheffsKissTheme
 import software.ulpgc.cheffskiss.ui.theme.Primary
-import software.ulpgc.cheffskiss.ui.ExploreViewModel
 import software.ulpgc.cheffskiss.ui.screen.AllRecipesScreen
 import software.ulpgc.cheffskiss.ui.screen.EditRecipeScreen
 import software.ulpgc.cheffskiss.ui.screen.ExploreScreen
@@ -112,18 +112,18 @@ class MainActivity : ComponentActivity() {
 
                     composable("explore") {
                         ExploreScreen(
-                            viewModel      = viewModel<ExploreViewModel>(),
-                            onRecipeClick  = { recipe -> navController.navigate("recipe_detail/${recipe.id}") },
-                            onHomeClick    = { navController.navigate("home") { launchSingleTop = true } },
-                            onCreateClick  = { navController.navigate("create_recipe") },
-                            onSavedClick   = { navController.navigate("library") { launchSingleTop = true } }
+                            viewModel     = viewModel<ExploreViewModel>(),
+                            onRecipeClick = { recipe -> navController.navigate("recipe_detail/${recipe.id}") },
+                            onHomeClick   = { navController.navigate("home") { launchSingleTop = true } },
+                            onCreateClick = { navController.navigate("create_recipe") },
+                            onSavedClick  = { navController.navigate("library") { launchSingleTop = true } }
                         )
                     }
 
                     composable("create_recipe") {
                         CreateRecipeScreen(
                             onBack           = { navController.popBackStack() },
-                            onPublishSuccess = {
+                            onPublishSuccess  = {
                                 navController.navigate("home") { popUpTo("home") { inclusive = false } }
                             },
                             onSaveDraft      = { navController.popBackStack() }
@@ -140,6 +140,8 @@ class MainActivity : ComponentActivity() {
                         val authorName by detailViewModel.authorName.collectAsState()
                         val isSaved    by detailViewModel.isSaved.collectAsState()
                         val isOwner    by detailViewModel.isOwner.collectAsState()
+                        val lines      by detailViewModel.lines.collectAsState()
+                        val steps      by detailViewModel.steps.collectAsState()
 
                         LaunchedEffect(recipeId) { detailViewModel.load(recipeId) }
 
@@ -150,6 +152,8 @@ class MainActivity : ComponentActivity() {
                         } else {
                             RecipeDetailScreen(
                                 recipe     = recipe!!,
+                                lines      = lines,
+                                steps      = steps,
                                 authorName = authorName,
                                 isSaved    = isSaved,
                                 isOwner    = isOwner,
@@ -166,12 +170,13 @@ class MainActivity : ComponentActivity() {
                         arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
                     ) { backStackEntry ->
                         val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
-                        // Reuse detail VM from backstack so the recipe is already loaded
                         val detailEntry = remember(recipeId) {
                             navController.getBackStackEntry("recipe_detail/$recipeId")
                         }
                         val detailViewModel: RecipeDetailViewModel = viewModel(detailEntry)
                         val recipe by detailViewModel.recipe.collectAsState()
+                        val lines  by detailViewModel.lines.collectAsState()
+                        val steps  by detailViewModel.steps.collectAsState()
 
                         if (recipe == null) {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -180,6 +185,8 @@ class MainActivity : ComponentActivity() {
                         } else {
                             EditRecipeScreen(
                                 recipe          = recipe!!,
+                                initialLines    = lines,
+                                initialSteps    = steps,
                                 onBack          = { navController.popBackStack() },
                                 onUpdateSuccess = { navController.popBackStack() }
                             )

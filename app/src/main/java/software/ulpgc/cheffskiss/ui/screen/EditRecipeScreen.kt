@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
 import software.ulpgc.cheffskiss.ui.RecipeUiState
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -53,6 +54,8 @@ private fun parseIngredientRow(stored: String, idx: Int): IngredientRow {
 @Composable
 fun EditRecipeScreen(
     recipe: Recipe,
+    initialLines: List<RecipeLine>,
+    initialSteps: List<Step>,
     viewModel: RecipeViewModel = viewModel(),
     onBack: () -> Unit,
     onUpdateSuccess: () -> Unit
@@ -71,20 +74,35 @@ fun EditRecipeScreen(
     var tagInput by remember { mutableStateOf("") }
     val tags = remember { mutableStateListOf<String>().also { it.addAll(recipe.tags) } }
 
+    // ingredients — antes: recipe.ingredients.forEachIndexed
     val ingredients = remember {
         mutableStateListOf<IngredientRow>().also { list ->
-            recipe.ingredients.forEachIndexed { idx, it -> list.add(parseIngredientRow(it, idx)) }
+            initialLines.forEachIndexed { idx, line ->
+                // Reconstruimos texto legible desde RecipeLine
+                // El nombre del ingrediente no lo tenemos aquí (solo el UUID),
+                // así que mostramos amount + measurement como fallback
+                list.add(
+                    IngredientRow(
+                        id     = idx,
+                        amount = line.amount.toString(),
+                        unit   = line.measurement.name,
+                        name   = ""   // se llenará cuando tengamos IngredientStore en el VM
+                    )
+                )
+            }
             if (list.isEmpty()) list.add(IngredientRow(0))
         }
     }
+
+// steps — antes: recipe.steps.sortedBy
     val steps = remember {
         mutableStateListOf<StepRow>().also { list ->
-            recipe.steps.sortedBy { it.cardinal }.forEachIndexed { idx, step ->
+            initialSteps.sortedBy { it.cardinal }.forEachIndexed { idx, step ->
                 list.add(
                     StepRow(
-                        id = idx,
-                        description = step.description,
-                        duration = step.duration.inWholeMinutes.let { if (it > 0) it.toString() else "" },
+                        id               = idx,
+                        description      = step.description,
+                        duration         = step.duration.inWholeMinutes.let { if (it > 0) it.toString() else "" },
                         existingImageUrl = step.image.takeIf { it.isNotBlank() }
                     )
                 )
