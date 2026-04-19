@@ -1,0 +1,1671 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-04-19",
+  "total": 200,
+  "ingredients": [
+    {
+      "name": "Garlic",
+      "normalized_name": "garlic",
+      "category": "Vegetables",
+      "subcategory": "Bulbs",
+      "aliases": ["ajo", "aglio", "ail", "garlic clove", "garlic head"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "White Onion",
+      "normalized_name": "white onion",
+      "category": "Vegetables",
+      "subcategory": "Bulbs",
+      "aliases": ["onion", "cebolla", "cipolla", "oignon blanc"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Red Onion",
+      "normalized_name": "red onion",
+      "category": "Vegetables",
+      "subcategory": "Bulbs",
+      "aliases": ["purple onion", "cebolla morada", "cipolla rossa"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Spring Onion",
+      "normalized_name": "spring onion",
+      "category": "Vegetables",
+      "subcategory": "Bulbs",
+      "aliases": ["scallion", "green onion", "cebolleta", "cebolla de verdeo"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Shallot",
+      "normalized_name": "shallot",
+      "category": "Vegetables",
+      "subcategory": "Bulbs",
+      "aliases": ["chalota", "échalote", "scalogno"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Leek",
+      "normalized_name": "leek",
+      "category": "Vegetables",
+      "subcategory": "Bulbs",
+      "aliases": ["puerro", "porro", "poireau"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Tomato",
+      "normalized_name": "tomato",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["tomate", "pomodoro", "jitomate"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cherry Tomato",
+      "normalized_name": "cherry tomato",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["tomate cherry", "pomodorino", "grape tomato"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Plum Tomato",
+      "normalized_name": "plum tomato",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["roma tomato", "tomate pera", "san marzano"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Red Bell Pepper",
+      "normalized_name": "red bell pepper",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["red pepper", "pimiento rojo", "peperone rosso", "capsicum"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Green Bell Pepper",
+      "normalized_name": "green bell pepper",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["green pepper", "pimiento verde", "peperone verde"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Yellow Bell Pepper",
+      "normalized_name": "yellow bell pepper",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["yellow pepper", "pimiento amarillo", "peperone giallo"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Eggplant",
+      "normalized_name": "eggplant",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["aubergine", "berenjena", "melanzana"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Zucchini",
+      "normalized_name": "zucchini",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["courgette", "calabacín", "zucca verde"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cucumber",
+      "normalized_name": "cucumber",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["pepino", "cetriolo", "concombre"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Avocado",
+      "normalized_name": "avocado",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["palta", "aguacate", "avocado hass"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Corn",
+      "normalized_name": "corn",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["sweetcorn", "maíz", "choclo", "elote", "maize"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Jalapeño",
+      "normalized_name": "jalapeno",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["jalapeño pepper", "chile jalapeño", "hot pepper"],
+      "tags": ["vegan", "gluten-free", "spicy"]
+    },
+    {
+      "name": "Serrano Pepper",
+      "normalized_name": "serrano pepper",
+      "category": "Vegetables",
+      "subcategory": "Fruits",
+      "aliases": ["chile serrano", "serrano chili"],
+      "tags": ["vegan", "gluten-free", "spicy"]
+    },
+    {
+      "name": "Carrot",
+      "normalized_name": "carrot",
+      "category": "Vegetables",
+      "subcategory": "Roots & Tubers",
+      "aliases": ["zanahoria", "carota", "carotte"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Potato",
+      "normalized_name": "potato",
+      "category": "Vegetables",
+      "subcategory": "Roots & Tubers",
+      "aliases": ["patata", "papa", "pomme de terre"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Sweet Potato",
+      "normalized_name": "sweet potato",
+      "category": "Vegetables",
+      "subcategory": "Roots & Tubers",
+      "aliases": ["yam", "batata", "boniato", "camote"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Beetroot",
+      "normalized_name": "beetroot",
+      "category": "Vegetables",
+      "subcategory": "Roots & Tubers",
+      "aliases": ["beet", "remolacha", "barbabietola"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Turnip",
+      "normalized_name": "turnip",
+      "category": "Vegetables",
+      "subcategory": "Roots & Tubers",
+      "aliases": ["nabo", "rapa", "navet"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Radish",
+      "normalized_name": "radish",
+      "category": "Vegetables",
+      "subcategory": "Roots & Tubers",
+      "aliases": ["rábano", "ravanello", "radis"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Fresh Ginger",
+      "normalized_name": "fresh ginger",
+      "category": "Vegetables",
+      "subcategory": "Roots & Tubers",
+      "aliases": ["ginger root", "jengibre", "zenzero", "gingembre"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Fresh Turmeric",
+      "normalized_name": "fresh turmeric",
+      "category": "Vegetables",
+      "subcategory": "Roots & Tubers",
+      "aliases": ["turmeric root", "cúrcuma fresca", "curcuma fresca"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Celeriac",
+      "normalized_name": "celeriac",
+      "category": "Vegetables",
+      "subcategory": "Roots & Tubers",
+      "aliases": ["celery root", "apio nabo", "sedano rapa"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Parsnip",
+      "normalized_name": "parsnip",
+      "category": "Vegetables",
+      "subcategory": "Roots & Tubers",
+      "aliases": ["chirivía", "pastinaca", "panais"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Lettuce",
+      "normalized_name": "lettuce",
+      "category": "Vegetables",
+      "subcategory": "Leaves & Stems",
+      "aliases": ["lechuga", "lattuga", "laitue", "romaine", "iceberg"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Spinach",
+      "normalized_name": "spinach",
+      "category": "Vegetables",
+      "subcategory": "Leaves & Stems",
+      "aliases": ["espinaca", "spinaci", "épinard", "baby spinach"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Arugula",
+      "normalized_name": "arugula",
+      "category": "Vegetables",
+      "subcategory": "Leaves & Stems",
+      "aliases": ["rocket", "rúcula", "rucola", "oruga"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Kale",
+      "normalized_name": "kale",
+      "category": "Vegetables",
+      "subcategory": "Leaves & Stems",
+      "aliases": ["col rizada", "cavolo riccio", "chou frisé", "curly kale"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Swiss Chard",
+      "normalized_name": "swiss chard",
+      "category": "Vegetables",
+      "subcategory": "Leaves & Stems",
+      "aliases": ["chard", "acelga", "bietola", "blette"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Celery",
+      "normalized_name": "celery",
+      "category": "Vegetables",
+      "subcategory": "Leaves & Stems",
+      "aliases": ["apio", "sedano", "céleri"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cabbage",
+      "normalized_name": "cabbage",
+      "category": "Vegetables",
+      "subcategory": "Leaves & Stems",
+      "aliases": ["repollo", "col blanca", "cavolo cappuccio", "chou blanc"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Red Cabbage",
+      "normalized_name": "red cabbage",
+      "category": "Vegetables",
+      "subcategory": "Leaves & Stems",
+      "aliases": ["col lombarda", "cavolo rosso", "chou rouge"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Bok Choy",
+      "normalized_name": "bok choy",
+      "category": "Vegetables",
+      "subcategory": "Leaves & Stems",
+      "aliases": ["pak choi", "chinese cabbage", "col china"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Broccoli",
+      "normalized_name": "broccoli",
+      "category": "Vegetables",
+      "subcategory": "Flowers",
+      "aliases": ["brócoli", "broccolo", "brocoli"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cauliflower",
+      "normalized_name": "cauliflower",
+      "category": "Vegetables",
+      "subcategory": "Flowers",
+      "aliases": ["coliflor", "cavolfiore", "chou-fleur"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Artichoke",
+      "normalized_name": "artichoke",
+      "category": "Vegetables",
+      "subcategory": "Flowers",
+      "aliases": ["alcachofa", "carciofo", "artichaut", "alcaucil"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Brussels Sprouts",
+      "normalized_name": "brussels sprouts",
+      "category": "Vegetables",
+      "subcategory": "Flowers",
+      "aliases": ["col de Bruselas", "cavoletti di bruxelles", "chou de bruxelles"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Button Mushroom",
+      "normalized_name": "button mushroom",
+      "category": "Mushrooms",
+      "subcategory": "Cultivated",
+      "aliases": ["champiñón", "champignon", "white mushroom", "fungo coltivato"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Portobello Mushroom",
+      "normalized_name": "portobello mushroom",
+      "category": "Mushrooms",
+      "subcategory": "Cultivated",
+      "aliases": ["portobella", "portobello", "large mushroom"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Shiitake Mushroom",
+      "normalized_name": "shiitake mushroom",
+      "category": "Mushrooms",
+      "subcategory": "Cultivated",
+      "aliases": ["shiitake", "lentinula edodes", "seta shiitake"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Oyster Mushroom",
+      "normalized_name": "oyster mushroom",
+      "category": "Mushrooms",
+      "subcategory": "Cultivated",
+      "aliases": ["pleurotus", "seta ostra", "gírgola"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Porcini Mushroom",
+      "normalized_name": "porcini mushroom",
+      "category": "Mushrooms",
+      "subcategory": "Wild",
+      "aliases": ["cep", "boletus", "fungo porcino", "boletus edulis"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Chicken Breast",
+      "normalized_name": "chicken breast",
+      "category": "Meat",
+      "subcategory": "Poultry",
+      "aliases": ["pechuga de pollo", "petto di pollo", "blanc de poulet", "chicken fillet"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Chicken Thigh",
+      "normalized_name": "chicken thigh",
+      "category": "Meat",
+      "subcategory": "Poultry",
+      "aliases": ["muslo de pollo", "coscia di pollo", "cuisse de poulet"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Whole Chicken",
+      "normalized_name": "whole chicken",
+      "category": "Meat",
+      "subcategory": "Poultry",
+      "aliases": ["pollo entero", "poulet entier", "pollo intero"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Turkey Breast",
+      "normalized_name": "turkey breast",
+      "category": "Meat",
+      "subcategory": "Poultry",
+      "aliases": ["pechuga de pavo", "tacchino", "blanc de dinde"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Duck Breast",
+      "normalized_name": "duck breast",
+      "category": "Meat",
+      "subcategory": "Poultry",
+      "aliases": ["magret de pato", "magret de canard", "petto d'anatra"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Ground Beef",
+      "normalized_name": "ground beef",
+      "category": "Meat",
+      "subcategory": "Beef",
+      "aliases": ["minced beef", "carne picada", "carne molida", "macinato"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Beef Steak",
+      "normalized_name": "beef steak",
+      "category": "Meat",
+      "subcategory": "Beef",
+      "aliases": ["steak", "bistec", "bistecca", "entrecot"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Beef Brisket",
+      "normalized_name": "beef brisket",
+      "category": "Meat",
+      "subcategory": "Beef",
+      "aliases": ["falda de ternera", "pecho de res", "punta di petto"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Veal",
+      "normalized_name": "veal",
+      "category": "Meat",
+      "subcategory": "Beef",
+      "aliases": ["ternera", "vitello", "veau"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Pork Loin",
+      "normalized_name": "pork loin",
+      "category": "Meat",
+      "subcategory": "Pork",
+      "aliases": ["lomo de cerdo", "lombo di maiale", "longe de porc"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Pork Ribs",
+      "normalized_name": "pork ribs",
+      "category": "Meat",
+      "subcategory": "Pork",
+      "aliases": ["costillas de cerdo", "spare ribs", "costine", "côtes de porc"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Pork Belly",
+      "normalized_name": "pork belly",
+      "category": "Meat",
+      "subcategory": "Pork",
+      "aliases": ["panceta", "pancetta", "poitrine de porc", "bacon slab"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Bacon",
+      "normalized_name": "bacon",
+      "category": "Meat",
+      "subcategory": "Pork",
+      "aliases": ["beicon", "panceta ahumada", "lard fumé", "streaky bacon"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Ham",
+      "normalized_name": "ham",
+      "category": "Meat",
+      "subcategory": "Pork",
+      "aliases": ["jamón cocido", "prosciutto cotto", "jambon", "cooked ham"],
+      "tags": ["high-protein"]
+    },
+    {
+      "name": "Prosciutto",
+      "normalized_name": "prosciutto",
+      "category": "Meat",
+      "subcategory": "Pork",
+      "aliases": ["jamón serrano", "jamón ibérico", "prosciutto crudo", "jambon cru"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Lamb Leg",
+      "normalized_name": "lamb leg",
+      "category": "Meat",
+      "subcategory": "Lamb",
+      "aliases": ["pierna de cordero", "cosciotto di agnello", "gigot d'agneau"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Lamb Chops",
+      "normalized_name": "lamb chops",
+      "category": "Meat",
+      "subcategory": "Lamb",
+      "aliases": ["chuletas de cordero", "costolette di agnello", "côtelettes d'agneau"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Rabbit",
+      "normalized_name": "rabbit",
+      "category": "Meat",
+      "subcategory": "Game",
+      "aliases": ["conejo", "coniglio", "lapin"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Salmon",
+      "normalized_name": "salmon",
+      "category": "Fish & Seafood",
+      "subcategory": "Oily Fish",
+      "aliases": ["salmón", "salmone", "saumon", "atlantic salmon"],
+      "tags": ["gluten-free", "high-protein", "omega-3"]
+    },
+    {
+      "name": "Tuna",
+      "normalized_name": "tuna",
+      "category": "Fish & Seafood",
+      "subcategory": "Oily Fish",
+      "aliases": ["atún", "tonno", "thon", "bluefin tuna", "yellowfin tuna"],
+      "tags": ["gluten-free", "high-protein", "omega-3"]
+    },
+    {
+      "name": "Sardine",
+      "normalized_name": "sardine",
+      "category": "Fish & Seafood",
+      "subcategory": "Oily Fish",
+      "aliases": ["sardina", "sardine fraîche", "sardineta"],
+      "tags": ["gluten-free", "high-protein", "omega-3"]
+    },
+    {
+      "name": "Mackerel",
+      "normalized_name": "mackerel",
+      "category": "Fish & Seafood",
+      "subcategory": "Oily Fish",
+      "aliases": ["caballa", "sgombro", "maquereau", "verdel"],
+      "tags": ["gluten-free", "high-protein", "omega-3"]
+    },
+    {
+      "name": "Anchovy",
+      "normalized_name": "anchovy",
+      "category": "Fish & Seafood",
+      "subcategory": "Oily Fish",
+      "aliases": ["anchoa", "boquerón", "acciuga", "anchois"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Cod",
+      "normalized_name": "cod",
+      "category": "Fish & Seafood",
+      "subcategory": "White Fish",
+      "aliases": ["bacalao", "merluzzo", "morue", "salt cod"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Hake",
+      "normalized_name": "hake",
+      "category": "Fish & Seafood",
+      "subcategory": "White Fish",
+      "aliases": ["merluza", "nasello", "merlu"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Sea Bass",
+      "normalized_name": "sea bass",
+      "category": "Fish & Seafood",
+      "subcategory": "White Fish",
+      "aliases": ["lubina", "branzino", "bar", "robalo"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Sea Bream",
+      "normalized_name": "sea bream",
+      "category": "Fish & Seafood",
+      "subcategory": "White Fish",
+      "aliases": ["dorada", "orata", "daurade"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Sole",
+      "normalized_name": "sole",
+      "category": "Fish & Seafood",
+      "subcategory": "White Fish",
+      "aliases": ["lenguado", "sogliola", "sole commune"],
+      "tags": ["gluten-free", "high-protein"]
+    },
+    {
+      "name": "Trout",
+      "normalized_name": "trout",
+      "category": "Fish & Seafood",
+      "subcategory": "Oily Fish",
+      "aliases": ["trucha", "trota", "truite"],
+      "tags": ["gluten-free", "high-protein", "omega-3"]
+    },
+    {
+      "name": "Prawn",
+      "normalized_name": "prawn",
+      "category": "Fish & Seafood",
+      "subcategory": "Shellfish",
+      "aliases": ["gamba", "shrimp", "gambero", "crevette", "langostino"],
+      "tags": ["gluten-free", "high-protein", "common-allergen"]
+    },
+    {
+      "name": "Mussel",
+      "normalized_name": "mussel",
+      "category": "Fish & Seafood",
+      "subcategory": "Shellfish",
+      "aliases": ["mejillón", "cozza", "moule"],
+      "tags": ["gluten-free", "high-protein", "common-allergen"]
+    },
+    {
+      "name": "Clam",
+      "normalized_name": "clam",
+      "category": "Fish & Seafood",
+      "subcategory": "Shellfish",
+      "aliases": ["almeja", "vongola", "palourde"],
+      "tags": ["gluten-free", "high-protein", "common-allergen"]
+    },
+    {
+      "name": "Squid",
+      "normalized_name": "squid",
+      "category": "Fish & Seafood",
+      "subcategory": "Cephalopods",
+      "aliases": ["calamar", "calamaro", "calmar", "calamari"],
+      "tags": ["gluten-free", "high-protein", "common-allergen"]
+    },
+    {
+      "name": "Octopus",
+      "normalized_name": "octopus",
+      "category": "Fish & Seafood",
+      "subcategory": "Cephalopods",
+      "aliases": ["pulpo", "polpo", "poulpe"],
+      "tags": ["gluten-free", "high-protein", "common-allergen"]
+    },
+    {
+      "name": "Scallop",
+      "normalized_name": "scallop",
+      "category": "Fish & Seafood",
+      "subcategory": "Shellfish",
+      "aliases": ["vieira", "capasanta", "coquille Saint-Jacques"],
+      "tags": ["gluten-free", "high-protein", "common-allergen"]
+    },
+    {
+      "name": "Egg",
+      "normalized_name": "egg",
+      "category": "Eggs & Dairy",
+      "subcategory": "Eggs",
+      "aliases": ["huevo", "uovo", "oeuf", "hen egg"],
+      "tags": ["gluten-free", "high-protein", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Egg White",
+      "normalized_name": "egg white",
+      "category": "Eggs & Dairy",
+      "subcategory": "Eggs",
+      "aliases": ["clara de huevo", "albumen", "albume", "blanc d'oeuf"],
+      "tags": ["gluten-free", "high-protein", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Egg Yolk",
+      "normalized_name": "egg yolk",
+      "category": "Eggs & Dairy",
+      "subcategory": "Eggs",
+      "aliases": ["yema de huevo", "tuorlo", "jaune d'oeuf"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Whole Milk",
+      "normalized_name": "whole milk",
+      "category": "Eggs & Dairy",
+      "subcategory": "Milk & Cream",
+      "aliases": ["leche entera", "latte intero", "lait entier", "full-fat milk"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Skimmed Milk",
+      "normalized_name": "skimmed milk",
+      "category": "Eggs & Dairy",
+      "subcategory": "Milk & Cream",
+      "aliases": ["leche desnatada", "latte scremato", "lait écrémé", "fat-free milk"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Heavy Cream",
+      "normalized_name": "heavy cream",
+      "category": "Eggs & Dairy",
+      "subcategory": "Milk & Cream",
+      "aliases": ["nata para montar", "whipping cream", "panna da montare", "crème fouettée"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Cooking Cream",
+      "normalized_name": "cooking cream",
+      "category": "Eggs & Dairy",
+      "subcategory": "Milk & Cream",
+      "aliases": ["nata para cocinar", "single cream", "panna da cucina", "crème légère"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Butter",
+      "normalized_name": "butter",
+      "category": "Eggs & Dairy",
+      "subcategory": "Dairy Fats",
+      "aliases": ["mantequilla", "burro", "beurre", "unsalted butter", "salted butter"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Parmesan",
+      "normalized_name": "parmesan",
+      "category": "Eggs & Dairy",
+      "subcategory": "Hard Cheese",
+      "aliases": ["parmigiano reggiano", "queso parmesano", "parmesano", "grana padano"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Mozzarella",
+      "normalized_name": "mozzarella",
+      "category": "Eggs & Dairy",
+      "subcategory": "Fresh Cheese",
+      "aliases": ["mozzarella di bufala", "fior di latte", "fresh mozzarella"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Ricotta",
+      "normalized_name": "ricotta",
+      "category": "Eggs & Dairy",
+      "subcategory": "Fresh Cheese",
+      "aliases": ["ricotta cheese", "requesón", "ricotta fresca"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Feta",
+      "normalized_name": "feta",
+      "category": "Eggs & Dairy",
+      "subcategory": "Semi-cured Cheese",
+      "aliases": ["feta cheese", "queso feta", "fromage feta", "greek cheese"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Cheddar",
+      "normalized_name": "cheddar",
+      "category": "Eggs & Dairy",
+      "subcategory": "Hard Cheese",
+      "aliases": ["cheddar cheese", "queso cheddar", "aged cheddar"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Cream Cheese",
+      "normalized_name": "cream cheese",
+      "category": "Eggs & Dairy",
+      "subcategory": "Fresh Cheese",
+      "aliases": ["queso crema", "Philadelphia", "fromage frais", "soft cheese"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Goat Cheese",
+      "normalized_name": "goat cheese",
+      "category": "Eggs & Dairy",
+      "subcategory": "Fresh Cheese",
+      "aliases": ["queso de cabra", "chèvre", "formaggio di capra"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Natural Yogurt",
+      "normalized_name": "natural yogurt",
+      "category": "Eggs & Dairy",
+      "subcategory": "Fermented",
+      "aliases": ["yogur natural", "yogurt", "yaourt nature", "plain yogurt"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "Greek Yogurt",
+      "normalized_name": "greek yogurt",
+      "category": "Eggs & Dairy",
+      "subcategory": "Fermented",
+      "aliases": ["yogur griego", "yogurt greco", "strained yogurt"],
+      "tags": ["gluten-free", "vegetarian", "common-allergen"]
+    },
+    {
+      "name": "All-Purpose Flour",
+      "normalized_name": "all-purpose flour",
+      "category": "Flours & Grains",
+      "subcategory": "Flours",
+      "aliases": ["plain flour", "wheat flour", "harina de trigo", "farina di grano", "farine de blé"],
+      "tags": ["vegan", "vegetarian", "contains-gluten"]
+    },
+    {
+      "name": "Wholemeal Flour",
+      "normalized_name": "wholemeal flour",
+      "category": "Flours & Grains",
+      "subcategory": "Flours",
+      "aliases": ["whole wheat flour", "harina integral", "farina integrale"],
+      "tags": ["vegan", "vegetarian", "contains-gluten"]
+    },
+    {
+      "name": "Almond Flour",
+      "normalized_name": "almond flour",
+      "category": "Flours & Grains",
+      "subcategory": "Gluten-Free Flours",
+      "aliases": ["almond meal", "harina de almendra", "farina di mandorle"],
+      "tags": ["vegan", "vegetarian", "gluten-free", "common-allergen"]
+    },
+    {
+      "name": "Rice Flour",
+      "normalized_name": "rice flour",
+      "category": "Flours & Grains",
+      "subcategory": "Gluten-Free Flours",
+      "aliases": ["harina de arroz", "farina di riso", "farine de riz"],
+      "tags": ["vegan", "vegetarian", "gluten-free"]
+    },
+    {
+      "name": "Cornmeal",
+      "normalized_name": "cornmeal",
+      "category": "Flours & Grains",
+      "subcategory": "Gluten-Free Flours",
+      "aliases": ["polenta", "maize flour", "harina de maíz", "masa harina"],
+      "tags": ["vegan", "vegetarian", "gluten-free"]
+    },
+    {
+      "name": "Cornstarch",
+      "normalized_name": "cornstarch",
+      "category": "Flours & Grains",
+      "subcategory": "Thickeners",
+      "aliases": ["cornflour", "maicena", "amido di mais", "fécule de maïs"],
+      "tags": ["vegan", "vegetarian", "gluten-free"]
+    },
+    {
+      "name": "White Rice",
+      "normalized_name": "white rice",
+      "category": "Flours & Grains",
+      "subcategory": "Grains",
+      "aliases": ["arroz blanco", "riso bianco", "riz blanc", "long-grain rice"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Brown Rice",
+      "normalized_name": "brown rice",
+      "category": "Flours & Grains",
+      "subcategory": "Grains",
+      "aliases": ["arroz integral", "riso integrale", "riz complet"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Arborio Rice",
+      "normalized_name": "arborio rice",
+      "category": "Flours & Grains",
+      "subcategory": "Grains",
+      "aliases": ["risotto rice", "carnaroli", "vialone nano", "arroz para risotto"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Oats",
+      "normalized_name": "oats",
+      "category": "Flours & Grains",
+      "subcategory": "Grains",
+      "aliases": ["rolled oats", "avena", "porridge oats", "copos de avena"],
+      "tags": ["vegan", "vegetarian"]
+    },
+    {
+      "name": "Quinoa",
+      "normalized_name": "quinoa",
+      "category": "Flours & Grains",
+      "subcategory": "Pseudograins",
+      "aliases": ["quinua", "white quinoa", "red quinoa", "black quinoa"],
+      "tags": ["vegan", "gluten-free", "high-protein"]
+    },
+    {
+      "name": "Spaghetti",
+      "normalized_name": "spaghetti",
+      "category": "Pasta",
+      "subcategory": "Dry Pasta",
+      "aliases": ["espaguetis", "spaghettini", "pasta lunga"],
+      "tags": ["vegan", "contains-gluten"]
+    },
+    {
+      "name": "Penne",
+      "normalized_name": "penne",
+      "category": "Pasta",
+      "subcategory": "Dry Pasta",
+      "aliases": ["penne rigate", "penne lisce", "macarrones"],
+      "tags": ["vegan", "contains-gluten"]
+    },
+    {
+      "name": "Fusilli",
+      "normalized_name": "fusilli",
+      "category": "Pasta",
+      "subcategory": "Dry Pasta",
+      "aliases": ["spirali", "eliche", "rotini", "pasta espiral"],
+      "tags": ["vegan", "contains-gluten"]
+    },
+    {
+      "name": "Farfalle",
+      "normalized_name": "farfalle",
+      "category": "Pasta",
+      "subcategory": "Dry Pasta",
+      "aliases": ["bow tie pasta", "butterfly pasta", "pasta mariposa"],
+      "tags": ["vegan", "contains-gluten"]
+    },
+    {
+      "name": "Lasagna Sheets",
+      "normalized_name": "lasagna sheets",
+      "category": "Pasta",
+      "subcategory": "Dry Pasta",
+      "aliases": ["lasagne", "lasaña", "pasta sheets", "láminas de pasta"],
+      "tags": ["vegan", "contains-gluten"]
+    },
+    {
+      "name": "Extra Virgin Olive Oil",
+      "normalized_name": "extra virgin olive oil",
+      "category": "Oils & Fats",
+      "subcategory": "Vegetable Oils",
+      "aliases": ["EVOO", "aceite de oliva virgen extra", "olio extravergine", "AOVE"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Sunflower Oil",
+      "normalized_name": "sunflower oil",
+      "category": "Oils & Fats",
+      "subcategory": "Vegetable Oils",
+      "aliases": ["aceite de girasol", "olio di girasole", "huile de tournesol"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Coconut Oil",
+      "normalized_name": "coconut oil",
+      "category": "Oils & Fats",
+      "subcategory": "Vegetable Oils",
+      "aliases": ["aceite de coco", "olio di cocco", "huile de coco"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Sesame Oil",
+      "normalized_name": "sesame oil",
+      "category": "Oils & Fats",
+      "subcategory": "Vegetable Oils",
+      "aliases": ["aceite de sésamo", "toasted sesame oil", "olio di sesamo", "aceite de ajonjolí"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Salt",
+      "normalized_name": "salt",
+      "category": "Seasonings & Spices",
+      "subcategory": "Basic Seasonings",
+      "aliases": ["sal", "sale", "sel", "sea salt", "kosher salt", "table salt"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Black Pepper",
+      "normalized_name": "black pepper",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["pimienta negra", "pepe nero", "poivre noir", "ground black pepper"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "White Pepper",
+      "normalized_name": "white pepper",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["pimienta blanca", "pepe bianco", "poivre blanc"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Sweet Paprika",
+      "normalized_name": "sweet paprika",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["paprika", "pimentón dulce", "paprica dolce"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Smoked Paprika",
+      "normalized_name": "smoked paprika",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["pimentón ahumado", "paprica affumicata", "pimentón de La Vera"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cumin",
+      "normalized_name": "cumin",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["comino", "cumino", "cumin moulu", "ground cumin"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Turmeric",
+      "normalized_name": "turmeric",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["cúrcuma", "curcuma", "turmérico", "ground turmeric"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cinnamon",
+      "normalized_name": "cinnamon",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["canela", "cannella", "cannelle", "ground cinnamon", "cinnamon sticks"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Coriander Seeds",
+      "normalized_name": "coriander seeds",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["semillas de cilantro", "coriandolo in grani", "graines de coriandre"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cardamom",
+      "normalized_name": "cardamom",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["cardamomo", "cardamome", "green cardamom", "black cardamom"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cloves",
+      "normalized_name": "cloves",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["clavos de olor", "chiodi di garofano", "clous de girofle", "whole cloves"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Nutmeg",
+      "normalized_name": "nutmeg",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["nuez moscada", "noce moscata", "muscade", "ground nutmeg"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Star Anise",
+      "normalized_name": "star anise",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["anís estrellado", "anice stellato", "badiane"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cayenne Pepper",
+      "normalized_name": "cayenne pepper",
+      "category": "Seasonings & Spices",
+      "subcategory": "Spices",
+      "aliases": ["cayena", "peperoncino in polvere", "piment de cayenne", "chile en polvo"],
+      "tags": ["vegan", "gluten-free", "spicy"]
+    },
+    {
+      "name": "Oregano",
+      "normalized_name": "oregano",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["orégano", "origano", "origan", "dried oregano"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Basil",
+      "normalized_name": "basil",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["albahaca", "basilico", "basilic", "fresh basil", "dried basil"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Parsley",
+      "normalized_name": "parsley",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["perejil", "prezzemolo", "persil", "flat-leaf parsley", "curly parsley"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cilantro",
+      "normalized_name": "cilantro",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["fresh coriander", "culantro", "coriandolo fresco", "coriandre frais"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Rosemary",
+      "normalized_name": "rosemary",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["romero", "rosmarino", "romarin", "fresh rosemary"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Thyme",
+      "normalized_name": "thyme",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["tomillo", "timo", "thym", "lemon thyme"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Bay Leaf",
+      "normalized_name": "bay leaf",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["laurel", "alloro", "laurier", "bay leaves"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Mint",
+      "normalized_name": "mint",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["menta", "mentha", "peppermint", "spearmint", "hierbabuena"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Dill",
+      "normalized_name": "dill",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["eneldo", "aneto", "aneth", "fresh dill"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Tarragon",
+      "normalized_name": "tarragon",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["estragón", "dragoncello", "estragon"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Chives",
+      "normalized_name": "chives",
+      "category": "Seasonings & Spices",
+      "subcategory": "Herbs",
+      "aliases": ["cebollino", "erba cipollina", "ciboulette"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "White Wine Vinegar",
+      "normalized_name": "white wine vinegar",
+      "category": "Seasonings & Spices",
+      "subcategory": "Vinegars",
+      "aliases": ["vinagre de vino blanco", "aceto di vino bianco", "vinaigre de vin blanc"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Red Wine Vinegar",
+      "normalized_name": "red wine vinegar",
+      "category": "Seasonings & Spices",
+      "subcategory": "Vinegars",
+      "aliases": ["vinagre de vino tinto", "aceto di vino rosso", "vinaigre de vin rouge"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Balsamic Vinegar",
+      "normalized_name": "balsamic vinegar",
+      "category": "Seasonings & Spices",
+      "subcategory": "Vinegars",
+      "aliases": ["vinagre balsámico", "aceto balsamico", "vinaigre balsamique", "aceto di Modena"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Apple Cider Vinegar",
+      "normalized_name": "apple cider vinegar",
+      "category": "Seasonings & Spices",
+      "subcategory": "Vinegars",
+      "aliases": ["vinagre de manzana", "aceto di mele", "vinaigre de cidre", "ACV"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Soy Sauce",
+      "normalized_name": "soy sauce",
+      "category": "Seasonings & Spices",
+      "subcategory": "Sauces",
+      "aliases": ["salsa de soja", "shoyu", "tamari", "soja sauce"],
+      "tags": ["vegan", "common-allergen"]
+    },
+    {
+      "name": "White Sugar",
+      "normalized_name": "white sugar",
+      "category": "Sugars & Sweeteners",
+      "subcategory": "Sugars",
+      "aliases": ["granulated sugar", "azúcar blanco", "zucchero bianco", "sucre blanc"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Brown Sugar",
+      "normalized_name": "brown sugar",
+      "category": "Sugars & Sweeteners",
+      "subcategory": "Sugars",
+      "aliases": ["azúcar moreno", "zucchero di canna", "cassonade", "raw sugar"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Powdered Sugar",
+      "normalized_name": "powdered sugar",
+      "category": "Sugars & Sweeteners",
+      "subcategory": "Sugars",
+      "aliases": ["icing sugar", "confectioners' sugar", "azúcar glas", "zucchero a velo"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Honey",
+      "normalized_name": "honey",
+      "category": "Sugars & Sweeteners",
+      "subcategory": "Natural Sweeteners",
+      "aliases": ["miel", "miele", "miel d'abeille", "raw honey"],
+      "tags": ["gluten-free", "vegetarian"]
+    },
+    {
+      "name": "Maple Syrup",
+      "normalized_name": "maple syrup",
+      "category": "Sugars & Sweeteners",
+      "subcategory": "Natural Sweeteners",
+      "aliases": ["sirope de arce", "sciroppo d'acero", "sirop d'érable"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Agave Syrup",
+      "normalized_name": "agave syrup",
+      "category": "Sugars & Sweeteners",
+      "subcategory": "Natural Sweeteners",
+      "aliases": ["agave nectar", "sirope de agave", "sciroppo di agave"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Lemon",
+      "normalized_name": "lemon",
+      "category": "Fruits",
+      "subcategory": "Citrus",
+      "aliases": ["limón", "limone", "citron", "lemon zest", "lemon juice"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Lime",
+      "normalized_name": "lime",
+      "category": "Fruits",
+      "subcategory": "Citrus",
+      "aliases": ["lima", "limetta", "citron vert", "key lime"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Orange",
+      "normalized_name": "orange",
+      "category": "Fruits",
+      "subcategory": "Citrus",
+      "aliases": ["naranja", "arancia", "orange", "blood orange", "navel orange"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Apple",
+      "normalized_name": "apple",
+      "category": "Fruits",
+      "subcategory": "Pome Fruits",
+      "aliases": ["manzana", "mela", "pomme", "granny smith", "golden apple"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Pear",
+      "normalized_name": "pear",
+      "category": "Fruits",
+      "subcategory": "Pome Fruits",
+      "aliases": ["pera", "poire", "conference pear", "williams pear"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Banana",
+      "normalized_name": "banana",
+      "category": "Fruits",
+      "subcategory": "Tropical Fruits",
+      "aliases": ["plátano", "banane", "plantain", "cavendish banana"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Mango",
+      "normalized_name": "mango",
+      "category": "Fruits",
+      "subcategory": "Tropical Fruits",
+      "aliases": ["mango", "alphonso mango", "ataulfo mango"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Pineapple",
+      "normalized_name": "pineapple",
+      "category": "Fruits",
+      "subcategory": "Tropical Fruits",
+      "aliases": ["piña", "ananas", "ananas comosus"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Strawberry",
+      "normalized_name": "strawberry",
+      "category": "Fruits",
+      "subcategory": "Berries",
+      "aliases": ["fresa", "fragola", "fraise", "wild strawberry"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Blueberry",
+      "normalized_name": "blueberry",
+      "category": "Fruits",
+      "subcategory": "Berries",
+      "aliases": ["arándano", "mirtillo", "myrtille", "wild blueberry"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Raspberry",
+      "normalized_name": "raspberry",
+      "category": "Fruits",
+      "subcategory": "Berries",
+      "aliases": ["frambuesa", "lampone", "framboise"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Blackberry",
+      "normalized_name": "blackberry",
+      "category": "Fruits",
+      "subcategory": "Berries",
+      "aliases": ["mora", "mora di rovo", "mûre"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Pomegranate",
+      "normalized_name": "pomegranate",
+      "category": "Fruits",
+      "subcategory": "Other Fruits",
+      "aliases": ["granada", "melograno", "grenade", "pomegranate seeds"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Chickpeas",
+      "normalized_name": "chickpeas",
+      "category": "Legumes",
+      "subcategory": "Pulses",
+      "aliases": ["garbanzos", "ceci", "pois chiches", "garbanzo beans"],
+      "tags": ["vegan", "gluten-free", "high-protein"]
+    },
+    {
+      "name": "Lentils",
+      "normalized_name": "lentils",
+      "category": "Legumes",
+      "subcategory": "Pulses",
+      "aliases": ["lentejas", "lenticchie", "lentilles", "red lentils", "green lentils"],
+      "tags": ["vegan", "gluten-free", "high-protein"]
+    },
+    {
+      "name": "Black Beans",
+      "normalized_name": "black beans",
+      "category": "Legumes",
+      "subcategory": "Pulses",
+      "aliases": ["frijoles negros", "fagioli neri", "haricots noirs", "turtle beans"],
+      "tags": ["vegan", "gluten-free", "high-protein"]
+    },
+    {
+      "name": "Kidney Beans",
+      "normalized_name": "kidney beans",
+      "category": "Legumes",
+      "subcategory": "Pulses",
+      "aliases": ["judías rojas", "fagioli rossi", "haricots rouges", "red beans"],
+      "tags": ["vegan", "gluten-free", "high-protein"]
+    },
+    {
+      "name": "White Beans",
+      "normalized_name": "white beans",
+      "category": "Legumes",
+      "subcategory": "Pulses",
+      "aliases": ["judías blancas", "cannellini", "alubias", "navy beans", "haricots blancs"],
+      "tags": ["vegan", "gluten-free", "high-protein"]
+    },
+    {
+      "name": "Green Peas",
+      "normalized_name": "green peas",
+      "category": "Legumes",
+      "subcategory": "Pulses",
+      "aliases": ["guisantes", "piselli", "petits pois", "garden peas"],
+      "tags": ["vegan", "gluten-free", "high-protein"]
+    },
+    {
+      "name": "Edamame",
+      "normalized_name": "edamame",
+      "category": "Legumes",
+      "subcategory": "Pulses",
+      "aliases": ["soy beans", "habas de soja", "fagioli di soia"],
+      "tags": ["vegan", "gluten-free", "high-protein"]
+    },
+    {
+      "name": "Almonds",
+      "normalized_name": "almonds",
+      "category": "Nuts & Seeds",
+      "subcategory": "Nuts",
+      "aliases": ["almendras", "mandorle", "amandes", "sliced almonds", "whole almonds"],
+      "tags": ["vegan", "gluten-free", "common-allergen"]
+    },
+    {
+      "name": "Walnuts",
+      "normalized_name": "walnuts",
+      "category": "Nuts & Seeds",
+      "subcategory": "Nuts",
+      "aliases": ["nueces", "noci", "noix", "walnut halves"],
+      "tags": ["vegan", "gluten-free", "common-allergen"]
+    },
+    {
+      "name": "Cashews",
+      "normalized_name": "cashews",
+      "category": "Nuts & Seeds",
+      "subcategory": "Nuts",
+      "aliases": ["anacardos", "anacardi", "noix de cajou", "cashew nuts"],
+      "tags": ["vegan", "gluten-free", "common-allergen"]
+    },
+    {
+      "name": "Pine Nuts",
+      "normalized_name": "pine nuts",
+      "category": "Nuts & Seeds",
+      "subcategory": "Nuts",
+      "aliases": ["piñones", "pinoli", "pignons", "pignoli"],
+      "tags": ["vegan", "gluten-free", "common-allergen"]
+    },
+    {
+      "name": "Hazelnuts",
+      "normalized_name": "hazelnuts",
+      "category": "Nuts & Seeds",
+      "subcategory": "Nuts",
+      "aliases": ["avellanas", "nocciole", "noisettes"],
+      "tags": ["vegan", "gluten-free", "common-allergen"]
+    },
+    {
+      "name": "Sesame Seeds",
+      "normalized_name": "sesame seeds",
+      "category": "Nuts & Seeds",
+      "subcategory": "Seeds",
+      "aliases": ["semillas de sésamo", "semi di sesamo", "sésame", "ajonjolí", "tahini seeds"],
+      "tags": ["vegan", "gluten-free", "common-allergen"]
+    },
+    {
+      "name": "Sunflower Seeds",
+      "normalized_name": "sunflower seeds",
+      "category": "Nuts & Seeds",
+      "subcategory": "Seeds",
+      "aliases": ["pipas de girasol", "semi di girasole", "graines de tournesol"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Pumpkin Seeds",
+      "normalized_name": "pumpkin seeds",
+      "category": "Nuts & Seeds",
+      "subcategory": "Seeds",
+      "aliases": ["pepitas", "semi di zucca", "graines de courge", "pepitas de calabaza"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Chia Seeds",
+      "normalized_name": "chia seeds",
+      "category": "Nuts & Seeds",
+      "subcategory": "Seeds",
+      "aliases": ["semillas de chía", "semi di chia", "graines de chia"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Flaxseeds",
+      "normalized_name": "flaxseeds",
+      "category": "Nuts & Seeds",
+      "subcategory": "Seeds",
+      "aliases": ["linseeds", "semillas de lino", "semi di lino", "graines de lin"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Tofu",
+      "normalized_name": "tofu",
+      "category": "Plant Proteins",
+      "subcategory": "Soy Products",
+      "aliases": ["firm tofu", "silken tofu", "tofu firme", "queso de soja"],
+      "tags": ["vegan", "gluten-free", "high-protein"]
+    },
+    {
+      "name": "Tempeh",
+      "normalized_name": "tempeh",
+      "category": "Plant Proteins",
+      "subcategory": "Soy Products",
+      "aliases": ["tempé", "fermented soy"],
+      "tags": ["vegan", "high-protein"]
+    },
+    {
+      "name": "White Wine",
+      "normalized_name": "white wine",
+      "category": "Liquids & Stocks",
+      "subcategory": "Wine",
+      "aliases": ["vino blanco", "vino bianco", "vin blanc", "dry white wine"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Red Wine",
+      "normalized_name": "red wine",
+      "category": "Liquids & Stocks",
+      "subcategory": "Wine",
+      "aliases": ["vino tinto", "vino rosso", "vin rouge", "dry red wine"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Chicken Stock",
+      "normalized_name": "chicken stock",
+      "category": "Liquids & Stocks",
+      "subcategory": "Stocks",
+      "aliases": ["chicken broth", "caldo de pollo", "brodo di pollo", "bouillon de poulet"],
+      "tags": ["gluten-free"]
+    },
+    {
+      "name": "Vegetable Stock",
+      "normalized_name": "vegetable stock",
+      "category": "Liquids & Stocks",
+      "subcategory": "Stocks",
+      "aliases": ["vegetable broth", "caldo de verduras", "brodo vegetale", "bouillon de légumes"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Beef Stock",
+      "normalized_name": "beef stock",
+      "category": "Liquids & Stocks",
+      "subcategory": "Stocks",
+      "aliases": ["beef broth", "caldo de carne", "brodo di manzo", "fond de boeuf"],
+      "tags": ["gluten-free"]
+    },
+    {
+      "name": "Coconut Milk",
+      "normalized_name": "coconut milk",
+      "category": "Liquids & Stocks",
+      "subcategory": "Plant Milks",
+      "aliases": ["leche de coco", "latte di cocco", "lait de coco"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Oat Milk",
+      "normalized_name": "oat milk",
+      "category": "Liquids & Stocks",
+      "subcategory": "Plant Milks",
+      "aliases": ["leche de avena", "latte di avena", "lait d'avoine"],
+      "tags": ["vegan"]
+    },
+    {
+      "name": "Almond Milk",
+      "normalized_name": "almond milk",
+      "category": "Liquids & Stocks",
+      "subcategory": "Plant Milks",
+      "aliases": ["leche de almendra", "latte di mandorla", "lait d'amande"],
+      "tags": ["vegan", "gluten-free", "common-allergen"]
+    },
+    {
+      "name": "Baking Powder",
+      "normalized_name": "baking powder",
+      "category": "Baking",
+      "subcategory": "Leavening Agents",
+      "aliases": ["levadura química", "lievito in polvere", "levure chimique", "polvo de hornear"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Baking Soda",
+      "normalized_name": "baking soda",
+      "category": "Baking",
+      "subcategory": "Leavening Agents",
+      "aliases": ["bicarbonato sódico", "bicarbonato di sodio", "bicarbonate de soude"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Dry Yeast",
+      "normalized_name": "dry yeast",
+      "category": "Baking",
+      "subcategory": "Leavening Agents",
+      "aliases": ["levadura seca", "lievito secco", "levure sèche", "instant yeast"],
+      "tags": ["vegan"]
+    },
+    {
+      "name": "Vanilla Extract",
+      "normalized_name": "vanilla extract",
+      "category": "Baking",
+      "subcategory": "Flavorings",
+      "aliases": ["extracto de vainilla", "estratto di vaniglia", "extrait de vanille", "vanilla bean"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Dark Chocolate",
+      "normalized_name": "dark chocolate",
+      "category": "Baking",
+      "subcategory": "Chocolate & Cocoa",
+      "aliases": ["chocolate negro", "cioccolato fondente", "chocolat noir", "bittersweet chocolate"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Cocoa Powder",
+      "normalized_name": "cocoa powder",
+      "category": "Baking",
+      "subcategory": "Chocolate & Cocoa",
+      "aliases": ["cacao en polvo", "cacao amaro", "poudre de cacao", "unsweetened cocoa"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Tahini",
+      "normalized_name": "tahini",
+      "category": "Condiments",
+      "subcategory": "Pastes",
+      "aliases": ["pasta de sésamo", "tahin", "pasta tahini", "sesame paste"],
+      "tags": ["vegan", "gluten-free", "common-allergen"]
+    },
+    {
+      "name": "Tomato Paste",
+      "normalized_name": "tomato paste",
+      "category": "Condiments",
+      "subcategory": "Pastes",
+      "aliases": ["concentrado de tomate", "concentrato di pomodoro", "concentré de tomate", "tomato puree"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Dijon Mustard",
+      "normalized_name": "dijon mustard",
+      "category": "Condiments",
+      "subcategory": "Mustards",
+      "aliases": ["mostaza de Dijon", "senape di Digione", "mustarde de Dijon"],
+      "tags": ["vegan", "gluten-free"]
+    },
+    {
+      "name": "Worcestershire Sauce",
+      "normalized_name": "worcestershire sauce",
+      "category": "Condiments",
+      "subcategory": "Sauces",
+      "aliases": ["salsa Worcestershire", "salsa inglesa", "lea & perrins"],
+      "tags": ["gluten-free"]
+    },
+    {
+      "name": "Fish Sauce",
+      "normalized_name": "fish sauce",
+      "category": "Condiments",
+      "subcategory": "Sauces",
+      "aliases": ["nam pla", "nuoc mam", "salsa de pescado", "colatura di alici"],
+      "tags": ["gluten-free"]
+    },
+    {
+      "name": "Miso Paste",
+      "normalized_name": "miso paste",
+      "category": "Condiments",
+      "subcategory": "Pastes",
+      "aliases": ["white miso", "red miso", "shiro miso", "pasta miso"],
+      "tags": ["vegan"]
+    },
+    {
+      "name": "Harissa",
+      "normalized_name": "harissa",
+      "category": "Condiments",
+      "subcategory": "Pastes",
+      "aliases": ["harissa paste", "pasta harissa", "salsa harissa"],
+      "tags": ["vegan", "gluten-free", "spicy"]
+    }
+  ]
+}

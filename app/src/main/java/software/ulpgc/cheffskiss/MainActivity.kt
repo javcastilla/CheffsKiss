@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,6 +21,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.IngredientSeeder
 import software.ulpgc.cheffskiss.ui.HomeViewModel
 import software.ulpgc.cheffskiss.ui.LibraryViewModel
 import software.ulpgc.cheffskiss.ui.MealPlanDetailViewModel
@@ -42,6 +45,15 @@ import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        lifecycleScope.launch {
+            runCatching {
+                IngredientSeeder.seedIfNeeded(applicationContext)
+            }.onFailure {
+                android.util.Log.e("MainActivity", "Seed failed: ${it.message}")
+            }
+        }
+
         enableEdgeToEdge()
         setContent {
             CheffsKissTheme {
