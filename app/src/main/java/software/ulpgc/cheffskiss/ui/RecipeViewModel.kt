@@ -51,12 +51,26 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         imageUri: Uri?
     ) {
         when {
-            title.isBlank()       -> { _uiState.value = RecipeUiState.Error("The title have to be filled"); return }
-            description.isBlank() -> { _uiState.value = RecipeUiState.Error("The description have to be filled"); return }
-            (hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0") ->
-                { _uiState.value = RecipeUiState.Error("Indicate the recipe duration"); return }
-            ingredients.isEmpty() -> { _uiState.value = RecipeUiState.Error("The ingredients have to be filled with at least one ingredient"); return }
-            steps.isEmpty()       -> { _uiState.value = RecipeUiState.Error("The steps have to be filled with at least one step"); return }
+            title.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("The title must be filled.")
+                return
+            }
+            description.isBlank() -> {
+                _uiState.value = RecipeUiState.Error("The description must be filled.")
+                return
+            }
+            (hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0") -> {
+                _uiState.value = RecipeUiState.Error("Indicate the recipe duration.")
+                return
+            }
+            ingredients.isEmpty() -> {
+                _uiState.value = RecipeUiState.Error("There must be at least one ingredient.")
+                return
+            }
+            steps.isEmpty() -> {
+                _uiState.value = RecipeUiState.Error("There must be at least one step.")
+                return
+            }
         }
 
         viewModelScope.launch {
