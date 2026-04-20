@@ -79,41 +79,57 @@ fun CreateRecipeScreen(
             onPublishSuccess()
         }
     }
-
     val handlePublish = {
         val authorId = authViewModel.getCurrentUid()
         if (authorId != null) {
-            val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
-            val mappedSteps = steps.mapIndexed { index, stepRow ->
-                Step(
-                    id          = UUID.randomUUID(),
-                    description = stepRow.description,
-                    duration    = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
-                    cardinal    = index + 1,
-                    image       = ""  // will be set by ViewModel after upload
-                )
-            }
-            val stepImageUris = steps.map { it.imageUri }
+            val mappedIngredients = ingredients
+                .filter { it.name.isNotBlank() }
+                .map { "${it.amount} ${it.unit} ${it.name}".trim() }
+
+            val mappedSteps = steps
+                .filter { it.description.isNotBlank() }
+                .mapIndexed { index, stepRow ->
+                    Step(
+                        id = UUID.randomUUID(),
+                        description = stepRow.description.trim(),
+                        duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
+                        cardinal = index + 1,
+                        image = ""
+                    )
+                }
+
+            val stepImageUris = steps
+                .filter { it.description.isNotBlank() }
+                .map { it.imageUri }
+
             viewModel.createRecipe(
-                authorId      = authorId,
-                title         = title,
-                description   = description,
-                servings      = servings,
-                hours         = hours,
-                minutes       = minutes,
-                ingredients   = mappedIngredients,
-                steps         = mappedSteps,
+                authorId = authorId,
+                title = title,
+                description = description,
+                servings = servings,
+                hours = hours,
+                minutes = minutes,
+                ingredients = mappedIngredients,
+                steps = mappedSteps,
                 stepImageUris = stepImageUris,
-                tags          = tags.toList(),
-                imageUri      = coverImageUri
+                tags = tags.toList(),
+                imageUri = coverImageUri
             )
         }
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState) {
-        if (uiState is RecipeUiState.Error) {
-            snackbarHostState.showSnackbar((uiState as RecipeUiState.Error).message)
+        when (val state = uiState) {
+            is RecipeUiState.Success -> {
+                viewModel.resetState()
+                onPublishSuccess()
+            }
+            is RecipeUiState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetState()
+            }
+            else -> Unit
         }
     }
 
