@@ -170,6 +170,7 @@ fun EditRecipeScreen(
                 onSaveDraft  = onBack,
                 onPublish    = handleUpdate,
                 isLoading    = uiState is RecipeUiState.Loading,
+                isPublishFormComplete = true,
                 publishLabel = "Update Recipe"
             )
         }
