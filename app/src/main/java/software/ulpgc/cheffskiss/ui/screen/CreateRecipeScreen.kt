@@ -40,6 +40,7 @@ import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
+import androidx.compose.ui.graphics.Brush
 
 // ── Models ────────────────────────────────────────────────────────────────────
 data class IngredientRow(val id: Int, val name: String = "", val amount: String = "", val unit: String = "UNIT")
@@ -73,26 +74,42 @@ fun CreateRecipeScreen(
         uri?.let { coverImageUri = it }
     }
 
+    val hasValidDuration = !((hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0"))
+    val hasIngredients = ingredients.any { it.name.isNotBlank() }
+    val hasSteps = steps.any { it.description.isNotBlank() }
+
+    val isRecipeFormComplete =
+        title.isNotBlank() &&
+                description.isNotBlank() &&
+                hasValidDuration &&
+                hasIngredients &&
+                hasSteps
+
     LaunchedEffect(uiState) {
         if (uiState is RecipeUiState.Success) {
             viewModel.resetState()
             onPublishSuccess()
         }
     }
-
     val handlePublish = {
         val authorId = authViewModel.getCurrentUid()
         if (authorId != null) {
-            val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
-            val mappedSteps = steps.mapIndexed { index, stepRow ->
-                Step(
-                    id          = UUID.randomUUID(),
-                    description = stepRow.description,
-                    duration    = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
-                    cardinal    = index + 1,
-                    image       = stepRow.existingImageUrl ?: ""
-                )
-            }
+            val mappedIngredients = ingredients
+                .filter { it.name.isNotBlank() }
+                .map { "${it.amount} ${it.unit} ${it.name}".trim() }
+
+            val mappedSteps = steps
+                .filter { it.description.isNotBlank() }
+                .mapIndexed { index, stepRow ->
+                    Step(
+                        id = UUID.randomUUID(),
+                        description = stepRow.description.trim(),
+                        duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
+                        cardinal = index + 1,
+                        image = ""
+                    )
+                }
+
             val stepImageUris = steps.map { it.imageUri }
             viewModel.createRecipe(
                 authorId      = authorId,
@@ -112,8 +129,16 @@ fun CreateRecipeScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState) {
-        if (uiState is RecipeUiState.Error) {
-            snackbarHostState.showSnackbar((uiState as RecipeUiState.Error).message)
+        when (val state = uiState) {
+            is RecipeUiState.Success -> {
+                viewModel.resetState()
+                onPublishSuccess()
+            }
+            is RecipeUiState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetState()
+            }
+            else -> Unit
         }
     }
 
@@ -121,7 +146,13 @@ fun CreateRecipeScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Background,
         topBar = { CRTopBar(onBack = onBack, onSaveDraft = onSaveDraft) },
-        bottomBar = { CRBottomBar(onSaveDraft = onSaveDraft, onPublish = handlePublish, isLoading = uiState is RecipeUiState.Loading) }
+
+        bottomBar = {CRBottomBar(
+            onSaveDraft = onSaveDraft,
+            onPublish = handlePublish,
+            isLoading = uiState is RecipeUiState.Loading,
+            isPublishFormComplete = isRecipeFormComplete
+        )}
     ) { padding ->
         Column(
             modifier = Modifier
@@ -404,7 +435,13 @@ internal fun CRTopBar(title: String = "New Recipe", onBack: () -> Unit, onSaveDr
 
 // ── Bottom Bar ────────────────────────────────────────────────────────────────
 @Composable
-internal fun CRBottomBar(onSaveDraft: () -> Unit, onPublish: () -> Unit, isLoading: Boolean, publishLabel: String = "Publish Recipe") {
+internal fun CRBottomBar(
+    onSaveDraft: () -> Unit,
+    onPublish: () -> Unit,
+    isLoading: Boolean,
+    isPublishFormComplete: Boolean,
+    publishLabel: String = "Publish Recipe"
+) {
     Surface(
         color = Background.copy(alpha = 0.95f),
         tonalElevation = 0.dp,
@@ -425,18 +462,54 @@ internal fun CRBottomBar(onSaveDraft: () -> Unit, onPublish: () -> Unit, isLoadi
             }
             Button(
                 onClick = onPublish,
-                modifier = Modifier.weight(2f).height(52.dp),
+                modifier = Modifier
+                    .weight(2f)
+                    .height(52.dp),
                 shape = CircleShape,
-                enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = Primary, contentColor = OnPrimary),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = OnPrimary
+                ),
+                contentPadding = PaddingValues(0.dp),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(color = OnPrimary, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                } else {
-                    Icon(Icons.Default.Publish, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(publishLabel, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.linearGradient(
+                                if (!isLoading && isPublishFormComplete) {
+                                    listOf(Primary, Color(0xFF004D1C))
+                                } else {
+                                    listOf(
+                                        Primary.copy(alpha = 0.4f),
+                                        Color(0xFF004D1C).copy(alpha = 0.4f)
+                                    )
+                                }
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = OnPrimary,
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(Icons.Default.Publish, null, modifier = Modifier.size(18.dp))
+                            Text(
+                                text = publishLabel,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
                 }
             }
         }
