@@ -11,8 +11,7 @@ import kotlinx.datetime.Instant
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.model.MealPlan
 import software.ulpgc.cheffskiss.domain.model.MealSlot
-import software.ulpgc.cheffskiss.domain.model.vo.SlotTime
-import software.ulpgc.cheffskiss.domain.model.vo.Weekday
+import software.ulpgc.cheffskiss.domain.vo.MealSlotTime
 import java.util.UUID
 
 class FirebaseMealPlanService : MealPlanRepository {
@@ -116,8 +115,8 @@ class FirebaseMealPlanService : MealPlanRepository {
         MealSlot(
             id         = UUID.fromString(get("id") as? String ?: return null),
             name       = get("name") as? String ?: "",
-            startTime = SlotTime.fromHHmm(get("startTime") as? String ?: "08:00"),
-            endTime   = SlotTime.fromHHmm(get("endTime")   as? String ?: "09:00"),
+            startTime = MealSlotTime.fromHHmm(get("startTime") as? String ?: "08:00"),
+            endTime   = MealSlotTime.fromHHmm(get("endTime")   as? String ?: "09:00"),
             recipeId   = (get("recipeId") as? String)?.let { UUID.fromString(it) },
             colorIndex = when (val raw = get("colorIndex")) {
                 is Long   -> raw.toInt()

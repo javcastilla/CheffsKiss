@@ -3,7 +3,6 @@ package software.ulpgc.cheffskiss.application.control
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.control.Command
 import software.ulpgc.cheffskiss.domain.model.MealPlan
-import software.ulpgc.cheffskiss.domain.model.vo.Weekday
 import java.util.UUID
 
 class CreateMealPlanCommand(

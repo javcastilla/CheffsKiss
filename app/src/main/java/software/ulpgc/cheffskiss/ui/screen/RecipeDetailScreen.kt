@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.RecipeLine
 import software.ulpgc.cheffskiss.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)

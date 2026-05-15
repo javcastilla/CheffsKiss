@@ -11,7 +11,7 @@ import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.SavedRecipe
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.RecipeLine
 import java.util.UUID
 
 class FirebaseRecipeService : RecipeRepository {

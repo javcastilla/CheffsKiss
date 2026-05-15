@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.SavedRecipe
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.RecipeLine
 
 interface RecipeRepository {
     suspend fun createRecipe(recipe: Recipe, lines: List<RecipeLine>, steps: List<Step>)

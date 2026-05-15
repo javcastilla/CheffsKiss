@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import software.ulpgc.cheffskiss.domain.model.MealSlot
 import software.ulpgc.cheffskiss.domain.model.Recipe
-import software.ulpgc.cheffskiss.domain.model.vo.Weekday
 import software.ulpgc.cheffskiss.ui.MealPlanDetailViewModel
 import software.ulpgc.cheffskiss.ui.SlotFormState
 import software.ulpgc.cheffskiss.ui.theme.*

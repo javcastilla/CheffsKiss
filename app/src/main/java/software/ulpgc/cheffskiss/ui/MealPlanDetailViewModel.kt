@@ -9,8 +9,7 @@ import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.model.MealPlan
 import software.ulpgc.cheffskiss.domain.model.MealSlot
 import software.ulpgc.cheffskiss.domain.model.Recipe
-import software.ulpgc.cheffskiss.domain.model.vo.SlotTime
-import software.ulpgc.cheffskiss.domain.model.vo.Weekday
+import software.ulpgc.cheffskiss.domain.vo.MealSlotTime
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
@@ -179,8 +178,8 @@ class MealPlanDetailViewModel(
             return
         }
 
-        val start = SlotTime.fromHHmm(form.startTime)
-        val end = SlotTime.fromHHmm(form.endTime)
+        val start = MealSlotTime.fromHHmm(form.startTime)
+        val end = MealSlotTime.fromHHmm(form.endTime)
 
         if (start >= end) {
             _uiState.update { it.copy(slotForm = it.slotForm.copy(timeError = "Invalid time range")) }
