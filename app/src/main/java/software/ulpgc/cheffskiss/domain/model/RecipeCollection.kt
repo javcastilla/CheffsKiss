@@ -1,11 +1,13 @@
 package software.ulpgc.cheffskiss.domain.model
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import java.util.UUID
 
 data class RecipeCollection(
-    val id: UUID,
+    val id: UUID=UUID.randomUUID(),
     val userId: UUID,
     val name: String,
-    val description: String,
-    val image: String?,
+    val image: String = "",
+    val createdAt: Instant = Clock.System.now(),
     val recipes: List<UUID>)
