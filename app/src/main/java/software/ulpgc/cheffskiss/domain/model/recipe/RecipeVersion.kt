@@ -1,4 +1,4 @@
-package software.ulpgc.cheffskiss.domain.model
+package software.ulpgc.cheffskiss.domain.model.recipe
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant

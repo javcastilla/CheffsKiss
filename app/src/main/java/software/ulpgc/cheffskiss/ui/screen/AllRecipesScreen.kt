@@ -21,13 +21,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.theme.*
 
 private val allRecipesTags = listOf("All", "Vegan", "Protein", "Dessert", "Quick", "Artisanal")
@@ -179,9 +178,9 @@ fun AllRecipesScreen(
                 itemsIndexed(filtered, key = { _, r -> r.id }) { index, recipe ->
                     AnimatedRecipeMenuCard(
                         recipe = recipe,
-                        authorName = authorNames[recipe.author] ?: "…",
+                        authorName = authorNames[recipe.creator.id.toString()] ?: "…",
                         isSaved = recipe.id.toString() in savedRecipeIds,
-                        isOwn = recipe.author == currentUserId,
+                        isOwn = recipe.creator.id.toString() == currentUserId,
                         index = index,
                         onSave = { onToggleSave(recipe) },
                         onRecipeClick = { onRecipeClick(recipe) }

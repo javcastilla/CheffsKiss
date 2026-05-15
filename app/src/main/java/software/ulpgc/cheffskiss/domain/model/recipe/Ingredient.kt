@@ -1,5 +1,6 @@
-package software.ulpgc.cheffskiss.domain.model
+package software.ulpgc.cheffskiss.domain.model.recipe
 
+import software.ulpgc.cheffskiss.domain.vo.IngredientCategory
 import java.net.URI
 import java.util.UUID
 

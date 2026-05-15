@@ -2,26 +2,33 @@ package software.ulpgc.cheffskiss.application.control
 
 import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.domain.control.Command
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.user.User
 import java.util.UUID
 import kotlin.time.Duration
+import java.net.URI
 
 class CreateRecipeCommand(
     private val recipeRepository: RecipeRepository,
     private val recipeInput: RecipeInput
 ) : Command {
     override suspend fun execute() {
+        val image = recipeInput.image().let { 
+            if (it.isNotBlank()) {
+                try { URI(it) } catch (e: Exception) { null }
+            } else null
+        }
+        
         val recipe = Recipe(
             id          = recipeInput.id(),
-            author      = recipeInput.author(),
             title       = recipeInput.title(),
-            description = recipeInput.description(),
             duration    = recipeInput.duration(),
             tags        = recipeInput.tags(),
-            image       = recipeInput.image(),
-            servings    = recipeInput.servings()
+            image       = image,
+            servings    = recipeInput.servings(),
+            creator     = recipeInput.creator()
         )
         recipeRepository.createRecipe(recipe, recipeInput.lines(), recipeInput.steps())
     }
@@ -29,9 +36,8 @@ class CreateRecipeCommand(
 
 interface RecipeInput {
     fun id(): UUID
-    fun author(): String
+    fun creator(): User
     fun title(): String
-    fun description(): String
     fun servings(): Int
     fun duration(): Duration
     fun lines(): List<RecipeLine>

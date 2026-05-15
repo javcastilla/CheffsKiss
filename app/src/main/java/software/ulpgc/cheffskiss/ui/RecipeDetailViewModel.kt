@@ -13,9 +13,9 @@ import software.ulpgc.cheffskiss.application.control.UnsaveRecipeCommand
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
@@ -51,9 +51,9 @@ class RecipeDetailViewModel(
         viewModelScope.launch {
             val r = recipeReader.getById(recipeId) ?: return@launch
             _recipe.value = r
-            _isOwner.value = currentUid == r.author
+            _isOwner.value = currentUid ==  r.creator.id.toString()
 
-            val name = userNameReader.getUsernameByUid(r.author)
+            val name = userNameReader.getUsernameByUid(r.creator.id.toString())
             _authorName.value = if (name.isNullOrBlank()) "Unknown" else name
 
             launch {

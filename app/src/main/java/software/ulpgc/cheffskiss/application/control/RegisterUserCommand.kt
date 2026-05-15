@@ -2,8 +2,8 @@ package software.ulpgc.cheffskiss.application.control
 
 import software.ulpgc.cheffskiss.application.port.Registrator
 import software.ulpgc.cheffskiss.domain.control.Command
-import software.ulpgc.cheffskiss.domain.model.UserName
 import software.ulpgc.cheffskiss.domain.port.input.UserNameReader
+import software.ulpgc.cheffskiss.domain.vo.Username
 
 class RegisterUserCommand(
     private val userNameReader: UserNameReader,
@@ -24,8 +24,8 @@ class RegisterUserCommand(
         require(uid != null) { "Error registering user" }
     }
 
-    private fun getUserName(): UserName {
-        return UserName(registerUserInput.username())
+    private fun getUserName(): Username {
+        return Username.of(registerUserInput.username()).getOrThrow()
     }
 }
 

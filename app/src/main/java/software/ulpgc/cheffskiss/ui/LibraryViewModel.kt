@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
@@ -65,7 +65,7 @@ class LibraryViewModel(
     private fun observeSavedRecipes(uid: String) {
         viewModelScope.launch {
             GetSavedRecipesQuery(recipeRepository)(uid)
-                .catch { /* no bloquear si falla saved */ }
+                .catch {  }
                 .collect { savedList ->
                     val recipes = coroutineScope {
                         savedList.map { saved ->
@@ -79,15 +79,18 @@ class LibraryViewModel(
     }
 
     private fun resolveAuthors(recipes: List<Recipe>) {
-        recipes.map { it.author }.distinct().forEach { authorId ->
-            if (!_uiState.value.authorNames.containsKey(authorId)) {
-                viewModelScope.launch {
-                    val name = userNameReader.getUsernameByUid(authorId)
-                    if (!name.isNullOrBlank()) {
-                        _uiState.update { it.copy(authorNames = it.authorNames + (authorId to name)) }
+        recipes
+            .mapNotNull { it.creator?.id?.toString() }
+            .distinct()
+            .forEach { authorId ->
+                if (!_uiState.value.authorNames.containsKey(authorId)) {
+                    viewModelScope.launch {
+                        val name = userNameReader.getUsernameByUid(authorId)
+                        if (!name.isNullOrBlank()) {
+                            _uiState.update { it.copy(authorNames = it.authorNames + (authorId to name)) }
+                        }
                     }
                 }
             }
-        }
     }
 }

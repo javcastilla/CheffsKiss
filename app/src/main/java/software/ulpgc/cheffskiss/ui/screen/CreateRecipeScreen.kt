@@ -59,7 +59,6 @@ fun CreateRecipeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var coverImageUri by remember { mutableStateOf<Uri?>(null) }
     var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
     var servings by remember { mutableIntStateOf(4) }
     var hours by remember { mutableStateOf("") }
     var minutes by remember { mutableStateOf("") }
@@ -80,7 +79,6 @@ fun CreateRecipeScreen(
 
     val isRecipeFormComplete =
         title.isNotBlank() &&
-                description.isNotBlank() &&
                 hasValidDuration &&
                 hasIngredients &&
                 hasSteps
@@ -105,8 +103,7 @@ fun CreateRecipeScreen(
                         id = UUID.randomUUID(),
                         description = stepRow.description.trim(),
                         duration = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
-                        cardinal = index + 1,
-                        image = ""
+                        cardinal = index + 1
                     )
                 }
 
@@ -114,7 +111,7 @@ fun CreateRecipeScreen(
             viewModel.createRecipe(
                 authorId      = authorId,
                 title         = title,
-                description   = description,
+                description   = "",
                 servings      = servings,
                 hours         = hours,
                 minutes       = minutes,

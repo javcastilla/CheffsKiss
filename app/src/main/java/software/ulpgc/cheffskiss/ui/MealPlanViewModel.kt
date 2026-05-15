@@ -6,11 +6,10 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.control.CreateMealPlanCommand
 import software.ulpgc.cheffskiss.application.control.DeleteMealPlanCommand
-import software.ulpgc.cheffskiss.application.control.SetActiveMealPlanCommand
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.application.services.GetMealPlansQuery
-import software.ulpgc.cheffskiss.domain.model.MealPlan
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseMealPlanService
 import java.util.UUID
@@ -49,7 +48,7 @@ class MealPlanViewModel(
                 .catch { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
                 .collect { plans ->
                     _uiState.update {
-                        it.copy(isLoading = false, plans = plans.sortedByDescending { p -> p.isActive })
+                        it.copy(isLoading = false, plans = plans)
                     }
                 }
         }
@@ -82,14 +81,6 @@ class MealPlanViewModel(
         val uid = userId ?: return
         viewModelScope.launch {
             runCatching { DeleteMealPlanCommand(port, uid, plan.id).execute() }
-                .onFailure { e -> _uiState.update { it.copy(error = e.message) } }
-        }
-    }
-
-    fun setActive(plan: MealPlan) {
-        val uid = userId ?: return
-        viewModelScope.launch {
-            runCatching { SetActiveMealPlanCommand(port, uid, plan.id).execute() }
                 .onFailure { e -> _uiState.update { it.copy(error = e.message) } }
         }
     }

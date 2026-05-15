@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import kotlinx.coroutines.flow.distinctUntilChanged
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.ExploreViewModel
 import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -235,7 +235,7 @@ fun ExploreScreen(
                         val heroHeight = PIN_HEIGHTS[hash % PIN_HEIGHTS.size]
                         PinCard(
                             recipe     = recipe,
-                            authorName = state.authorNames[recipe.author] ?: "",
+                            authorName = state.authorNames[recipe.creator.id.toString()] ?: "",
                             pinColor   = pinColor,
                             heroHeight = heroHeight,
                             onClick    = { onRecipeClick(recipe) }
@@ -368,9 +368,9 @@ private fun PinCard(
                     .background(pinColor),
                 contentAlignment = Alignment.Center
             ) {
-                if (recipe.image.isNotBlank()) {
+                if (recipe.image != null) {
                     AsyncImage(
-                        model = recipe.image,
+                        model = recipe.image.toString(),
                         contentDescription = recipe.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -383,8 +383,8 @@ private fun PinCard(
                         tint     = Color.White.copy(alpha = 0.1f),
                         modifier = Modifier.size(heroHeight * 0.7f)
                     )
-                    Icon(
-                        heroIcon,
+
+
                         contentDescription = null,
                         tint     = Color.White.copy(alpha = 0.88f),
                         modifier = Modifier.size(36.dp)

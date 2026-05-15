@@ -28,12 +28,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.distinctUntilChanged
-import software.ulpgc.cheffskiss.domain.model.MealSlot
 import software.ulpgc.cheffskiss.ui.ActivePlanDay
 import software.ulpgc.cheffskiss.ui.HomeUiState
 import software.ulpgc.cheffskiss.ui.HomeViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -225,9 +224,9 @@ fun HomeScreen(
             items(filtered, key = { it.id }) { recipe ->
                 RecipeItemCard(
                     recipe      = recipe,
-                    authorName  = authorNames[recipe.author] ?: "...",
+                    authorName  = authorNames[recipe.creator.id.toString()] ?: "...",
                     isSaved     = recipe.id.toString() in state.savedRecipeIds,
-                    isOwn       = recipe.author == state.currentUserId,
+                    isOwn       = recipe.creator.id.toString() == state.currentUserId,
                     onSave      = { onToggleSave(recipe) },
                     onRecipeClick = onRecipeClick,
                     modifier    = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
@@ -500,9 +499,9 @@ private fun RecipeItemCard(
                     .background(CKSurfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                if (recipe.image.isNotBlank()) {
+                if (recipe.image != null) {
                     AsyncImage(
-                        model = recipe.image,
+                        model = recipe.image.toString(),
                         contentDescription = recipe.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()

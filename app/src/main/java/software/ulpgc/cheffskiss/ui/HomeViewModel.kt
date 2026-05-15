@@ -1,5 +1,7 @@
 package software.ulpgc.cheffskiss.ui
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.async
@@ -16,8 +18,9 @@ import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
 import software.ulpgc.cheffskiss.application.services.GetMealPlansQuery
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
-import software.ulpgc.cheffskiss.domain.model.MealSlot
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
+import software.ulpgc.cheffskiss.domain.enum.WeekDay
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
@@ -45,6 +48,7 @@ data class HomeUiState(
     val error: String? = null
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 class HomeViewModel(
     private val getAllRecipesQuery: GetAllRecipesQuery = GetAllRecipesQuery(FirebaseRecipeReader()),
     private val recipeRepository: RecipeRepository = FirebaseRecipeService(),
@@ -68,6 +72,7 @@ class HomeViewModel(
         observeActivePlan()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun retryLoad() {
         observeRecipes()
         observeSavedRecipes()
@@ -97,6 +102,7 @@ class HomeViewModel(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun observeActivePlan() {
         val uid = currentUserPort.getCurrentUser() ?: return
         val userUuid = UUID.nameUUIDFromBytes(uid.toByteArray())
@@ -106,23 +112,24 @@ class HomeViewModel(
             GetMealPlansQuery(mealPlanRepository)(userUuid)
                 .catch { }
                 .collect { plans ->
-                    val active = plans.firstOrNull { it.isActive }
+                    // Get the first meal plan (no isActive property)
+                    val active = plans.firstOrNull()
                     if (active == null) {
                         _uiState.update { it.copy(activePlanDay = null) }
                         return@collect
                     }
 
-                    val slots = active.days[todayWeekday] ?: emptyList()
+                    val slots = active.mealSlots.filter { it.day == todayWeekday }
                     val planDay = ActivePlanDay(
                         planId    = active.id.toString(),
                         planName  = active.name,
-                        todayName = todayWeekday.fullName,
+                        todayName = todayWeekday.name,
                         slots     = slots
                     )
                     _uiState.update { it.copy(activePlanDay = planDay) }
 
                     // Resolve recipe titles for today's slots
-                    val recipeIds = slots.mapNotNull { it.recipeId?.toString() }.distinct()
+                    val recipeIds = slots.mapNotNull { it.recipe?.id?.toString() }.distinct()
                     if (recipeIds.isNotEmpty()) {
                         val titles = coroutineScope {
                             recipeIds.map { id -> async { id to recipeReader.getById(id)?.title } }
@@ -140,7 +147,7 @@ class HomeViewModel(
 
     fun toggleSave(recipe: Recipe) {
         val uid = currentUserPort.getCurrentUser() ?: return
-        if (recipe.author == uid) return
+        if (recipe.creator.id.toString() == uid) return
         val recipeIdStr = recipe.id.toString()
         val currentlySaved = _uiState.value.savedRecipeIds.contains(recipeIdStr)
 
@@ -167,7 +174,7 @@ class HomeViewModel(
     }
 
     private fun resolveAllAuthors(recipes: List<Recipe>) {
-        recipes.map { it.author }.distinct().forEach { uid ->
+        recipes.map { it.creator.id.toString() }.distinct().forEach { uid ->
             if (!_authorNames.value.containsKey(uid)) {
                 viewModelScope.launch {
                     val name = userNameReader.getUsernameByUid(uid)
@@ -177,13 +184,14 @@ class HomeViewModel(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun DayOfWeek.toWeekday() = when (this) {
-        DayOfWeek.MONDAY    -> Weekday.MONDAY
-        DayOfWeek.TUESDAY   -> Weekday.TUESDAY
-        DayOfWeek.WEDNESDAY -> Weekday.WEDNESDAY
-        DayOfWeek.THURSDAY  -> Weekday.THURSDAY
-        DayOfWeek.FRIDAY    -> Weekday.FRIDAY
-        DayOfWeek.SATURDAY  -> Weekday.SATURDAY
-        DayOfWeek.SUNDAY    -> Weekday.SUNDAY
+        DayOfWeek.MONDAY    -> WeekDay.MONDAY
+        DayOfWeek.TUESDAY   -> WeekDay.TUESDAY
+        DayOfWeek.WEDNESDAY -> WeekDay.WEDNESDAY
+        DayOfWeek.THURSDAY  -> WeekDay.THURSDAY
+        DayOfWeek.FRIDAY    -> WeekDay.FRIDAY
+        DayOfWeek.SATURDAY  -> WeekDay.SATURDAY
+        DayOfWeek.SUNDAY    -> WeekDay.SUNDAY
     }
 }

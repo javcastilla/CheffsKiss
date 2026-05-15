@@ -7,16 +7,20 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import software.ulpgc.cheffskiss.domain.model.Ingredient
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.enum.Measurement
+import software.ulpgc.cheffskiss.domain.model.recipe.Ingredient
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
 import software.ulpgc.cheffskiss.domain.port.input.IngredientStore
 import software.ulpgc.cheffskiss.domain.port.input.RecipeLineStore
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.domain.port.input.StepStore
+import software.ulpgc.cheffskiss.domain.model.user.User
 import java.util.UUID
+import java.net.URI
 import kotlin.time.Duration.Companion.seconds
 
 class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, IngredientStore {
@@ -51,7 +55,7 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
 
     override fun getByAuthor(author: String): Flow<List<Recipe>> = callbackFlow {
         val listener = recipes
-            .whereEqualTo("author", author)
+            .whereEqualTo("creatorId", author)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) { close(error); return@addSnapshotListener }
                 trySend(snapshot?.documents?.mapNotNull { it.toRecipe() } ?: emptyList())
@@ -90,25 +94,38 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
     // ── IngredientStore ───────────────────────────────────────────────────────
 
     override suspend fun ingredientOf(recipeLine: RecipeLine): Ingredient? =
-        ingredients.document(recipeLine.ingredientId.toString()).get().await().toIngredient()
+        if (recipeLine.ingredient != null) {
+            recipeLine.ingredient
+        } else {
+            null
+        }
 
     // ── Mappers ───────────────────────────────────────────────────────────────
 
     private fun DocumentSnapshot.toRecipe(): Recipe? {
-        val id     = getString("id")     ?: return null
-        val author = getString("author") ?: return null
+        val id = getString("id") ?: return null
+        val creatorId = getString("creatorId") ?: return null
+        
+        val creator = try {
+            User(UUID.fromString(creatorId))
+        } catch (e: Exception) {
+            User(UUID.nameUUIDFromBytes(creatorId.toByteArray()))
+        }
+        
         return runCatching {
             Recipe(
                 id          = UUID.fromString(id),
-                author      = author,
+                version     = getLong("version")?.toInt() ?: 0,
                 title       = getString("title") ?: "",
-                description = getString("description") ?: "",
-                servings    = getLong("servings")?.toInt() ?: 1,
                 duration    = (getLong("duration") ?: 0L).seconds,
                 tags        = (get("tags") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                image       = getString("image") ?: "",
-                createdAt   = getString("createdAt")?.let { Instant.parse(it) }
-                    ?: kotlinx.datetime.Clock.System.now()
+                servings    = getLong("servings")?.toInt() ?: 1,
+                image       = getString("image")?.let { 
+                    try { URI(it) } catch (e: Exception) { null }
+                },
+                timestamp   = getString("timestamp")?.let { Instant.parse(it) }
+                    ?: Clock.System.now(),
+                creator     = creator
             )
         }.getOrNull()
     }
@@ -117,9 +134,8 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
     private fun Map<String, Any>.toRecipeLine(): RecipeLine? = runCatching {
         RecipeLine(
             id           = UUID.fromString(this["id"] as? String ?: return null),
-            ingredientId = UUID.fromString(this["ingredientId"] as? String ?: return null),
             amount       = (this["amount"] as? Number)?.toInt() ?: return null,
-            measurement  = Measurement.valueOf(this["measurement"] as? String ?: "UNIT")
+            measurement  = (this["measurement"] as? String)?.let { Measurement.valueOf(it) }
         )
     }.getOrNull()
 
@@ -129,9 +145,8 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
             Step(
                 id          = UUID.fromString(map["id"] as? String ?: return null),
                 description = map["description"] as? String ?: "",
-                duration    = ((map["duration"] as? Long) ?: 0L).seconds,
-                cardinal    = ((map["cardinal"] as? Long) ?: 0L).toInt(),
-                image       = map["image"] as? String ?: ""
+                duration    = ((map["duration"] as? Long) ?: 0L).takeIf { it > 0 }?.seconds,
+                cardinal    = ((map["cardinal"] as? Long) ?: 0L).toInt()
             )
         }.getOrNull()
     }
@@ -140,7 +155,9 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
         Ingredient(
             id    = UUID.fromString(getString("id") ?: return null),
             name  = getString("name") ?: "",
-            image = getString("image") ?: ""
+            image = getString("image")?.let { 
+                try { URI(it) } catch (e: Exception) { null }
+            }
         )
     }.getOrNull()
 }

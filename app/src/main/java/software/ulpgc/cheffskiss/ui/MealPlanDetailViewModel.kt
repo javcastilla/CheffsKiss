@@ -6,9 +6,11 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
-import software.ulpgc.cheffskiss.domain.model.MealPlan
-import software.ulpgc.cheffskiss.domain.model.MealSlot
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
+import software.ulpgc.cheffskiss.domain.enum.MealType
+import software.ulpgc.cheffskiss.domain.enum.WeekDay
 import software.ulpgc.cheffskiss.domain.vo.MealSlotTime
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
@@ -19,12 +21,8 @@ import java.util.UUID
 data class SlotFormState(
     val isVisible: Boolean = false,
     val editingSlotId: UUID? = null,
-    val name: String = "",
-    val nameError: String? = null,
-    val startTime: String = "",
-    val endTime: String = "",
-    val timeError: String? = null,
-    val colorIndex: Int = 0,
+    val selectedDay: WeekDay = WeekDay.MONDAY,
+    val selectedMealType: MealType = MealType.BREAKFAST,
     val selectedRecipeId: UUID? = null,
     val selectedRecipeTitle: String = "",
     val isRecipePickerVisible: Boolean = false,
@@ -35,7 +33,7 @@ data class MealPlanDetailUiState(
     val plan: MealPlan? = null,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
-    val selectedDay: Weekday = Weekday.MONDAY,
+    val selectedDay: WeekDay = WeekDay.MONDAY,
     val slotForm: SlotFormState = SlotFormState(),
     val recipeTitles: Map<String, String> = emptyMap(),
     val availableRecipes: List<Recipe> = emptyList(),
@@ -82,8 +80,8 @@ class MealPlanDetailViewModel(
     }
 
     private fun resolveRecipeTitles(plan: MealPlan) {
-        val ids = plan.days.values.flatten()
-            .mapNotNull { it.recipeId?.toString() }
+        val ids = plan.mealSlots
+            .mapNotNull { it.recipe?.id?.toString() }
             .toSet()
         if (ids.isEmpty()) return
         viewModelScope.launch {
@@ -92,14 +90,8 @@ class MealPlanDetailViewModel(
         }
     }
 
-    fun selectDay(day: Weekday) {
+    fun selectDay(day: WeekDay) {
         _uiState.update { it.copy(selectedDay = day) }
-    }
-
-    fun toggleActive() {
-        val plan = _uiState.value.plan ?: return
-        val updated = if (plan.isActive) plan.deactivate() else plan.activate()
-        save(updated)
     }
 
     fun openAddSlot() {
@@ -112,13 +104,10 @@ class MealPlanDetailViewModel(
                 slotForm = SlotFormState(
                     isVisible = true,
                     editingSlotId = slot.id,
-                    name = slot.name,
-                    startTime = slot.startTime.toString(),
-                    endTime = slot.endTime.toString(),
-                    colorIndex = slot.colorIndex,
-                    selectedRecipeId = slot.recipeId,
-                    selectedRecipeTitle = slot.recipeId?.toString()
-                        ?.let { id -> it.recipeTitles[id] } ?: ""
+                    selectedDay = slot.day,
+                    selectedMealType = slot.mealType,
+                    selectedRecipeId = slot.recipe?.id,
+                    selectedRecipeTitle = slot.recipe?.title ?: ""
                 )
             )
         }
@@ -128,20 +117,12 @@ class MealPlanDetailViewModel(
         _uiState.update { it.copy(slotForm = SlotFormState()) }
     }
 
-    fun onSlotNameChange(name: String) {
-        _uiState.update { it.copy(slotForm = it.slotForm.copy(name = name, nameError = null)) }
+    fun onSlotMealTypeChange(mealType: MealType) {
+        _uiState.update { it.copy(slotForm = it.slotForm.copy(selectedMealType = mealType)) }
     }
 
-    fun onSlotStartTimeChange(time: String) {
-        _uiState.update { it.copy(slotForm = it.slotForm.copy(startTime = time, timeError = null)) }
-    }
-
-    fun onSlotEndTimeChange(time: String) {
-        _uiState.update { it.copy(slotForm = it.slotForm.copy(endTime = time, timeError = null)) }
-    }
-
-    fun onSlotColorChange(index: Int) {
-        _uiState.update { it.copy(slotForm = it.slotForm.copy(colorIndex = index)) }
+    fun onSlotDayChange(day: WeekDay) {
+        _uiState.update { it.copy(slotForm = it.slotForm.copy(selectedDay = day)) }
     }
 
     fun openRecipePicker() {
@@ -173,46 +154,32 @@ class MealPlanDetailViewModel(
         val form = _uiState.value.slotForm
         val plan = _uiState.value.plan ?: return
 
-        if (form.name.isBlank()) {
-            _uiState.update { it.copy(slotForm = it.slotForm.copy(nameError = "Name is required")) }
+        if (form.selectedRecipeId == null) {
+            _uiState.update { it.copy(slotForm = it.slotForm.copy()) }
             return
         }
-
-        val start = MealSlotTime.fromHHmm(form.startTime)
-        val end = MealSlotTime.fromHHmm(form.endTime)
-
-        if (start >= end) {
-            _uiState.update { it.copy(slotForm = it.slotForm.copy(timeError = "Invalid time range")) }
-            return
-        }
-
-        val day = _uiState.value.selectedDay
-        val currentSlots = plan.days[day] ?: emptyList()
 
         val newSlot = MealSlot(
             id = form.editingSlotId ?: UUID.randomUUID(),
-            name = form.name,
-            startTime = start,
-            endTime = end,
-            colorIndex = form.colorIndex,
-            recipeId = form.selectedRecipeId
+            day = form.selectedDay,
+            mealType = form.selectedMealType,
+            recipe = _uiState.value.availableRecipes.firstOrNull { it.id == form.selectedRecipeId }
         )
 
         val updatedSlots = if (form.editingSlotId != null) {
-            currentSlots.map { if (it.id == form.editingSlotId) newSlot else it }
+            plan.mealSlots.map { if (it.id == form.editingSlotId) newSlot else it }
         } else {
-            currentSlots + newSlot
+            plan.mealSlots + newSlot
         }
 
-        val updatedPlan = plan.copy(days = plan.days + (day to updatedSlots))
+        val updatedPlan = plan.copy(mealSlots = updatedSlots)
         save(updatedPlan)
     }
 
     fun deleteSlot(slot: MealSlot) {
         val plan = _uiState.value.plan ?: return
-        val day = _uiState.value.selectedDay
-        val updatedSlots = (plan.days[day] ?: emptyList()).filter { it.id != slot.id }
-        val updatedPlan = plan.copy(days = plan.days + (day to updatedSlots))
+        val updatedSlots = plan.mealSlots.filter { it.id != slot.id }
+        val updatedPlan = plan.copy(mealSlots = updatedSlots)
         save(updatedPlan)
     }
 

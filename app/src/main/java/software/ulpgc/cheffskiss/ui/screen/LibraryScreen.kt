@@ -21,9 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import software.ulpgc.cheffskiss.domain.model.MealPlan
-import software.ulpgc.cheffskiss.domain.model.Recipe
-import software.ulpgc.cheffskiss.ui.LibraryUiState
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.LibraryViewModel
 import software.ulpgc.cheffskiss.ui.MealPlanViewModel
 import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
@@ -178,7 +177,7 @@ fun LibraryScreen(
                                 items(recipes, key = { it.id }) { recipe ->
                                     LibraryRecipeCard(
                                         recipe     = recipe,
-                                        authorName = state.authorNames[recipe.author] ?: "",
+                                        authorName = state.authorNames[recipe.creator.id.toString()] ?: "",
                                         onClick    = { onRecipeClick(recipe) }
                                     )
                                 }

@@ -1,7 +1,7 @@
 package software.ulpgc.cheffskiss.domain.store
 
-import software.ulpgc.cheffskiss.domain.model.Ingredient
-import software.ulpgc.cheffskiss.domain.model.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.recipe.Ingredient
+import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
 import java.util.stream.Stream
 
 interface IngredientStore {

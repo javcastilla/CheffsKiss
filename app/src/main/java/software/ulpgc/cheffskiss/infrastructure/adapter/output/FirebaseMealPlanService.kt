@@ -6,12 +6,12 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
-import software.ulpgc.cheffskiss.domain.model.MealPlan
-import software.ulpgc.cheffskiss.domain.model.MealSlot
-import software.ulpgc.cheffskiss.domain.vo.MealSlotTime
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
+import software.ulpgc.cheffskiss.domain.model.user.User
+import software.ulpgc.cheffskiss.domain.enum.MealType
+import software.ulpgc.cheffskiss.domain.enum.WeekDay
 import java.util.UUID
 
 class FirebaseMealPlanService : MealPlanRepository {
@@ -24,14 +24,16 @@ class FirebaseMealPlanService : MealPlanRepository {
     // ── CRUD ─────────────────────────────────────────────────────────────────
 
     override suspend fun createMealPlan(mealPlan: MealPlan) {
-        plansCollection(mealPlan.userId)
+        val userId = mealPlan.creator?.id ?: return
+        plansCollection(userId)
             .document(mealPlan.id.toString())
             .set(mealPlan.toMap())
             .await()
     }
 
     override suspend fun updateMealPlan(mealPlan: MealPlan) {
-        plansCollection(mealPlan.userId)
+        val userId = mealPlan.creator?.id ?: return
+        plansCollection(userId)
             .document(mealPlan.id.toString())
             .set(mealPlan.toMap())
             .await()
@@ -45,13 +47,7 @@ class FirebaseMealPlanService : MealPlanRepository {
     }
 
     override suspend fun setActivePlan(planId: UUID, userId: UUID) {
-        val col = plansCollection(userId)
-        val snapshot = col.get().await()
-        val batch = Firebase.firestore.batch()
-        snapshot.documents.forEach { doc ->
-            batch.update(doc.reference, "isActive", doc.id == planId.toString())
-        }
-        batch.commit().await()
+        // No se necesita implementación para el nuevo modelo
     }
 
     override fun getMealPlans(userId: UUID): Flow<List<MealPlan>> = callbackFlow {
@@ -70,60 +66,49 @@ class FirebaseMealPlanService : MealPlanRepository {
 
     private fun MealPlan.toMap(): Map<String, Any?> = mapOf(
         "id" to id.toString(),
-        "userId" to userId.toString(),
+        "version" to version,
         "name" to name,
-        "isActive" to isActive,
-        "createdAt" to createdAt.toString(),
-        "days" to days.map { (day, slots) ->
-            day.name to slots.map { it.toMap() }
-        }.toMap()
+        "creatorId" to creator?.id?.toString(),
+        "mealSlots" to mealSlots.map { it.toMap() }
     )
 
     private fun MealSlot.toMap(): Map<String, Any?> = mapOf(
         "id" to id.toString(),
-        "name" to name,
-        "startTime" to startTime.toString(),
-        "endTime" to endTime.toString(),
-        "recipeId" to recipeId?.toString(),
-        "colorIndex" to colorIndex
+        "day" to day.name,
+        "mealType" to mealType.name,
+        "recipeId" to recipe?.id?.toString()
     )
 
     @Suppress("UNCHECKED_CAST")
     private fun com.google.firebase.firestore.DocumentSnapshot.toMealPlan(userId: UUID): MealPlan {
         val id        = UUID.fromString(getString("id") ?: id)
+        val version   = getLong("version")?.toInt() ?: 0
         val name      = getString("name") ?: ""
-        val isActive  = getBoolean("isActive") ?: false
-        val createdAt = getString("createdAt")?.let { Instant.parse(it) } ?: Clock.System.now()
+        val creatorId = getString("creatorId")
 
-        val rawDays = get("days") as? Map<String, List<Map<String, Any?>>> ?: emptyMap()
-        val days = Weekday.entries.associateWith { weekday ->
-            val rawSlots = rawDays[weekday.name] as? List<*> ?: emptyList<Any>()
-            rawSlots.mapNotNull { (it as? Map<*, *>)?.toMealSlot() }
-        }
+        val rawSlots = get("mealSlots") as? List<Map<String, Any?>> ?: emptyList()
+        val mealSlots = rawSlots.mapNotNull { (it as? Map<*, *>)?.toMealSlot() }
+
+        val creator = creatorId?.let { User(UUID.fromString(it)) }
 
         return MealPlan(
             id        = id,
-            userId    = userId,
+            version   = version,
             name      = name,
-            isActive  = isActive,
-            createdAt = createdAt,
-            days      = days
+            mealSlots = mealSlots,
+            creator   = creator
         )
     }
 
     private fun Map<*, *>.toMealSlot(): MealSlot? = runCatching {
+        val dayStr = get("day") as? String ?: return null
+        val mealTypeStr = get("mealType") as? String ?: return null
+        
         MealSlot(
-            id         = UUID.fromString(get("id") as? String ?: return null),
-            name       = get("name") as? String ?: "",
-            startTime = MealSlotTime.fromHHmm(get("startTime") as? String ?: "08:00"),
-            endTime   = MealSlotTime.fromHHmm(get("endTime")   as? String ?: "09:00"),
-            recipeId   = (get("recipeId") as? String)?.let { UUID.fromString(it) },
-            colorIndex = when (val raw = get("colorIndex")) {
-                is Long   -> raw.toInt()
-                is Int    -> raw
-                is Double -> raw.toInt()
-                else      -> 0
-            }
+            id       = UUID.fromString(get("id") as? String ?: return null),
+            day      = WeekDay.valueOf(dayStr),
+            mealType = MealType.valueOf(mealTypeStr),
+            recipe   = null  // La receta se cargará si es necesario
         )
     }.getOrNull()
 }

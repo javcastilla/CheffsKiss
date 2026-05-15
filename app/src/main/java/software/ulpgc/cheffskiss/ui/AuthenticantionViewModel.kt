@@ -9,9 +9,9 @@ import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.control.Input
 import software.ulpgc.cheffskiss.application.control.LogoutUserCommand
 import software.ulpgc.cheffskiss.application.control.RegisterUserCommand
-import software.ulpgc.cheffskiss.domain.model.UserName
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+import software.ulpgc.cheffskiss.domain.vo.Username
 
 sealed class AuthUiState {
     object Idle    : AuthUiState()
@@ -95,7 +95,7 @@ class AuthenticantionViewModel : ViewModel() {
     }
      fun isValidEmail(email: String): Boolean =
         android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    private fun toUserName(username: String): UserName { return UserName(username) }
+    private fun toUserName(username: String): Username = Username.of(username).getOrThrow()
 
     private fun friendlyError(msg: String?) = when {
         msg == null                    -> "Unknown error"
