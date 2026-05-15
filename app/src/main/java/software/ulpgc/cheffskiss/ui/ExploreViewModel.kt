@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
@@ -75,7 +75,7 @@ class ExploreViewModel(
                 .catch { e -> _error.value = e.message ?: "Error loading recipes"; _isLoading.value = false }
                 .collect { recipes ->
                     val currentUid = currentUserPort.getCurrentUser()
-                    val filtered = recipes.filter { it.author != currentUid }
+                    val filtered = recipes.filter { it.creator.id.toString() != currentUid }
                     _allRecipes.value = filtered
                     _isLoading.value  = false
                     resolveAuthors(filtered)
@@ -97,7 +97,7 @@ class ExploreViewModel(
     }
 
     private fun resolveAuthors(recipes: List<Recipe>) {
-        recipes.map { it.author }.distinct().forEach { uid ->
+        recipes.map { it.creator.id.toString() }.distinct().forEach { uid ->
             if (!_authorNames.value.containsKey(uid)) {
                 viewModelScope.launch {
                     val name = userNameReader.getUsernameByUid(uid)

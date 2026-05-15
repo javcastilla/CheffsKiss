@@ -27,9 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
 import software.ulpgc.cheffskiss.ui.RecipeUiState
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -62,7 +62,6 @@ fun EditRecipeScreen(
 
     var coverImageUri by remember { mutableStateOf<Uri?>(null) }
     var title by remember { mutableStateOf(recipe.title) }
-    var description by remember { mutableStateOf(recipe.description) }
     var servings by remember { mutableIntStateOf(recipe.servings) }
 
     val totalMinutes = recipe.duration.inWholeMinutes
@@ -83,7 +82,7 @@ fun EditRecipeScreen(
                     IngredientRow(
                         id     = idx,
                         amount = line.amount.toString(),
-                        unit   = line.measurement.name,
+                        unit   = line.measurement?.name ?: "",
                         name   = ""   // se llenará cuando tengamos IngredientStore en el VM
                     )
                 )
@@ -100,8 +99,8 @@ fun EditRecipeScreen(
                     StepRow(
                         id               = idx,
                         description      = step.description,
-                        duration         = step.duration.inWholeMinutes.let { if (it > 0) it.toString() else "" },
-                        existingImageUrl = step.image.takeIf { it.isNotBlank() }
+                        duration         = step.duration?.inWholeMinutes?.let { if (it > 0) it.toString() else "" } ?: "",
+                        existingImageUrl = null
                     )
                 )
             }
@@ -129,16 +128,15 @@ fun EditRecipeScreen(
                 id          = UUID.randomUUID(),
                 description = stepRow.description,
                 duration    = (stepRow.duration.toLongOrNull() ?: 0L).minutes,
-                cardinal    = index + 1,
-                image       = stepRow.existingImageUrl ?: ""  // will be replaced by upload if imageUri != null
+                cardinal    = index + 1
             )
         }
         val stepImageUris = steps.map { it.imageUri }
         viewModel.updateRecipe(
             recipeId         = recipe.id,
-            authorId         = recipe.author,
+            authorId         = recipe.creator.id.toString(),
             title            = title,
-            description      = description,
+            description      = "",
             servings         = servings,
             hours            = hours,
             minutes          = minutes,
@@ -147,8 +145,8 @@ fun EditRecipeScreen(
             stepImageUris    = stepImageUris,
             tags             = tags.toList(),
             imageUri         = coverImageUri,
-            existingImageUrl = recipe.image,
-            createdAt        = recipe.createdAt
+            existingImageUrl = recipe.image?.toString() ?: "",
+            createdAt        = recipe.timestamp
         )
     }
 
@@ -184,7 +182,7 @@ fun EditRecipeScreen(
             // ── Cover Photo ──────────────────────────────────────────────────
             CoverPhotoCard(
                 imageUri    = coverImageUri,
-                existingUrl = recipe.image.takeIf { it.isNotBlank() },
+                existingUrl = recipe.image?.toString(),
                 onClick     = { galleryLauncher.launch("image/*") }
             )
 

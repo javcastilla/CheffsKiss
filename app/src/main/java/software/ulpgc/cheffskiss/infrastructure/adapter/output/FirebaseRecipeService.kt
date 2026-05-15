@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.Instant
 import software.ulpgc.cheffskiss.application.port.RecipeRepository
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.SavedRecipe
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
 import java.util.UUID
 
 class FirebaseRecipeService : RecipeRepository {
@@ -88,29 +88,28 @@ class FirebaseRecipeService : RecipeRepository {
 
     private fun Recipe.toMap(lines: List<RecipeLine>, steps: List<Step>): Map<String, Any?> = mapOf(
         "id"          to id.toString(),
-        "author"      to author,
+        "version"     to version,
         "title"       to title,
-        "description" to description,
-        "servings"    to servings,
         "duration"    to duration.inWholeSeconds,
         "tags"        to tags,
-        "image"       to image,
-        "createdAt"   to createdAt.toString(),
+        "servings"    to servings,
+        "image"       to image?.toString(),
+        "timestamp"   to timestamp.toString(),
+        "creatorId"   to creator.id.toString(),
         "lines"       to lines.map { line ->
             mapOf(
                 "id"           to line.id.toString(),
-                "ingredientId" to line.ingredientId.toString(),
                 "amount"       to line.amount,
-                "measurement"  to line.measurement.name
+                "ingredientId" to line.ingredient?.id?.toString(),
+                "measurement"  to line.measurement?.name
             )
         },
         "steps"       to steps.map { step ->
             mapOf(
                 "id"          to step.id.toString(),
                 "description" to step.description,
-                "duration"    to step.duration.inWholeSeconds,
-                "cardinal"    to step.cardinal,
-                "image"       to step.image
+                "duration"    to step.duration?.inWholeSeconds,
+                "cardinal"    to step.cardinal
             )
         }
     )

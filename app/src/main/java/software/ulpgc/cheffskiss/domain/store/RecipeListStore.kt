@@ -1,7 +1,7 @@
 package software.ulpgc.cheffskiss.domain.store
 
 import software.ulpgc.cheffskiss.domain.model.RecipeList
-import software.ulpgc.cheffskiss.domain.model.User
+import software.ulpgc.cheffskiss.domain.model.user.User
 import java.util.stream.Stream
 
 interface RecipeListStore {

@@ -1,8 +1,8 @@
 package software.ulpgc.cheffskiss.domain.store
 
-import software.ulpgc.cheffskiss.domain.model.Recipe
-import software.ulpgc.cheffskiss.domain.model.RecipeVersion
-import software.ulpgc.cheffskiss.domain.model.User
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.RecipeVersion
+import software.ulpgc.cheffskiss.domain.model.user.User
 import java.util.UUID
 import java.util.stream.Stream
 

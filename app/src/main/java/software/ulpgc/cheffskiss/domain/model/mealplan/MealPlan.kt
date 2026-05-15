@@ -1,5 +1,6 @@
-package software.ulpgc.cheffskiss.domain.model
+package software.ulpgc.cheffskiss.domain.model.mealplan
 
+import software.ulpgc.cheffskiss.domain.model.user.User
 import java.util.UUID
 
 data class MealPlan(

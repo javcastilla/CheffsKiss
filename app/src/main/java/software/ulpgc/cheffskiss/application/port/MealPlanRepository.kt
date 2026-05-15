@@ -1,7 +1,7 @@
 package software.ulpgc.cheffskiss.application.port
 
 import kotlinx.coroutines.flow.Flow
-import software.ulpgc.cheffskiss.domain.model.MealPlan
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
 import java.util.UUID
 
 interface MealPlanRepository {

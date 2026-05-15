@@ -1,4 +1,4 @@
-package software.ulpgc.cheffskiss.domain.model
+package software.ulpgc.cheffskiss.domain.model.user
 
 import software.ulpgc.cheffskiss.domain.vo.Description
 import software.ulpgc.cheffskiss.domain.vo.Username

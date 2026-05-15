@@ -1,5 +1,6 @@
 package software.ulpgc.cheffskiss.domain.model
 
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import java.util.UUID
 
 data class RecipeList(

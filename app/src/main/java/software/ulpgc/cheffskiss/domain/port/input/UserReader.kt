@@ -1,6 +1,6 @@
 package software.ulpgc.cheffskiss.domain.port.input
 
-import software.ulpgc.cheffskiss.domain.model.User
+import software.ulpgc.cheffskiss.domain.model.user.User
 
 interface UserReader {
     suspend fun getByEmail(email: String): User?

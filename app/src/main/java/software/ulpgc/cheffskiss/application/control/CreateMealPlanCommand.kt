@@ -2,7 +2,8 @@ package software.ulpgc.cheffskiss.application.control
 
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.control.Command
-import software.ulpgc.cheffskiss.domain.model.MealPlan
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
+import software.ulpgc.cheffskiss.domain.model.user.User
 import java.util.UUID
 
 class CreateMealPlanCommand(
@@ -13,9 +14,9 @@ class CreateMealPlanCommand(
     override suspend fun execute() {
         port.createMealPlan(
             MealPlan(
-                userId = UUID.nameUUIDFromBytes(userId.toByteArray()),
+                id = UUID.randomUUID(),
                 name = name,
-                days = Weekday.entries.associateWith { emptyList() }
+                creator = User(UUID.nameUUIDFromBytes(userId.toByteArray()))
             )
         )
     }

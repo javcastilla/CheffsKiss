@@ -22,9 +22,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
 import software.ulpgc.cheffskiss.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,9 +82,9 @@ fun RecipeDetailScreen(
                     .background(Surface)
                     .border(2.dp, CKOutlineVariant.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
             ) {
-                if (recipe.image.isNotBlank()) {
+                if (recipe.image != null) {
                     AsyncImage(
-                        model = recipe.image,
+                        model = recipe.image.toString(),
                         contentDescription = recipe.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -237,7 +237,7 @@ fun RecipeDetailScreen(
                                 )
                             )
                             Text(
-                                "${line.amount} ${line.measurement.name.lowercase()}",
+                                "${line.amount} ${line.measurement?.name?.lowercase() ?: ""}",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = if (checked) CKOnSurfaceVariant else OnSurface
@@ -286,25 +286,14 @@ fun RecipeDetailScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(step.description, fontSize = 14.sp, color = OnSurface, lineHeight = 22.sp)
-                                if (step.image.isNotBlank()) {
-                                    AsyncImage(
-                                        model = step.image,
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(160.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                    )
-                                }
-                                if (step.duration.inWholeMinutes > 0) {
+                                if ((step.duration?.inWholeMinutes ?: 0) > 0) {
                                     HorizontalDivider(color = CKOutlineVariant.copy(alpha = 0.2f))
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
                                         Icon(Icons.Default.Timer, null, tint = CKOutlineVariant, modifier = Modifier.size(12.dp))
-                                        Text("${step.duration.inWholeMinutes} min", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CKOutlineVariant)
+                                        Text("${step.duration?.inWholeMinutes} min", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CKOutlineVariant)
                                     }
                                 }
                             }

@@ -25,8 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import software.ulpgc.cheffskiss.domain.model.MealSlot
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.MealPlanDetailViewModel
 import software.ulpgc.cheffskiss.ui.SlotFormState
 import software.ulpgc.cheffskiss.ui.theme.*

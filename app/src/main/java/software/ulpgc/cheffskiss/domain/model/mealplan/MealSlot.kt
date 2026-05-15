@@ -1,7 +1,8 @@
-package software.ulpgc.cheffskiss.domain.model
+package software.ulpgc.cheffskiss.domain.model.mealplan
 
 import software.ulpgc.cheffskiss.domain.enum.MealType
 import software.ulpgc.cheffskiss.domain.enum.WeekDay
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import java.util.UUID
 
 data class MealSlot(

@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import software.ulpgc.cheffskiss.domain.model.MealPlan
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
 import software.ulpgc.cheffskiss.ui.MealPlanUiState
 import software.ulpgc.cheffskiss.ui.MealPlanViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
