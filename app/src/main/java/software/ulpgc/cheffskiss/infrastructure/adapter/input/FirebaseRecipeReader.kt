@@ -11,8 +11,7 @@ import kotlinx.datetime.Instant
 import software.ulpgc.cheffskiss.domain.model.Ingredient
 import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.vo.Measurement
-import software.ulpgc.cheffskiss.domain.model.vo.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.RecipeLine
 import software.ulpgc.cheffskiss.domain.port.input.IngredientStore
 import software.ulpgc.cheffskiss.domain.port.input.RecipeLineStore
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader

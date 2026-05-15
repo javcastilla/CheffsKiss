@@ -4,14 +4,12 @@ import java.util.UUID
 import kotlin.time.Duration
 
 data class Step(
-    val id: UUID = UUID.randomUUID(),
+    val id: UUID,
     val description: String,
-    val duration: Duration,
+    val duration: Duration? = null,
     val cardinal: Int,
-    val image: String = ""
 ) {
-    init {
-        require(description.isNotBlank()) { "Step description cannot be blank" }
-        require(cardinal > 0) { "Cardinal must be greater than zero" }
-    }
+    fun with(description: String): Step = copy(description = description)
+    fun with(duration: Duration): Step = copy(duration = duration)
+    fun with(cardinal: Int): Step = copy(cardinal = cardinal)
 }
