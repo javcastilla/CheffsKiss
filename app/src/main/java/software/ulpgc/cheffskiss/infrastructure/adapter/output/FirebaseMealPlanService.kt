@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlanVersion
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
+import software.ulpgc.cheffskiss.domain.enum.MealPlanStatus
 import software.ulpgc.cheffskiss.domain.model.user.User
 import software.ulpgc.cheffskiss.domain.enum.MealType
 import software.ulpgc.cheffskiss.domain.enum.WeekDay
@@ -33,10 +35,20 @@ class FirebaseMealPlanService : MealPlanRepository {
 
     override suspend fun updateMealPlan(mealPlan: MealPlan) {
         val userId = mealPlan.creator?.id ?: return
-        plansCollection(userId)
-            .document(mealPlan.id.toString())
-            .set(mealPlan.toMap())
+        val doc = plansCollection(userId).document(mealPlan.id.toString())
+        val snapshot = MealPlanVersion(mealPlan = mealPlan, status = MealPlanStatus.PRIMARY)
+        doc.collection("versions")
+            .document(mealPlan.version.toString())
+            .set(
+                mapOf(
+                    "id" to snapshot.id.toString(),
+                    "timestamp" to snapshot.timestamp.toString(),
+                    "status" to snapshot.status.name,
+                    "mealPlan" to mealPlan.toMap(),
+                )
+            )
             .await()
+        doc.set(mealPlan.toMap()).await()
     }
 
     override suspend fun deleteMealPlan(planId: UUID, userId: UUID) {
