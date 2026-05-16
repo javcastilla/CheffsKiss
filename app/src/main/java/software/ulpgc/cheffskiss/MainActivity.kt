@@ -42,7 +42,7 @@ import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
 import software.ulpgc.cheffskiss.ui.RecipeCollectionViewModel
 import software.ulpgc.cheffskiss.ui.screen.CreateRecipeCollectionScreen
 import software.ulpgc.cheffskiss.ui.screen.RecipeCollectionDetailScreen
-
+import software.ulpgc.cheffskiss.ui.screen.EditRecipeCollectionScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,7 +85,19 @@ class MainActivity : ComponentActivity() {
                             onMealPlanClick = { planId -> navController.navigate("meal_plan_detail/$planId") }
                         )
                     }
-
+                    composable(
+                        route = "edit_collection/{collectionId}",
+                        arguments = listOf(navArgument("collectionId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val collectionId = backStackEntry.arguments?.getString("collectionId") ?: return@composable
+                        val vm: RecipeCollectionDetailViewModel = viewModel()
+                        EditRecipeCollectionScreen(
+                            collectionId = collectionId,
+                            viewModel = vm,
+                            onBack = { navController.popBackStack() },
+                            onSaveSuccess = { navController.popBackStack() }
+                        )
+                    }
                     composable("all_recipes") {
                         val homeEntry = remember(navController) {
                             navController.getBackStackEntry("home")
@@ -123,11 +135,23 @@ class MainActivity : ComponentActivity() {
                     ) { backStackEntry ->
                         val collectionId = backStackEntry.arguments?.getString("collectionId") ?: return@composable
                         val detailViewModel: RecipeCollectionDetailViewModel = viewModel()
+                        val collectionViewModel: RecipeCollectionViewModel = viewModel()
                         RecipeCollectionDetailScreen(
                             collectionId = collectionId,
                             viewModel = detailViewModel,
                             onBack = { navController.popBackStack() },
-                            onRecipeClick = { recipeId -> navController.navigate("recipedetail/$recipeId") }
+                            onRecipeClick = { recipeId -> navController.navigate("recipe_detail/$recipeId") },
+                            onEdit = { navController.navigate("edit_collection/$collectionId") },
+                            onDelete = {
+                                val collection = detailViewModel.uiState.value.collection
+                                if (collection != null) {
+                                    collectionViewModel.deleteCollection(
+                                        collectionID = collection.id,
+                                        userId = collection.userId
+                                    )
+                                }
+                                navController.popBackStack()
+                            }
                         )
                     }
                     composable("create_collection") {
@@ -160,11 +184,12 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(
-                        route = "recipe_detail/{recipeId}",
+                        route = "recipe_detail/{recipeId}",  // ← guión bajo
                         arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
                     ) { backStackEntry ->
                         val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
                         val detailViewModel: RecipeDetailViewModel = viewModel()
+
                         val recipe     by detailViewModel.recipe.collectAsState()
                         val authorName by detailViewModel.authorName.collectAsState()
                         val isSaved    by detailViewModel.isSaved.collectAsState()
@@ -172,7 +197,9 @@ class MainActivity : ComponentActivity() {
                         val lines      by detailViewModel.lines.collectAsState()
                         val steps      by detailViewModel.steps.collectAsState()
 
-                        LaunchedEffect(recipeId) { detailViewModel.load(recipeId) }
+                        LaunchedEffect(recipeId) {
+                            detailViewModel.load(recipeId)
+                        }
 
                         if (recipe == null) {
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -193,7 +220,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-
                     composable(
                         route = "edit_recipe/{recipeId}",
                         arguments = listOf(navArgument("recipeId") { type = NavType.StringType })

@@ -1,5 +1,6 @@
 package software.ulpgc.cheffskiss.ui.screen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -31,13 +33,18 @@ fun RecipeCollectionDetailScreen(
     collectionId: String,
     viewModel: RecipeCollectionDetailViewModel,
     onBack: () -> Unit,
-    onRecipeClick: (String) -> Unit   // recipeId
+    onRecipeClick: (String) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
+
     val state by viewModel.uiState.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }  // ← AÑADE ESTO
 
     LaunchedEffect(collectionId) {
         viewModel.load(collectionId)
     }
+
 
     Scaffold(
         containerColor = Background,
@@ -68,28 +75,20 @@ fun RecipeCollectionDetailScreen(
                         }
                     }
                 },
-                actions = {
-                    // Botón para añadir recetas
-                    IconButton(onClick = viewModel::openRecipePicker) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .background(Primary, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Add recipe",
-                                tint = OnPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Background.copy(alpha = 0.95f)
                 )
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = viewModel::openRecipePicker,
+                containerColor = Primary,
+                contentColor = OnPrimary,
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add recipe", modifier = Modifier.size(24.dp))
+            }
         }
     ) { padding ->
 
@@ -139,6 +138,7 @@ fun RecipeCollectionDetailScreen(
 
                     // ── Hero de la colección ───────────────────────────────────
                     item {
+
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -155,6 +155,7 @@ fun RecipeCollectionDetailScreen(
                                     modifier = Modifier.fillMaxSize()
                                 )
                             } else {
+
                                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -179,8 +180,52 @@ fun RecipeCollectionDetailScreen(
                             }
                         }
                     }
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = Surface),
+                            elevation = CardDefaults.cardElevation(1.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ){Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                OutlinedButton(
+                                    onClick = onEdit,
+                                    modifier = Modifier.weight(1f).height(48.dp),
+                                    shape = CircleShape,
+                                    border = BorderStroke(1.dp, Primary.copy(alpha = 0.5f)),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = Primary,
+                                        containerColor = Color.Transparent
+                                    )
+                                ) {
+                                    Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Edit", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                            }
 
-                    // ── Info: nombre + contador ───────────────────────────────
+                                // Botón Delete
+                                OutlinedButton(
+                                    onClick = { showDeleteDialog = true },
+                                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                                    shape = CircleShape,
+                                    border = BorderStroke(1.dp, Color(0xFFBA1A1A).copy(alpha = 0.4f)),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = Color(0xFFBA1A1A),
+                                        containerColor = Color.Transparent
+                                    )
+                                ) {
+                                    Icon(Icons.Default.Delete, null, modifier = Modifier.size(15.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Delete Collection", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                }}
+                        }
+                    }
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -203,7 +248,6 @@ fun RecipeCollectionDetailScreen(
                             }
                         }
                     }
-                    // ── Lista de recetas ──────────────────────────────────────
                     item {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -265,10 +309,12 @@ fun RecipeCollectionDetailScreen(
                             items = collection.recipes,
                             key = { it.toString() }
                         ) { recipeId ->
-                            val title = state.recipeTitles[recipeId.toString()] ?: "Loading..."
+                            val recipe = state.recipeDetails[recipeId.toString()]
+                            val authorName = recipe?.let { state.authorNames[it.author] } ?: ""
+
                             CollectionRecipeRow(
-                                recipeId = recipeId.toString(),
-                                title = title,
+                                recipe = recipe,
+                                authorName = authorName,
                                 onClick = { onRecipeClick(recipeId.toString()) },
                                 onRemove = { viewModel.removeRecipe(recipeId) }
                             )
@@ -280,9 +326,8 @@ fun RecipeCollectionDetailScreen(
             }
         }
 
-        // ── Recipe Picker Dialog ─────────────────────────────────────────────
         if (state.recipePicker.isVisible) {
-            RecipePickerDialog(
+            RecipePickerSheet(
                 query = state.recipePicker.recipePickerQuery,
                 onQueryChange = viewModel::onRecipePickerQueryChange,
                 availableRecipes = state.availableRecipes.filter { r ->
@@ -294,14 +339,43 @@ fun RecipeCollectionDetailScreen(
                 onDismiss = viewModel::closeRecipePicker
             )
         }
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                containerColor = Surface,
+                shape = RoundedCornerShape(24.dp),
+                title = {
+                    Text("Delete collection?", fontWeight = FontWeight.ExtraBold, color = OnSurface)
+                },
+                text = {
+                    Text(
+                        "This will permanently delete \"${state.collection?.name}\". This action cannot be undone.",
+                        color = CKOnSurfaceVariant
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showDeleteDialog = false
+                            onDelete()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBA1A1A))
+                    ) { Text("Delete", color = Color.White) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel", color = CKOnSurfaceVariant)
+                    }
+                }
+            )
+        }
     }
 }
 
-// ── Fila de receta en la colección ───────────────────────────────────────────
 @Composable
 private fun CollectionRecipeRow(
-    recipeId: String,
-    title: String,
+    recipe: Recipe?,
+    authorName: String,
     onClick: () -> Unit,
     onRemove: () -> Unit
 ) {
@@ -312,49 +386,95 @@ private fun CollectionRecipeRow(
         colors = CardDefaults.cardColors(containerColor = Surface),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Thumbnail placeholder (igual que LibraryRecipeCard)
+        Row(modifier = Modifier.padding(0.dp)) {
+            // Barra de acento izquierda (igual que AllRecipesScreen)
             Box(
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(CKSurfaceVariant),
-                contentAlignment = Alignment.Center
+                    .width(4.dp)
+                    .height(88.dp)
+                    .background(Primary, RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+            )
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Icon(Icons.Default.Restaurant, null, tint = Outline, modifier = Modifier.size(28.dp))
-            }
+                // Thumbnail
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(CKSurfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (recipe?.image?.isNotBlank() == true) {
+                        AsyncImage(
+                            model = recipe.image,
+                            contentDescription = recipe.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(Icons.Default.Restaurant, null, tint = Outline, modifier = Modifier.size(26.dp))
+                    }
+                }
 
-            // Título
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = OnSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(Modifier.height(4.dp))
-                Text("Tap to view details", fontSize = 11.sp, color = CKOutlineVariant)
-            }
+                // Info
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text(
+                        recipe?.title ?: "Loading...",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = OnSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (authorName.isNotBlank()) {
+                        Text(
+                            "by $authorName",
+                            fontSize = 12.sp,
+                            color = CKOnSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    Spacer(Modifier.height(2.dp))
+                    // Duration + Servings (igual que Library)
+                    if (recipe != null) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(Icons.Default.Timer, null, tint = Outline, modifier = Modifier.size(12.dp))
+                                Text("${recipe.duration.inWholeMinutes}m", fontSize = 11.sp, color = Outline)
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(Icons.Default.People, null, tint = Outline, modifier = Modifier.size(12.dp))
+                                Text("${recipe.servings} srv", fontSize = 11.sp, color = Outline)
+                            }
+                        }
+                    }
+                }
 
-            // Quitar de la colección
-            IconButton(onClick = onRemove, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    Icons.Default.RemoveCircleOutline,
-                    contentDescription = "Remove from collection",
-                    tint = CKOutlineVariant,
-                    modifier = Modifier.size(20.dp)
-                )
+                IconButton(onClick = onRemove, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        Icons.Default.RemoveCircleOutline,
+                        contentDescription = "Remove from collection",
+                        tint = CKOutlineVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }
 }
-
 // ── Stat item (igual que RecipeDetailScreen) ─────────────────────────────────
 @Composable
 private fun CollectionStatItem(
@@ -375,8 +495,9 @@ private fun CollectionStatItem(
 }
 
 // ── Dialog para añadir recetas ────────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RecipePickerDialog(
+private fun RecipePickerSheet(
     query: String,
     onQueryChange: (String) -> Unit,
     availableRecipes: List<Recipe>,
@@ -384,87 +505,105 @@ private fun RecipePickerDialog(
     onAdd: (Recipe) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = Surface,
-        shape = RoundedCornerShape(24.dp),
-        title = {
-            Text("Add a recipe", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = OnSurface)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    placeholder = { Text("Search recipes...", fontSize = 14.sp, color = CKOutlineVariant) },
-                    leadingIcon = { Icon(Icons.Default.Search, null, tint = CKOutlineVariant, modifier = Modifier.size(18.dp)) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(50.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Primary,
-                        unfocusedBorderColor = CKOutlineVariant.copy(alpha = 0.4f),
-                        focusedContainerColor = Background,
-                        unfocusedContainerColor = Background,
-                        focusedTextColor = OnSurface,
-                        unfocusedTextColor = OnSurface,
-                        cursorColor = Primary
-                    ),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
-                )
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text(
+                "Select recipe",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = OnSurface
+            )
+            OutlinedTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                placeholder = { Text("Search...", color = CKOutlineVariant) },
+                leadingIcon = {
+                    Icon(Icons.Default.Search, null, tint = CKOutlineVariant)
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(50.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Primary,
+                    unfocusedBorderColor = CKSurfaceVariant,
+                    cursorColor = Primary
+                ),
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            )
 
-                if (availableRecipes.isEmpty()) {
-                    Box(
-                        Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("No recipes found", fontSize = 13.sp, color = CKOutlineVariant)
+            // Opción "No recipe"
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable { onDismiss() }
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier.size(36.dp).clip(CircleShape).background(CKSurfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Close, null, tint = CKOnSurfaceVariant, modifier = Modifier.size(18.dp))
+                }
+                Text("No recipe", fontSize = 14.sp, color = CKOnSurfaceVariant)
+            }
+
+            HorizontalDivider(color = CKSurfaceVariant, thickness = 0.5.dp)
+
+            val filtered = availableRecipes.filter {
+                query.isBlank() || it.title.contains(query, ignoreCase = true)
+            }
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.heightIn(max = 380.dp)
+            ) {
+                if (filtered.isEmpty()) {
+                    item {
+                        Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                            Text("No recipes found", color = CKOutlineVariant, fontSize = 14.sp)
+                        }
                     }
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        availableRecipes.take(6).forEach { recipe ->
-                            val alreadyIn = recipe.id in alreadyAdded
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(if (alreadyIn) CKSurfaceVariant else Background)
-                                    .clickable(enabled = !alreadyIn) { onAdd(recipe) }
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    items(filtered, key = { it.id }) { recipe ->
+                        val alreadyIn = recipe.id in alreadyAdded
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (alreadyIn) CKSurfaceVariant else Color.Transparent)
+                                .clickable(enabled = !alreadyIn) { onAdd(recipe) }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)).background(CKSurfaceVariant),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(CKSurfaceVariant),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(Icons.Default.Restaurant, null, tint = Outline, modifier = Modifier.size(20.dp))
-                                }
-                                Text(
-                                    recipe.title,
-                                    modifier = Modifier.weight(1f),
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (alreadyIn) CKOutlineVariant else OnSurface,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                if (alreadyIn) {
-                                    Icon(Icons.Default.Check, null, tint = Primary, modifier = Modifier.size(18.dp))
-                                }
+                                Icon(Icons.Default.Restaurant, null, tint = Primary, modifier = Modifier.size(18.dp))
                             }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(recipe.title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text("${recipe.duration.inWholeMinutes}m · ${recipe.servings} servings", fontSize = 11.sp, color = CKOnSurfaceVariant)
+                            }
+                            Icon(Icons.Default.ChevronRight, null, tint = CKOutlineVariant, modifier = Modifier.size(16.dp))
                         }
                     }
                 }
             }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close", color = CKOnSurfaceVariant)
-            }
         }
-    )
+    }
 }

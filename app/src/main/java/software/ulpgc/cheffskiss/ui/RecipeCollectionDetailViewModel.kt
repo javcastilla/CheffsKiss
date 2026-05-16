@@ -17,6 +17,7 @@ import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeRead
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeCollectionService
 import java.util.UUID
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 
 data class RecipePickerFormState(
     val isVisible: Boolean = false,
@@ -28,15 +29,19 @@ data class RecipeCollectionDetailUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val recipePicker: RecipePickerFormState = RecipePickerFormState(),
-    val recipeTitles: Map<String, String> = emptyMap(),   // recipeId → title (igual que MealPlan)
+    val recipeTitles: Map<String, String> = emptyMap(),
+    val recipeDetails: Map<String, Recipe> = emptyMap(),
     val availableRecipes: List<Recipe> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
+    val authorNames: Map<String, String> = emptyMap(),
+    val saveCompleted: Boolean = false
 )
 
 class RecipeCollectionDetailViewModel(
     private val port: RecipeCollectionRepository = FirebaseRecipeCollectionService(),
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
-    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
+    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService(),
+    private val userNameReader: FirebaseUserNameReader = FirebaseUserNameReader()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RecipeCollectionDetailUiState())
@@ -83,13 +88,31 @@ class RecipeCollectionDetailViewModel(
         val ids = collection.recipes.map { it.toString() }.toSet()
         if (ids.isEmpty()) return
         viewModelScope.launch {
-            val titles = ids.associateWith { id ->
-                recipeReader.getById(id)?.title ?: ""
+            val recipes = ids.mapNotNull { id -> recipeReader.getById(id) }
+            val titles = recipes.associate { it.id.toString() to it.title }
+            val details = recipes.associate { it.id.toString() to it }
+
+            _uiState.update {
+                it.copy(
+                    recipeTitles = it.recipeTitles + titles,
+                    recipeDetails = it.recipeDetails + details
+                )
             }
-            _uiState.update { it.copy(recipeTitles = it.recipeTitles + titles) }
+
+            recipes.map { it.author }.distinct().forEach { authorUid ->
+                if (!_uiState.value.authorNames.containsKey(authorUid)) {
+                    viewModelScope.launch {
+                        val name = userNameReader.getUsernameByUid(authorUid)
+                        if (!name.isNullOrBlank()) {
+                            _uiState.update {
+                                it.copy(authorNames = it.authorNames + (authorUid to name))
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-
 
     fun openRecipePicker() =
         _uiState.update { it.copy(recipePicker = it.recipePicker.copy(isVisible = true)) }
@@ -114,8 +137,12 @@ class RecipeCollectionDetailViewModel(
         val updated = collection.copy(recipes = collection.recipes - recipeId)
         save(updated)
     }
-
-
+    fun updateMetadata(newName: String, newImage: String) {
+        val collection = uiState.value.collection ?: return
+        save(collection.copy(name = newName, image = newImage))
+    }
+    private val _saved = MutableSharedFlow<Unit>()
+    val saved: SharedFlow<Unit> = _saved.asSharedFlow()
     private fun save(updated: RecipeCollection) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
@@ -130,7 +157,10 @@ class RecipeCollectionDetailViewModel(
                     override fun recipes()   = updated.recipes
                 }
             ).execute()
-            _uiState.update { it.copy(collection = updated, isSaving = false, recipePicker = RecipePickerFormState()) }
+            _uiState.update { it.copy(collection = updated, isSaving = false, saveCompleted = true, recipePicker = RecipePickerFormState()) }
         }
+    }
+    fun resetSaveState() {
+        _uiState.update { it.copy(saveCompleted = false) }
     }
 }
