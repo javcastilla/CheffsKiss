@@ -383,12 +383,6 @@ private fun PinCard(
                         tint     = Color.White.copy(alpha = 0.1f),
                         modifier = Modifier.size(heroHeight * 0.7f)
                     )
-
-
-                        contentDescription = null,
-                        tint     = Color.White.copy(alpha = 0.88f),
-                        modifier = Modifier.size(36.dp)
-                    )
                 }
 
                 // Duration — bottom start

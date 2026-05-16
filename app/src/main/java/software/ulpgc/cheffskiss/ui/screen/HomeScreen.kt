@@ -406,8 +406,9 @@ private fun ActivePlanBanner(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     planDay.slots.take(4).forEach { slot ->
-                        val color = SLOT_COLORS.getOrElse(slot.colorIndex) { SLOT_COLORS[0] }
-                        val recipeTitle = slot.recipeId?.let { planDay.recipeTitles[it.toString()] }
+                        val color = mealSlotColor(slot)
+                        val recipeTitle = slot.recipe?.title
+                            ?: slot.recipe?.id?.let { planDay.recipeTitles[it.toString()] }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -415,7 +416,6 @@ private fun ActivePlanBanner(
                                 .background(Background),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Color bar
                             Box(
                                 modifier = Modifier
                                     .width(4.dp)
@@ -423,33 +423,29 @@ private fun ActivePlanBanner(
                                     .background(color, RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
                             )
                             Spacer(Modifier.width(10.dp))
-                            // Time
                             Text(
-                                slot.startTime.toString(),
+                                slot.mealType.label(),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = color,
-                                modifier = Modifier.width(36.dp)
+                                modifier = Modifier.width(56.dp)
                             )
-                            // Name + recipe
                             Column(modifier = Modifier.weight(1f).padding(vertical = 10.dp)) {
                                 Text(
-                                    slot.name,
+                                    recipeTitle ?: "No recipe assigned",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = OnSurface,
                                     maxLines = 1,
                                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                 )
-                                if (recipeTitle != null) {
-                                    Text(
-                                        recipeTitle,
-                                        fontSize = 11.sp,
-                                        color = CKOnSurfaceVariant,
-                                        maxLines = 1,
-                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                                    )
-                                }
+                                Text(
+                                    slot.mealType.label(),
+                                    fontSize = 11.sp,
+                                    color = CKOnSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
                             }
                             Spacer(Modifier.width(8.dp))
                         }

@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.DeleteOutline
+import software.ulpgc.cheffskiss.domain.enum.WeekDay
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -87,22 +89,22 @@ private fun MealPlanContent(
         return
     }
 
-    val activePlan = state.plans.firstOrNull { it.isActive }
-    val otherPlans = state.plans.filter { !it.isActive }
+    val featuredPlan = state.plans.firstOrNull()
+    val otherPlans = state.plans.drop(1)
 
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        if (activePlan != null) {
-            item { SectionLabel("Active plan") }
+        if (featuredPlan != null) {
+            item { SectionLabel("Primary plan") }
             item { Spacer(Modifier.height(8.dp)) }
             item {
                 ActivePlanCard(
-                    plan     = activePlan,
-                    onClick  = { onPlanClick(activePlan) },
-                    onDelete = { viewModel.deletePlan(activePlan) }
+                    plan     = featuredPlan,
+                    onClick  = { onPlanClick(featuredPlan) },
+                    onDelete = { viewModel.deletePlan(featuredPlan) }
                 )
             }
             item { Spacer(Modifier.height(24.dp)) }
@@ -122,10 +124,9 @@ private fun MealPlanContent(
                     Column {
                         otherPlans.forEachIndexed { index, plan ->
                             PlanListRow(
-                                plan        = plan,
-                                onClick     = { onPlanClick(plan) },
-                                onSetActive = { viewModel.setActive(plan) },
-                                onDelete    = { viewModel.deletePlan(plan) }
+                                plan     = plan,
+                                onClick  = { onPlanClick(plan) },
+                                onDelete = { viewModel.deletePlan(plan) }
                             )
                             if (index < otherPlans.lastIndex) {
                                 HorizontalDivider(
@@ -147,8 +148,8 @@ private fun MealPlanContent(
 // ── Active plan card ──────────────────────────────────────────────────────────
 @Composable
 private fun ActivePlanCard(plan: MealPlan, onClick: () -> Unit, onDelete: () -> Unit) {
-    val totalSlots    = plan.days.values.sumOf { it.size }
-    val daysWithSlots = plan.days.values.count { it.isNotEmpty() }
+    val totalSlots    = plan.mealSlots.size
+    val daysWithSlots = plan.daysWithSlotsCount()
 
     Card(
         onClick   = onClick,
@@ -194,7 +195,7 @@ private fun ActivePlanCard(plan: MealPlan, onClick: () -> Unit, onDelete: () -> 
                         Text(plan.name, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
                     }
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.DeleteOutline, null, tint = OnPrimary.copy(alpha = 0.5f))
+                        Icon(Icons.Outlined.DeleteOutline, null, tint = OnPrimary.copy(alpha = 0.5f))
                     }
                 }
 
@@ -205,8 +206,8 @@ private fun ActivePlanCard(plan: MealPlan, onClick: () -> Unit, onDelete: () -> 
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Weekday.entries.forEach { day ->
-                        val hasSlots = plan.days[day]?.isNotEmpty() == true
+                    WeekDay.entries.forEach { day ->
+                        val hasSlots = plan.slotsFor(day).isNotEmpty()
                         WeekdayPill(day = day.shortName, active = hasSlots)
                     }
                 }
@@ -254,11 +255,10 @@ private fun StatChip(icon: androidx.compose.ui.graphics.vector.ImageVector, labe
 private fun PlanListRow(
     plan: MealPlan,
     onClick: () -> Unit,
-    onSetActive: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val totalSlots = plan.days.values.sumOf { it.size }
-    val daysWithSlots = plan.days.values.count { it.isNotEmpty() }
+    val totalSlots = plan.mealSlots.size
+    val daysWithSlots = plan.daysWithSlotsCount()
 
     Row(
         modifier = Modifier
@@ -289,20 +289,9 @@ private fun PlanListRow(
             )
         }
 
-        // Activate icon
-        IconButton(onClick = onSetActive, modifier = Modifier.size(32.dp)) {
-            Icon(
-                Icons.Default.StarBorder,
-                contentDescription = "Activate plan",
-                tint = CKOutlineVariant,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-
-        // Delete icon
         IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
             Icon(
-                Icons.Default.DeleteOutline,
+                Icons.Outlined.DeleteOutline,
                 contentDescription = "Delete",
                 tint = CKOutlineVariant,
                 modifier = Modifier.size(18.dp)

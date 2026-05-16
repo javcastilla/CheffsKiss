@@ -11,7 +11,6 @@ import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.enum.MealType
 import software.ulpgc.cheffskiss.domain.enum.WeekDay
-import software.ulpgc.cheffskiss.domain.vo.MealSlotTime
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService

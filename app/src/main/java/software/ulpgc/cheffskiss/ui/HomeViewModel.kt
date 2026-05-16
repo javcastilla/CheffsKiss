@@ -21,6 +21,7 @@ import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.enum.WeekDay
+import software.ulpgc.cheffskiss.ui.screen.displayName
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
@@ -123,7 +124,7 @@ class HomeViewModel(
                     val planDay = ActivePlanDay(
                         planId    = active.id.toString(),
                         planName  = active.name,
-                        todayName = todayWeekday.name,
+                        todayName = todayWeekday.displayName,
                         slots     = slots
                     )
                     _uiState.update { it.copy(activePlanDay = planDay) }

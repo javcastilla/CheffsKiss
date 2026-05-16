@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -15,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material3.*
 import androidx.compose.material3.ButtonDefaults.outlinedButtonColors
 import androidx.compose.runtime.*
@@ -62,6 +64,7 @@ fun EditRecipeScreen(
 
     var coverImageUri by remember { mutableStateOf<Uri?>(null) }
     var title by remember { mutableStateOf(recipe.title) }
+    var description by remember { mutableStateOf("") }
     var servings by remember { mutableIntStateOf(recipe.servings) }
 
     val totalMinutes = recipe.duration.inWholeMinutes
@@ -136,7 +139,7 @@ fun EditRecipeScreen(
             recipeId         = recipe.id,
             authorId         = recipe.creator.id.toString(),
             title            = title,
-            description      = "",
+            description      = description.trim(),
             servings         = servings,
             hours            = hours,
             minutes          = minutes,
@@ -229,6 +232,7 @@ fun EditRecipeScreen(
 
             // ── Tags ─────────────────────────────────────────────────────────
             CRCard(icon = Icons.Default.Sell, title = "Tags") {
+                @OptIn(ExperimentalLayoutApi::class)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth().animateContentSize(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -291,7 +295,7 @@ fun EditRecipeScreen(
                             )
                         }
                         IconButton(onClick = { ingredients.removeAll { it.id == ingredient.id } }, modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Default.RemoveCircleOutline, null, tint = CKOutlineVariant)
+                            Icon(Icons.Outlined.RemoveCircleOutline, null, tint = CKOutlineVariant)
                         }
                     }
                 }
