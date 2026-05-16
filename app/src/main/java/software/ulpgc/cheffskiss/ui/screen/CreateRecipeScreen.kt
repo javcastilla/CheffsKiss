@@ -441,13 +441,9 @@ internal fun CRBottomBar(
     isPublishFormComplete: Boolean,
     publishLabel: String = "Publish Recipe"
 ) {
-    Surface(
-        color = Background.copy(alpha = 0.95f),
-        tonalElevation = 0.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    StickyBottomBar {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp).navigationBarsPadding(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             OutlinedButton(

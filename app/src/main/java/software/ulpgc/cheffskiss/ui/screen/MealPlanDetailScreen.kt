@@ -58,7 +58,8 @@ fun MealPlanDetailScreen(
     planId: String,
     viewModel: MealPlanDetailViewModel,
     onBack: () -> Unit,
-    onRecipeClick: (recipeId: String) -> Unit
+    onRecipeClick: (recipeId: String) -> Unit,
+    onPickerRecipeClick: (recipeId: String) -> Unit,
 ) {
     LaunchedEffect(planId) { viewModel.load(planId) }
 
@@ -176,22 +177,16 @@ fun MealPlanDetailScreen(
     }
 
     if (state.slotForm.isRecipePickerVisible) {
-        val preview = state.slotForm.previewRecipe
-        if (preview != null) {
-            MealSlotRecipePreviewSheet(
-                recipe  = preview,
-                onBack  = viewModel::closeRecipePreview,
-                onAdd   = { viewModel.selectRecipe(preview) },
-            )
-        } else {
-            RecipePickerSheet(
-                recipes         = state.availableRecipes,
-                query           = state.slotForm.recipePickerQuery,
-                onQueryChange   = viewModel::onRecipePickerQueryChange,
-                onRecipeClick   = viewModel::openRecipePreview,
-                onDismiss       = viewModel::closeRecipePicker,
-            )
-        }
+        RecipePickerSheet(
+            recipes         = state.availableRecipes,
+            query           = state.slotForm.recipePickerQuery,
+            onQueryChange   = viewModel::onRecipePickerQueryChange,
+            onRecipeClick   = { recipe ->
+                viewModel.preparePickNavigation()
+                onPickerRecipeClick(recipe.id.toString())
+            },
+            onDismiss       = viewModel::closeRecipePicker,
+        )
     }
 }
 
@@ -423,7 +418,8 @@ private fun SlotFormSheet(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
+                .padding(bottom = 32.dp)
+                .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(
@@ -517,56 +513,6 @@ private fun SlotFormSheet(
 // ── Recipe picker ─────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MealSlotRecipePreviewSheet(
-    recipe: Recipe,
-    onBack: () -> Unit,
-    onAdd: () -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onBack,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Surface,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-    ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 8.dp, bottom = 88.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(recipe.title, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = OnSurface)
-                Text(
-                    "${recipe.duration.inWholeMinutes} min · ${recipe.servings} servings",
-                    fontSize = 13.sp,
-                    color = CKOnSurfaceVariant,
-                )
-                if (recipe.description.isNotBlank()) {
-                    Text(recipe.description, fontSize = 14.sp, color = OnSurface, lineHeight = 20.sp)
-                }
-                if (recipe.tags.isNotEmpty()) {
-                    Text(recipe.tags.joinToString(" · "), fontSize = 12.sp, color = CKOnSurfaceVariant)
-                }
-            }
-            Button(
-                onClick = onAdd,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                shape = RoundedCornerShape(14.dp),
-            ) {
-                Text("Add to meal slot", fontWeight = FontWeight.Bold, color = OnPrimary)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 private fun RecipePickerSheet(
     recipes: List<Recipe>,
     query: String,
@@ -583,7 +529,11 @@ private fun RecipePickerSheet(
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp)
+                .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text("Select recipe", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = OnSurface)

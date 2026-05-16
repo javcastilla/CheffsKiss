@@ -40,7 +40,9 @@ fun RecipeDetailScreen(
     onBack: () -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
-    onEdit: () -> Unit = {}
+    onEdit: () -> Unit = {},
+    pickForMealSlot: Boolean = false,
+    onAddToMealSlot: () -> Unit = {},
 ) {
     val scrollState = rememberScrollState()
     val checkedLines = remember { mutableStateListOf<Int>() }
@@ -64,7 +66,17 @@ fun RecipeDetailScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Background.copy(alpha = 0.95f))
             )
-        }
+        },
+        bottomBar = {
+            if (pickForMealSlot) {
+                StickyBottomBar {
+                    StickyPrimaryButton(
+                        text = "Add to meal slot",
+                        onClick = onAddToMealSlot,
+                    )
+                }
+            }
+        },
     ) { padding ->
         Column(
             modifier = Modifier
