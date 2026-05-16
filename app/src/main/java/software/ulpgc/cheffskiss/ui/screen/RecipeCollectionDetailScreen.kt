@@ -379,6 +379,7 @@ private fun CollectionRecipeRow(
     onClick: () -> Unit,
     onRemove: () -> Unit
 ) {
+    var showRemoveDialog by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
@@ -387,7 +388,6 @@ private fun CollectionRecipeRow(
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(modifier = Modifier.padding(0.dp)) {
-            // Barra de acento izquierda (igual que AllRecipesScreen)
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -463,7 +463,7 @@ private fun CollectionRecipeRow(
                     }
                 }
 
-                IconButton(onClick = onRemove, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = { showRemoveDialog = true }, modifier = Modifier.size(36.dp)) {
                     Icon(
                         Icons.Default.RemoveCircleOutline,
                         contentDescription = "Remove from collection",
@@ -473,6 +473,47 @@ private fun CollectionRecipeRow(
                 }
             }
         }
+    }
+    if (showRemoveDialog) {
+        AlertDialog(
+            onDismissRequest = { showRemoveDialog = false },
+            containerColor = Surface,
+            shape = RoundedCornerShape(24.dp),
+            icon = {
+                Icon(
+                    Icons.Default.RemoveCircleOutline,
+                    null,
+                    tint = Color(0xFFBA1A1A),
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            title = {
+                Text("Remove recipe?", fontWeight = FontWeight.ExtraBold, color = OnSurface)
+            },
+            text = {
+                Text(
+                    "Remove \"${recipe?.title ?: "this recipe"}\" from the collection?",
+                    color = CKOnSurfaceVariant,
+                    fontSize = 14.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showRemoveDialog = false
+                        onRemove()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBA1A1A))
+                ) {
+                    Text("Remove", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRemoveDialog = false }) {
+                    Text("Cancel", color = CKOnSurfaceVariant)
+                }
+            }
+        )
     }
 }
 // ── Stat item (igual que RecipeDetailScreen) ─────────────────────────────────
