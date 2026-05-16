@@ -12,6 +12,7 @@ import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.SavedRecipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
+import software.ulpgc.cheffskiss.domain.enum.RecipeStatus
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeVersion
 import java.util.UUID
 
@@ -22,9 +23,15 @@ class FirebaseRecipeService : RecipeRepository {
     // ── Authored recipes ──────────────────────────────────────────────────────
 
     override suspend fun createRecipe(recipe: Recipe, lines: List<RecipeLine>, steps: List<Step>) {
-        db.collection("Recipes")
-            .document(recipe.id.toString())
-            .set(recipe.toMap(lines, steps))
+        val doc = db.collection("Recipes").document(recipe.id.toString())
+        val payload = recipe.toMap(lines, steps)
+        doc.set(payload).await()
+        doc.collection("versions")
+            .document(recipe.version.toString())
+            .set(
+                RecipeVersion(recipe = recipe, status = RecipeStatus.CREATED)
+                    .toMap(lines, steps)
+            )
             .await()
     }
 
@@ -36,10 +43,20 @@ class FirebaseRecipeService : RecipeRepository {
     ) {
         val doc = db.collection("Recipes").document(recipe.id.toString())
         versionSnapshot?.let { snapshot ->
-            doc.collection("versions")
-                .document(recipe.version.toString())
-                .set(snapshot.toMap(lines, steps))
-                .await()
+            val existing = doc.get().await()
+            if (existing.exists()) {
+                doc.collection("versions")
+                    .document(snapshot.recipe.version.toString())
+                    .set(
+                        mapOf(
+                            "id"        to snapshot.id.toString(),
+                            "timestamp" to snapshot.timestamp.toString(),
+                            "status"    to snapshot.status.name,
+                            "recipe"    to existing.data,
+                        )
+                    )
+                    .await()
+            }
         }
         doc.set(recipe.toMap(lines, steps)).await()
     }
