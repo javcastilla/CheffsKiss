@@ -6,6 +6,7 @@ import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -70,11 +71,12 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
         val listener = recipes.document(recipe.id.toString())
             .addSnapshotListener { snapshot, error ->
                 if (error != null) { close(error); return@addSnapshotListener }
-                val lines = (snapshot?.get("lines") as? List<Map<String, Any>>)
-                    ?.mapNotNull { it.toRecipeLine() } ?: emptyList()
-                trySend(lines)
+                val raw = (snapshot?.get("lines") as? List<Map<String, Any>>) ?: emptyList()
+                trySend(raw)
             }
         awaitClose { listener.remove() }
+    }.map { rawLines ->
+        rawLines.mapNotNull { map -> mapToRecipeLine(map) }
     }
 
     // ── StepStore ─────────────────────────────────────────────────────────────
@@ -93,12 +95,65 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
 
     // ── IngredientStore ───────────────────────────────────────────────────────
 
-    override suspend fun ingredientOf(recipeLine: RecipeLine): Ingredient? =
-        if (recipeLine.ingredient != null) {
-            recipeLine.ingredient
-        } else {
-            null
+    override suspend fun ingredientOf(recipeLine: RecipeLine): Ingredient? {
+        recipeLine.ingredient?.let { return it }
+        return null
+    }
+
+    suspend fun getIngredientById(id: String): Ingredient? {
+        if (id.isBlank()) return null
+        return ingredients.document(id).get().await().toIngredient()
+    }
+
+    suspend fun findByName(name: String): Ingredient? {
+        if (name.isBlank()) return null
+        val snapshot = ingredients
+            .whereEqualTo("name", name)
+            .limit(1)
+            .get()
+            .await()
+        return snapshot.documents.firstOrNull()?.toIngredient()
+    }
+
+    suspend fun findOrCreateByName(name: String): Ingredient {
+        findByName(name)?.let { return it }
+        val ingredient = Ingredient(id = UUID.randomUUID(), name = name)
+        saveIngredient(ingredient)
+        return ingredient
+    }
+
+    suspend fun saveIngredient(ingredient: Ingredient) {
+        ingredients.document(ingredient.id.toString()).set(
+            mapOf(
+                "id" to ingredient.id.toString(),
+                "name" to ingredient.name,
+                "image" to ingredient.image?.toString(),
+            )
+        ).await()
+    }
+
+    private suspend fun mapToRecipeLine(map: Map<String, Any>): RecipeLine? = runCatching {
+        val ingredientId = map["ingredientId"] as? String
+        val embedded = map["ingredient"] as? Map<*, *>
+        val ingredient = when {
+            embedded != null -> embeddedToIngredient(embedded)
+            !ingredientId.isNullOrBlank() -> getIngredientById(ingredientId)
+            else -> null
         }
+        RecipeLine(
+            id = UUID.fromString(map["id"] as? String ?: return null),
+            amount = (map["amount"] as? Number)?.toInt() ?: 1,
+            ingredient = ingredient,
+            measurement = (map["measurement"] as? String)?.let { Measurement.valueOf(it) },
+        )
+    }.getOrNull()
+
+    private fun embeddedToIngredient(map: Map<*, *>): Ingredient? = runCatching {
+        Ingredient(
+            id = UUID.fromString(map["id"] as? String ?: return null),
+            name = map["name"] as? String ?: return null,
+        )
+    }.getOrNull()
 
     // ── Mappers ───────────────────────────────────────────────────────────────
 
@@ -117,6 +172,7 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
                 id          = UUID.fromString(id),
                 version     = getLong("version")?.toInt() ?: 0,
                 title       = getString("title") ?: "",
+                description = getString("description") ?: "",
                 duration    = (getLong("duration") ?: 0L).seconds,
                 tags        = (get("tags") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                 servings    = getLong("servings")?.toInt() ?: 1,
@@ -129,15 +185,6 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
             )
         }.getOrNull()
     }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun Map<String, Any>.toRecipeLine(): RecipeLine? = runCatching {
-        RecipeLine(
-            id           = UUID.fromString(this["id"] as? String ?: return null),
-            amount       = (this["amount"] as? Number)?.toInt() ?: return null,
-            measurement  = (this["measurement"] as? String)?.let { Measurement.valueOf(it) }
-        )
-    }.getOrNull()
 
     private fun Any?.toStep(): Step? {
         val map = this as? Map<String, Any> ?: return null
