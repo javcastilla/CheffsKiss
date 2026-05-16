@@ -98,15 +98,14 @@ class RecipeCollectionViewModel(
     }
 
 
-    fun deleteCollection(collection: RecipeCollection) {
-        val uid = userUuid ?: return
+    fun deleteCollection(collectionID: UUID, userId: UUID) {
         viewModelScope.launch {
             runCatching {
                 DeleteRecipeCollectionCommand(
                     port  = port,
                     input = object : DeleteRecipeCollectionCommandInput {
-                        override fun id()     = collection.id
-                        override fun userId() = uid
+                        override fun id()     = collectionID
+                        override fun userId() = userId
                     }
                 ).execute()
             }.onFailure { e -> _uiState.update { it.copy(error = e.message) } }
