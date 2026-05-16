@@ -12,6 +12,7 @@ data class Recipe(
     val id: UUID,
     val version: Int = 0,
     val title: String,
+    val description: String = "",
     val duration: Duration,
     val tags: List<String> = emptyList(),
     val servings: Int,
@@ -22,9 +23,11 @@ data class Recipe(
     val creator: User,
 ) {
     fun titled(title: String): Recipe = copy(title = title)
+    fun withDescription(description: String): Recipe = copy(description = description)
     fun with(duration: Duration): Recipe = copy(duration = duration)
     fun with(tags: List<String>): Recipe = copy(tags = tags.toList())
     fun with(servings: Int): Recipe = copy(servings = servings)
     fun with(image: URI): Recipe = copy(image = image)
     fun createdBy(user: User): Recipe = copy(creator = user)
+    fun nextVersion(): Recipe = copy(version = version + 1)
 }
