@@ -64,8 +64,16 @@ fun MealPlanDetailScreen(
 
     val state by viewModel.uiState.collectAsState()
     val plan = state.plan
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.error) {
+        state.error?.let { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Background,
         topBar = {
             TopAppBar(
@@ -168,13 +176,22 @@ fun MealPlanDetailScreen(
     }
 
     if (state.slotForm.isRecipePickerVisible) {
-        RecipePickerSheet(
-            recipes       = state.availableRecipes,
-            query         = state.slotForm.recipePickerQuery,
-            onQueryChange = viewModel::onRecipePickerQueryChange,
-            onSelect      = viewModel::selectRecipe,
-            onDismiss     = viewModel::closeRecipePicker
-        )
+        val preview = state.slotForm.previewRecipe
+        if (preview != null) {
+            MealSlotRecipePreviewSheet(
+                recipe  = preview,
+                onBack  = viewModel::closeRecipePreview,
+                onAdd   = { viewModel.selectRecipe(preview) },
+            )
+        } else {
+            RecipePickerSheet(
+                recipes         = state.availableRecipes,
+                query           = state.slotForm.recipePickerQuery,
+                onQueryChange   = viewModel::onRecipePickerQueryChange,
+                onRecipeClick   = viewModel::openRecipePreview,
+                onDismiss       = viewModel::closeRecipePicker,
+            )
+        }
     }
 }
 
@@ -500,12 +517,62 @@ private fun SlotFormSheet(
 // ── Recipe picker ─────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun MealSlotRecipePreviewSheet(
+    recipe: Recipe,
+    onBack: () -> Unit,
+    onAdd: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onBack,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = Surface,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 8.dp, bottom = 88.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(recipe.title, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = OnSurface)
+                Text(
+                    "${recipe.duration.inWholeMinutes} min · ${recipe.servings} servings",
+                    fontSize = 13.sp,
+                    color = CKOnSurfaceVariant,
+                )
+                if (recipe.description.isNotBlank()) {
+                    Text(recipe.description, fontSize = 14.sp, color = OnSurface, lineHeight = 20.sp)
+                }
+                if (recipe.tags.isNotEmpty()) {
+                    Text(recipe.tags.joinToString(" · "), fontSize = 12.sp, color = CKOnSurfaceVariant)
+                }
+            }
+            Button(
+                onClick = onAdd,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                shape = RoundedCornerShape(14.dp),
+            ) {
+                Text("Add to meal slot", fontWeight = FontWeight.Bold, color = OnPrimary)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 private fun RecipePickerSheet(
     recipes: List<Recipe>,
     query: String,
     onQueryChange: (String) -> Unit,
-    onSelect: (Recipe?) -> Unit,
-    onDismiss: () -> Unit
+    onRecipeClick: (Recipe) -> Unit,
+    onDismiss: () -> Unit,
 ) {
     val filtered = recipes.filter { query.isBlank() || it.title.contains(query, ignoreCase = true) }
 
@@ -531,24 +598,6 @@ private fun RecipePickerSheet(
                 modifier = Modifier.fillMaxWidth().height(50.dp)
             )
 
-            // "No recipe" row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .clickable { onSelect(null) }
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(CKSurfaceVariant), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.Close, null, tint = CKOnSurfaceVariant, modifier = Modifier.size(18.dp))
-                }
-                Text("No recipe", fontSize = 14.sp, color = CKOnSurfaceVariant)
-            }
-
-            HorizontalDivider(color = CKSurfaceVariant, thickness = 0.5.dp)
-
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
                 modifier = Modifier.heightIn(max = 380.dp)
@@ -565,7 +614,7 @@ private fun RecipePickerSheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(10.dp))
-                                .clickable { onSelect(recipe) }
+                                .clickable { onRecipeClick(recipe) }
                                 .padding(horizontal = 12.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
