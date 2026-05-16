@@ -10,6 +10,8 @@ import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.application.services.UserRecipeCatalogService
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
+import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.enum.MealType
@@ -21,6 +23,7 @@ import java.util.UUID
 
 data class SlotFormState(
     val isVisible: Boolean = false,
+    val hasDraft: Boolean = false,
     val editingSlotId: UUID? = null,
     val selectedDay: WeekDay = WeekDay.MONDAY,
     val selectedMealType: MealType = MealType.BREAKFAST,
@@ -28,7 +31,6 @@ data class SlotFormState(
     val selectedRecipeTitle: String = "",
     val isRecipePickerVisible: Boolean = false,
     val recipePickerQuery: String = "",
-    val previewRecipe: Recipe? = null,
 )
 
 data class MealPlanDetailUiState(
@@ -45,6 +47,7 @@ data class MealPlanDetailUiState(
 class MealPlanDetailViewModel(
     private val mealPlanRepository: MealPlanRepository = FirebaseMealPlanService(),
     private val recipeCatalog: UserRecipeCatalogService = UserRecipeCatalogService(),
+    private val recipeReader: RecipeReader = FirebaseRecipeReader(),
     private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
 ) : ViewModel() {
 
@@ -100,6 +103,7 @@ class MealPlanDetailViewModel(
             it.copy(
                 slotForm = SlotFormState(
                     isVisible = true,
+                    hasDraft = true,
                     selectedDay = it.selectedDay,
                 )
             )
@@ -111,6 +115,7 @@ class MealPlanDetailViewModel(
             it.copy(
                 slotForm = SlotFormState(
                     isVisible = true,
+                    hasDraft = true,
                     editingSlotId = slot.id,
                     selectedDay = slot.day,
                     selectedMealType = slot.mealType,
@@ -131,13 +136,50 @@ class MealPlanDetailViewModel(
 
     fun openRecipePicker() {
         _uiState.update {
-            it.copy(slotForm = it.slotForm.copy(isRecipePickerVisible = true, previewRecipe = null))
+            it.copy(
+                slotForm = it.slotForm.copy(
+                    isVisible = false,
+                    isRecipePickerVisible = true,
+                )
+            )
         }
     }
 
     fun closeRecipePicker() {
         _uiState.update {
-            it.copy(slotForm = it.slotForm.copy(isRecipePickerVisible = false, previewRecipe = null))
+            it.copy(
+                slotForm = it.slotForm.copy(
+                    isVisible = true,
+                    isRecipePickerVisible = false,
+                    recipePickerQuery = "",
+                )
+            )
+        }
+    }
+
+    fun preparePickNavigation() {
+        _uiState.update {
+            it.copy(
+                slotForm = it.slotForm.copy(
+                    isVisible = false,
+                    isRecipePickerVisible = false,
+                    recipePickerQuery = "",
+                )
+            )
+        }
+    }
+
+    fun restoreSlotFormFromPickFlow() {
+        _uiState.update {
+            val form = it.slotForm
+            if (!form.hasDraft) return@update it
+            it.copy(
+                slotForm = form.copy(
+                    isVisible = true,
+                    isRecipePickerVisible = false,
+                    recipePickerQuery = "",
+                )
+            )
         }
     }
 
@@ -145,12 +187,11 @@ class MealPlanDetailViewModel(
         _uiState.update { it.copy(slotForm = it.slotForm.copy(recipePickerQuery = query)) }
     }
 
-    fun openRecipePreview(recipe: Recipe) {
-        _uiState.update { it.copy(slotForm = it.slotForm.copy(previewRecipe = recipe)) }
-    }
-
-    fun closeRecipePreview() {
-        _uiState.update { it.copy(slotForm = it.slotForm.copy(previewRecipe = null)) }
+    fun applyPickedRecipe(recipeId: String) {
+        viewModelScope.launch {
+            val recipe = resolveRecipe(recipeId) ?: return@launch
+            selectRecipe(recipe)
+        }
     }
 
     fun selectRecipe(recipe: Recipe?) {
@@ -159,12 +200,18 @@ class MealPlanDetailViewModel(
                 slotForm = it.slotForm.copy(
                     selectedRecipeId = recipe?.id,
                     selectedRecipeTitle = recipe?.title ?: "",
+                    isVisible = it.slotForm.hasDraft,
                     isRecipePickerVisible = false,
                     recipePickerQuery = "",
-                    previewRecipe = null,
                 )
             )
         }
+    }
+
+    private suspend fun resolveRecipe(recipeId: String): Recipe? {
+        val id = runCatching { UUID.fromString(recipeId) }.getOrNull() ?: return null
+        return _uiState.value.availableRecipes.firstOrNull { it.id == id }
+            ?: recipeReader.getById(recipeId)
     }
 
     fun saveSlot() {
@@ -188,9 +235,17 @@ class MealPlanDetailViewModel(
             return
         }
 
-        val recipe = _uiState.value.availableRecipes.firstOrNull { it.id == form.selectedRecipeId }
-            ?: form.previewRecipe
+        viewModelScope.launch {
+            val recipeId = form.selectedRecipeId ?: return@launch
+            val recipe = resolveRecipe(recipeId.toString()) ?: run {
+                _uiState.update { it.copy(error = "Recipe not found") }
+                return@launch
+            }
+            saveSlotWithRecipe(plan, form, recipe)
+        }
+    }
 
+    private fun saveSlotWithRecipe(plan: MealPlan, form: SlotFormState, recipe: Recipe) {
         val newSlot = MealSlot(
             id = form.editingSlotId ?: UUID.randomUUID(),
             day = form.selectedDay,

@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import software.ulpgc.cheffskiss.ui.navigation.MealPlanNavigation
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -131,10 +133,17 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(
-                        route = "recipe_detail/{recipeId}",
-                        arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
+                        route = "recipe_detail/{recipeId}?pickForMealSlot={pickForMealSlot}",
+                        arguments = listOf(
+                            navArgument("recipeId") { type = NavType.StringType },
+                            navArgument("pickForMealSlot") {
+                                type = NavType.BoolType
+                                defaultValue = false
+                            },
+                        ),
                     ) { backStackEntry ->
                         val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
+                        val pickForMealSlot = backStackEntry.arguments?.getBoolean("pickForMealSlot") ?: false
                         val detailViewModel: RecipeDetailViewModel = viewModel()
                         val recipe     by detailViewModel.recipe.collectAsState()
                         val authorName by detailViewModel.authorName.collectAsState()
@@ -157,10 +166,24 @@ class MainActivity : ComponentActivity() {
                                 authorName = authorName,
                                 isSaved    = isSaved,
                                 isOwner    = isOwner,
-                                onBack     = { navController.popBackStack() },
+                                onBack     = {
+                                    if (pickForMealSlot) {
+                                        navController.previousBackStackEntry
+                                            ?.savedStateHandle
+                                            ?.set(MealPlanNavigation.PICK_FLOW_CANCELLED_KEY, true)
+                                    }
+                                    navController.popBackStack()
+                                },
                                 onSave     = { detailViewModel.toggleSave() },
                                 onDelete   = { detailViewModel.deleteRecipe { navController.popBackStack() } },
-                                onEdit     = { navController.navigate("edit_recipe/${recipe!!.id}") }
+                                onEdit     = { navController.navigate("edit_recipe/${recipe!!.id}") },
+                                pickForMealSlot = pickForMealSlot,
+                                onAddToMealSlot = {
+                                    navController.previousBackStackEntry
+                                        ?.savedStateHandle
+                                        ?.set(MealPlanNavigation.PICKED_RECIPE_ID_KEY, recipeId)
+                                    navController.popBackStack()
+                                },
                             )
                         }
                     }
@@ -198,12 +221,43 @@ class MainActivity : ComponentActivity() {
                         arguments = listOf(navArgument("planId") { type = NavType.StringType })
                     ) { backStackEntry ->
                         val planId = backStackEntry.arguments?.getString("planId") ?: return@composable
+                        val mealPlanEntry = remember(planId) {
+                            navController.getBackStackEntry("meal_plan_detail/$planId")
+                        }
                         val mealPlanDetailViewModel: MealPlanDetailViewModel = viewModel()
+                        LaunchedEffect(mealPlanEntry) {
+                            val handle = mealPlanEntry.savedStateHandle
+                            launch {
+                                handle.getStateFlow<String?>(MealPlanNavigation.PICKED_RECIPE_ID_KEY, null)
+                                    .collect { pickedId ->
+                                        if (pickedId != null) {
+                                            mealPlanDetailViewModel.applyPickedRecipe(pickedId)
+                                            handle[MealPlanNavigation.PICKED_RECIPE_ID_KEY] = null
+                                        }
+                                    }
+                            }
+                            launch {
+                                handle.getStateFlow(MealPlanNavigation.PICK_FLOW_CANCELLED_KEY, false)
+                                    .collect { cancelled ->
+                                        if (cancelled) {
+                                            mealPlanDetailViewModel.restoreSlotFormFromPickFlow()
+                                            handle[MealPlanNavigation.PICK_FLOW_CANCELLED_KEY] = false
+                                        }
+                                    }
+                            }
+                        }
                         MealPlanDetailScreen(
                             planId        = planId,
                             viewModel     = mealPlanDetailViewModel,
                             onBack        = { navController.popBackStack() },
-                            onRecipeClick = { recipeId -> navController.navigate("recipe_detail/$recipeId") }
+                            onRecipeClick = { recipeId ->
+                                navController.navigate(MealPlanNavigation.recipeDetailRoute(recipeId))
+                            },
+                            onPickerRecipeClick = { recipeId ->
+                                navController.navigate(
+                                    MealPlanNavigation.recipeDetailRoute(recipeId, pickForMealSlot = true)
+                                )
+                            },
                         )
                     }
                 }
