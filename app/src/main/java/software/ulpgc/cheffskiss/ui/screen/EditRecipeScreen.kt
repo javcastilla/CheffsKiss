@@ -34,6 +34,7 @@ import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
 import software.ulpgc.cheffskiss.application.services.IngredientDraft
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import software.ulpgc.cheffskiss.ui.RecipeUiState
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -59,6 +60,7 @@ fun EditRecipeScreen(
     initialLines: List<RecipeLine>,
     initialSteps: List<Step>,
     viewModel: RecipeViewModel = viewModel(),
+    authViewModel: AuthenticantionViewModel = viewModel(),
     onBack: () -> Unit,
     onUpdateSuccess: () -> Unit
 ) {
@@ -125,7 +127,8 @@ fun EditRecipeScreen(
         }
     }
 
-    val handleUpdate = {
+    val handleUpdate = handleUpdate@{
+        val authorId = authViewModel.getCurrentUid() ?: return@handleUpdate
         val ingredientDrafts = ingredients
             .filter { it.name.isNotBlank() }
             .map { IngredientDraft(name = it.name, amount = it.amount, unit = it.unit) }
@@ -140,7 +143,7 @@ fun EditRecipeScreen(
         val stepImageUris = steps.map { it.imageUri }
         viewModel.updateRecipe(
             recipeId         = recipe.id,
-            authorId         = recipe.creator.id.toString(),
+            authorId         = authorId,
             title            = title,
             description      = description.trim(),
             servings         = servings,

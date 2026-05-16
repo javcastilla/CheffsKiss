@@ -25,14 +25,13 @@ class UpdateRecipeCommand(
             tags        = recipeInput.tags(),
             image       = image ?: current.image,
             servings    = recipeInput.servings(),
-            creator     = recipeInput.creator(),
         ).nextVersion()
 
         recipeRepository.updateRecipe(
             recipe = updated,
             lines  = recipeInput.lines(),
             steps  = recipeInput.steps(),
-            versionSnapshot = RecipeVersion(recipe = updated, status = RecipeStatus.PUBLISHED),
+            versionSnapshot = RecipeVersion(recipe = current, status = RecipeStatus.PUBLISHED),
         )
     }
 }
