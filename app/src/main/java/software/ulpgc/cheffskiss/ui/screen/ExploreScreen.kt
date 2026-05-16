@@ -69,7 +69,7 @@ private val PIN_COLORS = listOf(
 )
 
 // Deterministic variable hero heights for masonry effect
-private val PIN_HEIGHTS = listOf<Dp>(120.dp, 150.dp, 100.dp, 140.dp, 160.dp, 110.dp, 130.dp, 145.dp)
+private val PIN_HERO_HEIGHT = 140.dp
 
 @Composable
 fun ExploreScreen(
@@ -230,14 +230,13 @@ fun ExploreScreen(
 
                 else -> {
                     items(state.filteredRecipes, key = { it.id }) { recipe ->
-                        val hash       = (recipe.id.hashCode() and 0x7FFFFFFF)
-                        val pinColor   = PIN_COLORS[hash % PIN_COLORS.size]
-                        val heroHeight = PIN_HEIGHTS[hash % PIN_HEIGHTS.size]
+                        val hash     = (recipe.id.hashCode() and 0x7FFFFFFF)
+                        val pinColor = PIN_COLORS[hash % PIN_COLORS.size]
                         PinCard(
                             recipe     = recipe,
                             authorName = state.authorNames[recipe.creator.id.toString()] ?: "",
                             pinColor   = pinColor,
-                            heroHeight = heroHeight,
+                            heroHeight = PIN_HERO_HEIGHT,
                             onClick    = { onRecipeClick(recipe) }
                         )
                     }
@@ -431,7 +430,12 @@ private fun PinCard(
             }
 
             // ── Body ──────────────────────────────────────────────────────────
-            Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 9.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 88.dp)
+                    .padding(horizontal = 10.dp, vertical = 9.dp)
+            ) {
                 Text(
                     recipe.title,
                     fontWeight = FontWeight.Bold,
