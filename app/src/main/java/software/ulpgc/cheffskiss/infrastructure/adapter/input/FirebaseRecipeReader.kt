@@ -15,16 +15,18 @@ import software.ulpgc.cheffskiss.domain.model.recipe.Ingredient
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
+import software.ulpgc.cheffskiss.domain.port.input.IngredientCatalogReader
 import software.ulpgc.cheffskiss.domain.port.input.IngredientStore
 import software.ulpgc.cheffskiss.domain.port.input.RecipeLineStore
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.domain.port.input.StepStore
+import software.ulpgc.cheffskiss.domain.vo.IngredientCategory
 import software.ulpgc.cheffskiss.domain.model.user.User
 import java.util.UUID
 import java.net.URI
 import kotlin.time.Duration.Companion.seconds
 
-class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, IngredientStore {
+class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, IngredientStore, IngredientCatalogReader {
 
     private val db          = Firebase.firestore
     private val recipes     = db.collection("Recipes")
@@ -100,9 +102,43 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
         return null
     }
 
-    suspend fun getIngredientById(id: String): Ingredient? {
+    override suspend fun getIngredientById(id: String): Ingredient? {
         if (id.isBlank()) return null
         return ingredients.document(id).get().await().toIngredient()
+    }
+
+    override suspend fun getAll(limit: Int): List<Ingredient> {
+        val snapshot = ingredients
+            .orderBy("name")
+            .limit(limit.toLong())
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { it.toIngredient() }
+    }
+
+    override suspend fun searchByPrefix(prefix: String, limit: Int): List<Ingredient> {
+        if (prefix.isBlank()) return emptyList()
+        val end = prefix + "\uf8ff"
+        val byName = ingredients
+            .whereGreaterThanOrEqualTo("name", prefix)
+            .whereLessThanOrEqualTo("name", end)
+            .limit(limit.toLong())
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toIngredient() }
+        if (byName.size >= limit) return byName
+
+        val byNormalized = ingredients
+            .whereGreaterThanOrEqualTo("normalized_name", prefix.lowercase())
+            .whereLessThanOrEqualTo("normalized_name", end.lowercase())
+            .limit(limit.toLong())
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toIngredient() }
+
+        return (byName + byNormalized).distinctBy { it.id }.take(limit)
     }
 
     suspend fun findByName(name: String): Ingredient? {
@@ -115,33 +151,8 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
         return snapshot.documents.firstOrNull()?.toIngredient()
     }
 
-    suspend fun findOrCreateByName(name: String): Ingredient {
-        findByName(name)?.let { return it }
-        val ingredient = Ingredient(id = UUID.randomUUID(), name = name)
-        saveIngredient(ingredient)
-        return ingredient
-    }
-
-    suspend fun searchIngredientsByPrefix(prefix: String, limit: Int = 8): List<Ingredient> {
-        if (prefix.isBlank()) return emptyList()
-        val end = prefix + "\uf8ff"
-        val snapshot = ingredients
-            .whereGreaterThanOrEqualTo("name", prefix)
-            .whereLessThanOrEqualTo("name", end)
-            .limit(limit.toLong())
-            .get()
-            .await()
-        return snapshot.documents.mapNotNull { it.toIngredient() }
-    }
-
     suspend fun saveIngredient(ingredient: Ingredient) {
-        ingredients.document(ingredient.id.toString()).set(
-            mapOf(
-                "id" to ingredient.id.toString(),
-                "name" to ingredient.name,
-                "image" to ingredient.image?.toString(),
-            )
-        ).await()
+        ingredients.document(ingredient.id.toString()).set(ingredient.toFirestoreMap()).await()
     }
 
     private suspend fun mapToRecipeLine(map: Map<String, Any>): RecipeLine? = runCatching {
@@ -161,10 +172,7 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
     }.getOrNull()
 
     private fun embeddedToIngredient(map: Map<*, *>): Ingredient? = runCatching {
-        Ingredient(
-            id = UUID.fromString(map["id"] as? String ?: return null),
-            name = map["name"] as? String ?: return null,
-        )
+        map.toIngredientFields()
     }.getOrNull()
 
     // ── Mappers ───────────────────────────────────────────────────────────────
@@ -211,12 +219,51 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
     }
 
     private fun DocumentSnapshot.toIngredient(): Ingredient? = runCatching {
-        Ingredient(
-            id    = UUID.fromString(getString("id") ?: return null),
-            name  = getString("name") ?: "",
-            image = getString("image")?.let { 
-                try { URI(it) } catch (e: Exception) { null }
-            }
-        )
+        toIngredientFields()
     }.getOrNull()
+
+    private fun DocumentSnapshot.toIngredientFields(): Ingredient {
+        val ingredientId = getString("id") ?: id
+        val categoryName = getString("category") ?: ""
+        return Ingredient(
+            id = UUID.fromString(ingredientId),
+            name = getString("name") ?: "",
+            normalizedName = getString("normalized_name") ?: "",
+            image = getString("image")?.takeIf { it.isNotBlank() }?.let { parseUri(it) },
+            category = categoryName,
+            subcategory = getString("subcategory") ?: "",
+            aliases = (get("aliases") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+            tags = (get("tags") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+            categories = if (categoryName.isNotBlank()) listOf(IngredientCategory(categoryName)) else emptyList(),
+        )
+    }
+
+    private fun Map<*, *>.toIngredientFields(): Ingredient {
+        val ingredientId = this["id"] as? String ?: error("Missing ingredient id")
+        val categoryName = this["category"] as? String ?: ""
+        return Ingredient(
+            id = UUID.fromString(ingredientId),
+            name = this["name"] as? String ?: "",
+            normalizedName = this["normalized_name"] as? String ?: "",
+            image = (this["image"] as? String)?.takeIf { it.isNotBlank() }?.let { parseUri(it) },
+            category = categoryName,
+            subcategory = this["subcategory"] as? String ?: "",
+            aliases = (this["aliases"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+            tags = (this["tags"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+            categories = if (categoryName.isNotBlank()) listOf(IngredientCategory(categoryName)) else emptyList(),
+        )
+    }
+
+    private fun Ingredient.toFirestoreMap(): Map<String, Any?> = mapOf(
+        "id" to id.toString(),
+        "name" to name,
+        "normalized_name" to normalizedName.ifBlank { name.lowercase() },
+        "image" to image?.toString().orEmpty(),
+        "category" to category,
+        "subcategory" to subcategory,
+        "aliases" to aliases,
+        "tags" to tags,
+    )
+
+    private fun parseUri(value: String): URI? = runCatching { URI(value) }.getOrNull()
 }

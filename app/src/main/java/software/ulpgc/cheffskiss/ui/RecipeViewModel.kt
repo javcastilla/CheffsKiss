@@ -12,6 +12,7 @@ import software.ulpgc.cheffskiss.application.control.CreateRecipeCommand
 import software.ulpgc.cheffskiss.application.control.RecipeInput
 import software.ulpgc.cheffskiss.application.control.UpdateRecipeCommand
 import software.ulpgc.cheffskiss.application.port.ImageStorage
+import software.ulpgc.cheffskiss.application.services.IngredientCatalogService
 import software.ulpgc.cheffskiss.application.services.IngredientDraft
 import software.ulpgc.cheffskiss.application.services.RecipeIngredientService
 import software.ulpgc.cheffskiss.application.services.UserIds
@@ -37,15 +38,37 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     private val recipeService = FirebaseRecipeService()
     private val recipeReader  = FirebaseRecipeReader()
     private val imageStorage: ImageStorage = LocalImageStorage(application)
-    private val ingredientService = RecipeIngredientService(recipeReader)
+    private val ingredientCatalog = IngredientCatalogService(recipeReader)
+    private val ingredientService = RecipeIngredientService(recipeReader, ingredientCatalog)
 
     private val _uiState = MutableStateFlow<RecipeUiState>(RecipeUiState.Idle)
     val uiState = _uiState.asStateFlow()
 
+    private val _ingredientCatalog = MutableStateFlow<List<Ingredient>>(emptyList())
+    val ingredientCatalogState = _ingredientCatalog.asStateFlow()
+
+    private val _ingredientCatalogLoading = MutableStateFlow(false)
+    val ingredientCatalogLoading = _ingredientCatalogLoading.asStateFlow()
+
     fun resetState() { _uiState.value = RecipeUiState.Idle }
 
-    suspend fun searchIngredients(query: String): List<Ingredient> =
-        recipeReader.searchIngredientsByPrefix(query.trim())
+    fun loadIngredientCatalog() {
+        if (_ingredientCatalog.value.isNotEmpty() || _ingredientCatalogLoading.value) return
+        viewModelScope.launch {
+            _ingredientCatalogLoading.value = true
+            runCatching { ingredientCatalog.loadCatalog() }
+                .onSuccess { _ingredientCatalog.value = it }
+                .onFailure { e ->
+                    _uiState.value = RecipeUiState.Error(
+                        e.message ?: "Could not load ingredients catalog"
+                    )
+                }
+            _ingredientCatalogLoading.value = false
+        }
+    }
+
+    fun filterIngredients(query: String): List<Ingredient> =
+        ingredientCatalog.filterCatalog(_ingredientCatalog.value, query)
 
     fun createRecipe(
         authorId: String,
@@ -73,8 +96,8 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 _uiState.value = RecipeUiState.Error("Indicate the recipe duration.")
                 return
             }
-            ingredientDrafts.none { it.name.isNotBlank() } -> {
-                _uiState.value = RecipeUiState.Error("There must be at least one ingredient.")
+            ingredientDrafts.none { it.ingredientId != null } -> {
+                _uiState.value = RecipeUiState.Error("Select at least one ingredient from the catalog.")
                 return
             }
             steps.isEmpty() -> {
@@ -133,8 +156,8 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
             servings < 1 -> { _uiState.value = RecipeUiState.Error("Indicate the number of servings."); return }
             (hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0") ->
                 { _uiState.value = RecipeUiState.Error("Indicate the recipe duration"); return }
-            ingredientDrafts.none { it.name.isNotBlank() } ->
-                { _uiState.value = RecipeUiState.Error("Add at least one ingredient"); return }
+            ingredientDrafts.none { it.ingredientId != null } ->
+                { _uiState.value = RecipeUiState.Error("Select at least one ingredient from the catalog"); return }
             steps.isEmpty() -> { _uiState.value = RecipeUiState.Error("Add at least one step"); return }
         }
 

@@ -33,11 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.delay
 import software.ulpgc.cheffskiss.application.services.IngredientDraft
 import software.ulpgc.cheffskiss.domain.model.Step
-import software.ulpgc.cheffskiss.domain.model.recipe.Ingredient
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.ui.components.IngredientPickerDropdown
 import software.ulpgc.cheffskiss.ui.RecipeUiState
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -53,6 +52,10 @@ fun CreateRecipeScreen(
     onSaveDraft: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val ingredientCatalog by viewModel.ingredientCatalogState.collectAsStateWithLifecycle()
+    val ingredientCatalogLoading by viewModel.ingredientCatalogLoading.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) { viewModel.loadIngredientCatalog() }
     var coverImageUri by remember { mutableStateOf<Uri?>(null) }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -74,7 +77,7 @@ fun CreateRecipeScreen(
         title.isNotBlank() &&
                 servings >= 1 &&
                 !((hours.isBlank() || hours == "0") && (minutes.isBlank() || minutes == "0")) &&
-                ingredients.any { it.name.isNotBlank() } &&
+                ingredients.any { it.ingredientId != null } &&
                 steps.any { it.description.isNotBlank() }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -90,8 +93,15 @@ fun CreateRecipeScreen(
         val authorId = authViewModel.getCurrentUid()
         if (authorId != null) {
             val ingredientDrafts = ingredients
-                .filter { it.name.isNotBlank() }
-                .map { IngredientDraft(name = it.name, amount = it.amount, unit = it.unit) }
+                .filter { it.ingredientId != null }
+                .map {
+                    IngredientDraft(
+                        ingredientId = it.ingredientId,
+                        name = it.name,
+                        amount = it.amount,
+                        unit = it.unit,
+                    )
+                }
             val mappedSteps = steps
                 .filter { it.description.isNotBlank() }
                 .mapIndexed { index, stepRow ->
@@ -279,14 +289,20 @@ fun CreateRecipeScreen(
                                 }
                             )
                         }
-                        IngredientNameField(
-                            name         = ingredient.name,
-                            onNameChange = { name ->
+                        IngredientPickerDropdown(
+                            selected = ingredientCatalog.firstOrNull { it.id == ingredient.ingredientId },
+                            options = ingredientCatalog,
+                            isLoading = ingredientCatalogLoading,
+                            onSelected = { selected ->
                                 val idx = ingredients.indexOf(ingredient)
-                                if (idx >= 0) ingredients[idx] = ingredient.copy(name = name)
+                                if (idx >= 0) {
+                                    ingredients[idx] = ingredient.copy(
+                                        ingredientId = selected.id,
+                                        name = selected.name,
+                                    )
+                                }
                             },
-                            viewModel    = viewModel,
-                            modifier     = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         )
                         IconButton(
                             onClick  = { ingredients.removeAll { it.id == ingredient.id } },
@@ -340,73 +356,6 @@ fun CreateRecipeScreen(
             }
 
             Spacer(Modifier.height(8.dp))
-        }
-    }
-}
-
-// ── Autocomplete de ingredientes (privado — depende de RecipeViewModel) ────────
-@Composable
-private fun IngredientNameField(
-    name: String,
-    onNameChange: (String) -> Unit,
-    viewModel: RecipeViewModel,
-    modifier: Modifier = Modifier
-) {
-    var suggestions by remember { mutableStateOf<List<Ingredient>>(emptyList()) }
-
-    LaunchedEffect(name) {
-        if (name.trim().length < 2) {
-            suggestions = emptyList()
-        } else {
-            delay(250)
-            suggestions = viewModel.searchIngredients(name)
-        }
-    }
-
-    Column(modifier = modifier) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Background, CircleShape)
-                .padding(horizontal = 14.dp, vertical = 12.dp)
-        ) {
-            BasicTextField(
-                value         = name,
-                onValueChange = onNameChange,
-                singleLine    = true,
-                textStyle     = androidx.compose.ui.text.TextStyle(fontSize = 13.sp, color = OnSurface, fontWeight = FontWeight.Medium),
-                modifier      = Modifier.fillMaxWidth(),
-                decorationBox = { inner ->
-                    Box {
-                        if (name.isEmpty()) Text("Ingredient", fontSize = 13.sp, color = CKOutlineVariant)
-                        inner()
-                    }
-                }
-            )
-        }
-        if (suggestions.isNotEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Surface)
-            ) {
-                suggestions.forEach { suggestion ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onNameChange(suggestion.name); suggestions = emptyList() }
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Search, null, tint = CKOutlineVariant, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(suggestion.name, fontSize = 13.sp, color = OnSurface)
-                    }
-                    HorizontalDivider(color = CKSurfaceVariant, thickness = 0.5.dp)
-                }
-            }
         }
     }
 }

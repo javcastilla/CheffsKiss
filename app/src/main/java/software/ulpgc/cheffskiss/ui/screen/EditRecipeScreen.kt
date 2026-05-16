@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import software.ulpgc.cheffskiss.application.services.IngredientDraft
+import software.ulpgc.cheffskiss.ui.components.IngredientPickerDropdown
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.ui.theme.*
 import kotlin.time.toDuration
@@ -37,9 +39,10 @@ import kotlin.time.toDuration
 
 data class IngredientRow(
     val id: Int,
+    val ingredientId: java.util.UUID? = null,
     val name: String = "",
     val amount: String = "",
-    val unit: String = "UNIT"
+    val unit: String = "UNIT",
 )
 
 data class StepRow(
@@ -464,7 +467,11 @@ fun EditRecipeScreen(
         androidx.lifecycle.viewmodel.compose.viewModel()
 
     val uiState by viewModel.uiState.collectAsState()
+    val ingredientCatalog by viewModel.ingredientCatalogState.collectAsStateWithLifecycle()
+    val ingredientCatalogLoading by viewModel.ingredientCatalogLoading.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) { viewModel.loadIngredientCatalog() }
 
     // ── Estado local pre-poblado con los datos existentes ─────────────────
     var coverImageUri   by remember { mutableStateOf<Uri?>(null) }
@@ -481,10 +488,11 @@ fun EditRecipeScreen(
             initialLines.forEachIndexed { i, line ->
                 list.add(
                     IngredientRow(
-                        id     = i,
-                        name   = line.ingredient?.name ?: "",
-                        amount = line.amount.toString(),
-                        unit   = line.measurement?.name ?: "UNIT"
+                        id           = i,
+                        ingredientId = line.ingredient?.id,
+                        name         = line.ingredient?.name ?: "",
+                        amount       = line.amount.toString(),
+                        unit         = line.measurement?.name ?: "UNIT",
                     )
                 )
             }
@@ -526,7 +534,7 @@ fun EditRecipeScreen(
     val isFormComplete = title.isNotBlank() &&
             servings >= 1 &&
             (durationHours.isNotBlank() || durationMinutes.isNotBlank()) &&
-            ingredients.any { it.name.isNotBlank() } &&
+            ingredients.any { it.ingredientId != null } &&
             steps.any { it.description.isNotBlank() }
 
     val handleUpdate: () -> Unit = {
@@ -542,10 +550,14 @@ fun EditRecipeScreen(
                 )
             }
         val drafts = ingredients
-            .filter { it.name.isNotBlank() }
+            .filter { it.ingredientId != null }
             .map {
-                IngredientDraft(name = it.name, amount = it.amount, unit = it.unit)
-
+                IngredientDraft(
+                    ingredientId = it.ingredientId,
+                    name = it.name,
+                    amount = it.amount,
+                    unit = it.unit,
+                )
             }
 
         viewModel.updateRecipe(
@@ -695,15 +707,20 @@ fun EditRecipeScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            CRTextField(
-                                value = row.name,
-                                onValueChange = { v ->
+                            IngredientPickerDropdown(
+                                selected = ingredientCatalog.firstOrNull { it.id == row.ingredientId },
+                                options = ingredientCatalog,
+                                isLoading = ingredientCatalogLoading,
+                                onSelected = { selected ->
                                     val i = ingredients.indexOfFirst { it.id == row.id }
-                                    if (i != -1) ingredients[i] = row.copy(name = v)
+                                    if (i != -1) {
+                                        ingredients[i] = row.copy(
+                                            ingredientId = selected.id,
+                                            name = selected.name,
+                                        )
+                                    }
                                 },
-                                placeholder = "Ingredient",
-                                singleLine = true,
-                                modifier = Modifier.weight(2f)
+                                modifier = Modifier.weight(2f),
                             )
                             CRTextField(
                                 value = row.amount,
@@ -723,7 +740,7 @@ fun EditRecipeScreen(
                         }
                     }
                     DashedAddButton(label = "Add Ingredient") {
-                        ingredients.add(IngredientRow(nextIngredId++, "", "", "UNIT"))
+                        ingredients.add(IngredientRow(id = nextIngredId++))
                     }
                 }
             }
