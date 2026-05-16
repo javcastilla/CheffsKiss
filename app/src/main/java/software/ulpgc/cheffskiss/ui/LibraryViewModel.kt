@@ -13,7 +13,8 @@ import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
-import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
+import software.ulpgc.cheffskiss.application.services.UserDisplayService
+import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
 import java.util.UUID
@@ -35,7 +36,7 @@ class LibraryViewModel(
     private val _uiState = MutableStateFlow(LibraryUiState())
     val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
 
-    private val userNameReader = FirebaseUserNameReader()
+    private val userDisplayService = UserDisplayService()
 
     init { load() }
 
@@ -50,7 +51,7 @@ class LibraryViewModel(
     }
 
     private fun observeMyRecipes(uid: String) {
-        val authorUuid = UUID.nameUUIDFromBytes(uid.toByteArray()).toString()
+        val authorUuid = UserIds.creatorIdStringFromFirebaseUid(uid)
         viewModelScope.launch {
             recipeReader.getByAuthor(authorUuid)
                 .onStart { _uiState.update { it.copy(isLoading = true, error = null) } }
@@ -87,7 +88,7 @@ class LibraryViewModel(
             .forEach { authorId ->
                 if (!_uiState.value.authorNames.containsKey(authorId)) {
                     viewModelScope.launch {
-                        val name = userNameReader.getUsernameByUid(authorId)
+                        val name = userDisplayService.displayNameFor(UUID.fromString(authorId))
                         if (!name.isNullOrBlank()) {
                             _uiState.update { it.copy(authorNames = it.authorNames + (authorId to name)) }
                         }

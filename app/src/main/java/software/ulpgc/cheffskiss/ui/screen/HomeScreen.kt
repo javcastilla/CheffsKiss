@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.distinctUntilChanged
+import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.ui.ActivePlanDay
 import software.ulpgc.cheffskiss.ui.HomeUiState
 import software.ulpgc.cheffskiss.ui.HomeViewModel
@@ -226,7 +227,9 @@ fun HomeScreen(
                     recipe      = recipe,
                     authorName  = authorNames[recipe.creator.id.toString()] ?: "...",
                     isSaved     = recipe.id.toString() in state.savedRecipeIds,
-                    isOwn       = recipe.creator.id.toString() == state.currentUserId,
+                    isOwn       = state.currentUserId?.let { uid ->
+                        recipe.creator.id == UserIds.creatorIdFromFirebaseUid(uid)
+                    } ?: false,
                     onSave      = { onToggleSave(recipe) },
                     onRecipeClick = onRecipeClick,
                     modifier    = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)

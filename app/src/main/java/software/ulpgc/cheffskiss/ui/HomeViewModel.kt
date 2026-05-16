@@ -25,6 +25,7 @@ import software.ulpgc.cheffskiss.ui.screen.displayName
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.application.services.UserDisplayService
+import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseMealPlanService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
@@ -148,7 +149,7 @@ class HomeViewModel(
 
     fun toggleSave(recipe: Recipe) {
         val uid = currentUserPort.getCurrentUser() ?: return
-        if (recipe.creator.id.toString() == uid) return
+        if (recipe.creator.id == UserIds.creatorIdFromFirebaseUid(uid)) return
         val recipeIdStr = recipe.id.toString()
         val currentlySaved = _uiState.value.savedRecipeIds.contains(recipeIdStr)
 

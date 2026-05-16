@@ -9,6 +9,7 @@ import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.application.services.UserDisplayService
+import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import java.util.UUID
 
@@ -76,9 +77,7 @@ class ExploreViewModel(
                 .catch { e -> _error.value = e.message ?: "Error loading recipes"; _isLoading.value = false }
                 .collect { recipes ->
                     val currentUid = currentUserPort.getCurrentUser()
-                    val currentCreatorId = currentUid?.let {
-                        UUID.nameUUIDFromBytes(it.toByteArray(Charsets.UTF_8))
-                    }
+                    val currentCreatorId = currentUid?.let { UserIds.creatorIdFromFirebaseUid(it) }
                     val filtered = recipes.filter { it.creator.id != currentCreatorId }
                     _allRecipes.value = filtered
                     _isLoading.value  = false

@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.theme.*
 
@@ -180,7 +181,9 @@ fun AllRecipesScreen(
                         recipe = recipe,
                         authorName = authorNames[recipe.creator.id.toString()] ?: "…",
                         isSaved = recipe.id.toString() in savedRecipeIds,
-                        isOwn = recipe.creator.id.toString() == currentUserId,
+                        isOwn = currentUserId?.let { uid ->
+                            recipe.creator.id == UserIds.creatorIdFromFirebaseUid(uid)
+                        } ?: false,
                         index = index,
                         onSave = { onToggleSave(recipe) },
                         onRecipeClick = { onRecipeClick(recipe) }
