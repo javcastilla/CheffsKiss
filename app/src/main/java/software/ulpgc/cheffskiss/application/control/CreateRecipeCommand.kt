@@ -24,11 +24,12 @@ class CreateRecipeCommand(
         val recipe = Recipe(
             id          = recipeInput.id(),
             title       = recipeInput.title(),
+            description = recipeInput.description(),
             duration    = recipeInput.duration(),
             tags        = recipeInput.tags(),
             image       = image,
             servings    = recipeInput.servings(),
-            creator     = recipeInput.creator()
+            creator     = recipeInput.creator(),
         )
         recipeRepository.createRecipe(recipe, recipeInput.lines(), recipeInput.steps())
     }
@@ -38,6 +39,7 @@ interface RecipeInput {
     fun id(): UUID
     fun creator(): User
     fun title(): String
+    fun description(): String
     fun servings(): Int
     fun duration(): Duration
     fun lines(): List<RecipeLine>
