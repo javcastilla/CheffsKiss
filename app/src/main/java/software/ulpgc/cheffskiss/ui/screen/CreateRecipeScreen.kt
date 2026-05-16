@@ -37,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
+import software.ulpgc.cheffskiss.application.services.IngredientDraft
 import software.ulpgc.cheffskiss.ui.RecipeUiState
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -62,15 +63,15 @@ fun CreateRecipeScreen(
     var coverImageUri by remember { mutableStateOf<Uri?>(null) }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var servings by remember { mutableIntStateOf(4) }
+    var servings by remember { mutableIntStateOf(0) }
     var hours by remember { mutableStateOf("") }
     var minutes by remember { mutableStateOf("") }
     var tagInput by remember { mutableStateOf("") }
-    val tags = remember { mutableStateListOf("Vegetarian", "Dessert") }
-    val ingredients = remember { mutableStateListOf(IngredientRow(0), IngredientRow(1)) }
-    val steps = remember { mutableStateListOf(StepRow(0)) }
-    var nextIngredId by remember { mutableIntStateOf(2) }
-    var nextStepId by remember { mutableIntStateOf(1) }
+    val tags = remember { mutableStateListOf<String>() }
+    val ingredients = remember { mutableStateListOf<IngredientRow>() }
+    val steps = remember { mutableStateListOf<StepRow>() }
+    var nextIngredId by remember { mutableIntStateOf(0) }
+    var nextStepId by remember { mutableIntStateOf(0) }
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { coverImageUri = it }
@@ -82,6 +83,7 @@ fun CreateRecipeScreen(
 
     val isRecipeFormComplete =
         title.isNotBlank() &&
+                servings >= 1 &&
                 hasValidDuration &&
                 hasIngredients &&
                 hasSteps
@@ -95,9 +97,9 @@ fun CreateRecipeScreen(
     val handlePublish = {
         val authorId = authViewModel.getCurrentUid()
         if (authorId != null) {
-            val mappedIngredients = ingredients
+            val ingredientDrafts = ingredients
                 .filter { it.name.isNotBlank() }
-                .map { "${it.amount} ${it.unit} ${it.name}".trim() }
+                .map { IngredientDraft(name = it.name, amount = it.amount, unit = it.unit) }
 
             val mappedSteps = steps
                 .filter { it.description.isNotBlank() }
@@ -118,7 +120,7 @@ fun CreateRecipeScreen(
                 servings      = servings,
                 hours         = hours,
                 minutes       = minutes,
-                ingredients   = mappedIngredients,
+                ingredientDrafts = ingredientDrafts,
                 steps         = mappedSteps,
                 stepImageUris = stepImageUris,
                 tags          = tags.toList(),
@@ -212,8 +214,13 @@ fun CreateRecipeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            SmallCircleButton(icon = Icons.Default.Remove) { if (servings > 1) servings-- }
-                            Text("$servings", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = OnSurface)
+                            SmallCircleButton(icon = Icons.Default.Remove) { if (servings > 0) servings-- }
+                            Text(
+                                if (servings > 0) "$servings" else "—",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (servings > 0) OnSurface else CKOutlineVariant
+                            )
                             SmallCircleButton(icon = Icons.Default.Add) { servings++ }
                         }
                     }
