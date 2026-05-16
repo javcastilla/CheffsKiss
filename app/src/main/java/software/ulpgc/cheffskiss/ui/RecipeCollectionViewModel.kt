@@ -15,7 +15,10 @@ import software.ulpgc.cheffskiss.domain.model.RecipeCollection
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeCollectionService
 import java.util.UUID
-
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.material3.ButtonDefaults.outlinedButtonColors
 data class RecipeCollectionUiState(
     val isLoading: Boolean = true,
     val collections: List<RecipeCollection> = emptyList(),
@@ -23,6 +26,7 @@ data class RecipeCollectionUiState(
     val showCreateDialog: Boolean = false,
     val createName: String = "",
     val createNameError: String? = null,
+    val createImage: String = "",
     val isCreating: Boolean = false
 )
 
@@ -64,13 +68,19 @@ class RecipeCollectionViewModel(
     fun onCreateNameChange(name: String) =
         _uiState.update { it.copy(createName = name, createNameError = null) }
 
+    fun onCreateImageChange(image: String) =
+        _uiState.update { it.copy(createImage = image) }
+
     fun createCollection() {
         val uid  = userUuid ?: return
         val name = _uiState.value.createName.trim()
+        val image = _uiState.value.createImage
+
         if (name.isBlank()) {
             _uiState.update { it.copy(createNameError = "Name cannot be empty") }
             return
         }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isCreating = true) }
             runCatching {
@@ -79,6 +89,7 @@ class RecipeCollectionViewModel(
                     input = object : CreateRecipeCollectionInput {
                         override fun userId() = uid
                         override fun name()   = name
+                        override fun image() = image
                     }
                 ).execute()
             }.onFailure { e -> _uiState.update { it.copy(error = e.message) } }

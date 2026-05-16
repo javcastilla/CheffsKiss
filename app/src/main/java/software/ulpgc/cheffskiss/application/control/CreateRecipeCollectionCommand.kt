@@ -12,6 +12,7 @@ class CreateRecipeCollectionCommand(
         port.create(RecipeCollection(
             userId = input.userId(),
             name = input.name(),
+            image = input.image(),
             recipes = emptyList()
         ))
     }
@@ -19,4 +20,5 @@ class CreateRecipeCollectionCommand(
 interface CreateRecipeCollectionInput{
     fun userId(): UUID
     fun name(): String
+    fun image(): String
 }

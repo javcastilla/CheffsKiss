@@ -17,10 +17,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.domain.model.MealPlan
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.RecipeCollection
+import software.ulpgc.cheffskiss.ui.LibraryUiState
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.LibraryViewModel
@@ -33,10 +39,12 @@ fun LibraryScreen(
     viewModel: LibraryViewModel,
     mealPlanViewModel: MealPlanViewModel,
     onGoHome: () -> Unit,
-    onExploreClick: () -> Unit = {},
+    onExploreClick: () -> Unit,
     onCreateRecipe: () -> Unit,
     onRecipeClick: (Recipe) -> Unit,
-    onMealPlanClick: (MealPlan) -> Unit
+    onMealPlanClick: (MealPlan) -> Unit,
+    onCreateCollection: () -> Unit,
+    onCollectionClick: (RecipeCollection) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -52,8 +60,25 @@ fun LibraryScreen(
                 onCreateClick  = onCreateRecipe,
                 onSavedClick   = {}
             )
+        },
+        floatingActionButton = {
+            if (selectedTab == 1) {
+                FloatingActionButton(
+                    onClick        = onCreateCollection,
+                    containerColor = Primary,
+                    contentColor   = OnPrimary,
+                    shape          = CircleShape,
+                    modifier       = Modifier.size(56.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "New Collection",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
         }
-    ) { padding ->
+    ){ padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -157,7 +182,7 @@ fun LibraryScreen(
                     else -> {
                         val allRecipes = if (selectedTab == 0) state.myRecipes else state.savedRecipes
                         val recipes = if (selectedFilter == "All") allRecipes
-                            else allRecipes.filter { r -> r.tags.any { it.equals(selectedFilter, ignoreCase = true) } }
+                        else allRecipes.filter { r -> r.tags.any { it.equals(selectedFilter, ignoreCase = true) } }
 
                         val emptyIcon = if (selectedTab == 0) Icons.Default.MenuBook else Icons.Default.Bookmark
                         val emptyTitle = if (selectedTab == 0) "No recipes yet" else "No saved recipes"
@@ -166,7 +191,10 @@ fun LibraryScreen(
                         else
                             "Save recipes from the feed to find them here."
 
-                        if (recipes.isEmpty()) {
+                        val showCollections = selectedTab == 1 && state.collections.isNotEmpty()
+
+                        if (recipes.isEmpty() && !showCollections) {
+                            // Solo muestra empty state si no hay nada que mostrar
                             LibraryEmptyState(icon = emptyIcon, title = emptyTitle, subtitle = emptySubtitle)
                         } else {
                             LazyColumn(
@@ -174,12 +202,44 @@ fun LibraryScreen(
                                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                items(recipes, key = { it.id }) { recipe ->
-                                    LibraryRecipeCard(
-                                        recipe     = recipe,
-                                        authorName = state.authorNames[recipe.creator.id.toString()] ?: "",
-                                        onClick    = { onRecipeClick(recipe) }
-                                    )
+                                if (showCollections) {
+                                    item {
+                                        Text(
+                                            "My Collections",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            color = CKOnSurfaceVariant,
+                                            modifier = Modifier.padding(bottom = 4.dp)
+                                        )
+                                    }
+                                    items(state.collections, key = { it.id }) { collection ->
+                                        CollectionCard(
+                                            collection = collection,
+                                            onClick = {onCollectionClick(collection) }
+                                        )
+                                    }
+                                    item { Spacer(Modifier.height(8.dp)) }
+                                }
+
+                                if (recipes.isNotEmpty()) {
+                                    if (showCollections) {
+                                        item {
+                                            Text(
+                                                "Saved Recipes",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = CKOnSurfaceVariant,
+                                                modifier = Modifier.padding(bottom = 4.dp)
+                                            )
+                                        }
+                                    }
+                                    items(recipes, key = { it.id }) { recipe ->
+                                        LibraryRecipeCard(
+                                            recipe     = recipe,
+                                            authorName = state.authorNames[recipe.author] ?: "",
+                                            onClick    = { onRecipeClick(recipe) }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -357,6 +417,79 @@ private fun LibraryErrorState(message: String, onRetry: () -> Unit) {
                 onClick = onRetry,
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) { Text("Retry") }
+        }
+    }
+}
+@Composable
+private fun CollectionCard(
+    collection: RecipeCollection,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Surface),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Thumbnail
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(CKSurfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (collection.image.isNotBlank()) {
+                    AsyncImage(
+                        model = collection.image,
+                        contentDescription = collection.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.CollectionsBookmark,
+                        null,
+                        tint = Outline,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+            // Info
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    collection.name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = OnSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Icon(
+                        Icons.Default.MenuBook,
+                        null,
+                        tint = Outline,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        "${collection.recipes.size} recipes",
+                        fontSize = 11.sp,
+                        color = Outline
+                    )
+                }
+            }
+            Icon(Icons.Default.ChevronRight, null, tint = CKOutlineVariant)
         }
     }
 }

@@ -8,14 +8,19 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
+import software.ulpgc.cheffskiss.application.port.RecipeCollectionRepository
 import software.ulpgc.cheffskiss.application.port.RecipeRepository
+import software.ulpgc.cheffskiss.application.services.GetRecipeCollectionQuery
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
+import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.RecipeCollection
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.application.services.UserDisplayService
 import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeCollectionService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
 import java.util.UUID
 
@@ -23,6 +28,7 @@ data class LibraryUiState(
     val isLoading: Boolean = true,
     val myRecipes: List<Recipe> = emptyList(),
     val savedRecipes: List<Recipe> = emptyList(),
+    val collections: List<RecipeCollection> = emptyList(),
     val authorNames: Map<String, String> = emptyMap(),
     val error: String? = null
 )
@@ -30,7 +36,8 @@ data class LibraryUiState(
 class LibraryViewModel(
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
     private val recipeRepository: RecipeRepository = FirebaseRecipeService(),
-    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
+    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService(),
+    private val collectionPort: RecipeCollectionRepository = FirebaseRecipeCollectionService()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LibraryUiState())
@@ -48,6 +55,7 @@ class LibraryViewModel(
         }
         observeMyRecipes(uid)
         observeSavedRecipes(uid)
+        loadCollections()
     }
 
     private fun observeMyRecipes(uid: String) {
@@ -95,5 +103,16 @@ class LibraryViewModel(
                     }
                 }
             }
+    }
+    private fun loadCollections() {
+        val uid = currentUserPort.getCurrentUser()
+            ?.let { UUID.nameUUIDFromBytes(it.toByteArray()) } ?: return
+        viewModelScope.launch {
+            GetRecipeCollectionQuery(collectionPort)(uid)
+                .catch { e -> _uiState.update { it.copy(error = e.message) } }
+                .collect { cols ->
+                    _uiState.update { it.copy(collections = cols) }
+                }
+        }
     }
 }
