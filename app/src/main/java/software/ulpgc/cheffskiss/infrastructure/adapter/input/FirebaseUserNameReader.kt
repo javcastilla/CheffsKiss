@@ -11,14 +11,13 @@ class FirebaseUserNameReader : UserNameReader {
         return Firebase.firestore.collection("Username").document(value.value).get().await().exists()
     }
     override suspend fun getUsernameByUid(uid: String): String {
+        FirebaseUserReader().getByUid(uid)?.username?.value?.takeIf { it.isNotBlank() }?.let { return it }
+
         val snapshot = Firebase.firestore
             .collection("Username")
             .whereEqualTo("UUID", uid)
             .get()
             .await()
-        android.util.Log.d("UserNameReader", "uid buscado: $uid")
-
-        android.util.Log.d("UserNameReader", "docs encontrados: ${snapshot.documents.size}")
-        return snapshot.documents.firstOrNull()?.id ?:""
+        return snapshot.documents.firstOrNull()?.id ?: ""
     }
 }

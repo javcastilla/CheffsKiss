@@ -8,8 +8,9 @@ import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
-import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
+import software.ulpgc.cheffskiss.application.services.UserDisplayService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+import java.util.UUID
 
 data class ExploreUiState(
     val isLoading: Boolean = true,
@@ -32,7 +33,7 @@ class ExploreViewModel(
     private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
 ) : ViewModel() {
 
-    private val userNameReader = FirebaseUserNameReader()
+    private val userDisplayService = UserDisplayService()
 
     private val _allRecipes   = MutableStateFlow<List<Recipe>>(emptyList())
     private val _searchQuery  = MutableStateFlow("")
@@ -75,7 +76,10 @@ class ExploreViewModel(
                 .catch { e -> _error.value = e.message ?: "Error loading recipes"; _isLoading.value = false }
                 .collect { recipes ->
                     val currentUid = currentUserPort.getCurrentUser()
-                    val filtered = recipes.filter { it.creator.id.toString() != currentUid }
+                    val currentCreatorId = currentUid?.let {
+                        UUID.nameUUIDFromBytes(it.toByteArray(Charsets.UTF_8))
+                    }
+                    val filtered = recipes.filter { it.creator.id != currentCreatorId }
                     _allRecipes.value = filtered
                     _isLoading.value  = false
                     resolveAuthors(filtered)
@@ -100,8 +104,8 @@ class ExploreViewModel(
         recipes.map { it.creator.id.toString() }.distinct().forEach { uid ->
             if (!_authorNames.value.containsKey(uid)) {
                 viewModelScope.launch {
-                    val name = userNameReader.getUsernameByUid(uid)
-                    if (!name.isNullOrBlank()) _authorNames.update { it + (uid to name) }
+                    val name = userDisplayService.displayNameFor(UUID.fromString(uid))
+                    if (name.isNotBlank()) _authorNames.update { it + (uid to name) }
                 }
             }
         }
