@@ -18,9 +18,10 @@ import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
-import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
+import software.ulpgc.cheffskiss.application.services.UserDisplayService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
+import java.util.UUID
 
 class RecipeDetailViewModel(
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
@@ -29,7 +30,7 @@ class RecipeDetailViewModel(
 ) : ViewModel() {
 
     private val firebaseReader = recipeReader as FirebaseRecipeReader
-    private val userNameReader = FirebaseUserNameReader()
+    private val userDisplayService = UserDisplayService()
 
     private val _recipe     = MutableStateFlow<Recipe?>(null)
     private val _authorName = MutableStateFlow("")
@@ -51,10 +52,13 @@ class RecipeDetailViewModel(
         viewModelScope.launch {
             val r = recipeReader.getById(recipeId) ?: return@launch
             _recipe.value = r
-            _isOwner.value = currentUid ==  r.creator.id.toString()
+            val currentCreatorId = currentUid?.let {
+                UUID.nameUUIDFromBytes(it.toByteArray(Charsets.UTF_8))
+            }
+            _isOwner.value = currentCreatorId == r.creator.id
 
-            val name = userNameReader.getUsernameByUid(r.creator.id.toString())
-            _authorName.value = if (name.isNullOrBlank()) "Unknown" else name
+            val name = userDisplayService.displayNameFor(r.creator.id)
+            _authorName.value = name.ifBlank { "Unknown" }
 
             launch {
                 firebaseReader.linesOf(r)

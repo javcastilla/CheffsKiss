@@ -24,7 +24,7 @@ import software.ulpgc.cheffskiss.domain.enum.WeekDay
 import software.ulpgc.cheffskiss.ui.screen.displayName
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
-import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
+import software.ulpgc.cheffskiss.application.services.UserDisplayService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseMealPlanService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
@@ -64,7 +64,7 @@ class HomeViewModel(
     private val _authorNames = MutableStateFlow<Map<String, String>>(emptyMap())
     val authorNames: StateFlow<Map<String, String>> = _authorNames.asStateFlow()
 
-    private val userNameReader = FirebaseUserNameReader()
+    private val userDisplayService = UserDisplayService()
 
     init {
         _uiState.update { it.copy(currentUserId = currentUserPort.getCurrentUser()) }
@@ -178,8 +178,8 @@ class HomeViewModel(
         recipes.map { it.creator.id.toString() }.distinct().forEach { uid ->
             if (!_authorNames.value.containsKey(uid)) {
                 viewModelScope.launch {
-                    val name = userNameReader.getUsernameByUid(uid)
-                    if (name != null) _authorNames.update { it + (uid to name) }
+                    val name = userDisplayService.displayNameFor(UUID.fromString(uid))
+                    if (name.isNotBlank()) _authorNames.update { it + (uid to name) }
                 }
             }
         }
