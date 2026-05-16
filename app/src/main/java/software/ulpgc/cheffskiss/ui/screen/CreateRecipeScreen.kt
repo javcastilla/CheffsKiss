@@ -7,6 +7,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -17,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material3.*
 import androidx.compose.material3.ButtonDefaults.outlinedButtonColors
 import androidx.compose.runtime.*
@@ -59,6 +61,7 @@ fun CreateRecipeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var coverImageUri by remember { mutableStateOf<Uri?>(null) }
     var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var servings by remember { mutableIntStateOf(4) }
     var hours by remember { mutableStateOf("") }
     var minutes by remember { mutableStateOf("") }
@@ -111,7 +114,7 @@ fun CreateRecipeScreen(
             viewModel.createRecipe(
                 authorId      = authorId,
                 title         = title,
-                description   = "",
+                description   = description.trim(),
                 servings      = servings,
                 hours         = hours,
                 minutes       = minutes,
@@ -244,6 +247,7 @@ fun CreateRecipeScreen(
 
             // ── Tags ─────────────────────────────────────────────────────────
             CRCard(icon = Icons.Default.Sell, title = "Tags") {
+                @OptIn(ExperimentalLayoutApi::class)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth().animateContentSize(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -356,7 +360,7 @@ fun CreateRecipeScreen(
                             onClick = { ingredients.removeAll { it.id == ingredient.id } },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.Default.RemoveCircleOutline, null, tint = CKOutlineVariant)
+                            Icon(Icons.Outlined.RemoveCircleOutline, null, tint = CKOutlineVariant)
                         }
                     }
                 }
