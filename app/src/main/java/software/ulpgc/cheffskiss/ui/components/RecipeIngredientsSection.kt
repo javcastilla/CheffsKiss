@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,9 +39,14 @@ fun RecipeIngredientsSection(
     ingredients: SnapshotStateList<IngredientRow>,
     ingredientCatalog: List<Ingredient>,
     isCatalogLoading: Boolean,
-    onNextIngredientRowId: () -> Int,
+    allocateRowId: () -> Int,
 ) {
-    val selectedIds = ingredients.mapNotNull { it.ingredientId }.toSet()
+    LaunchedEffect(Unit) {
+        ingredients.removeAll { row -> row.ingredientId == null }
+    }
+
+    val selectedRows = ingredients.filter { it.ingredientId != null }
+    val selectedIds = selectedRows.mapNotNull { it.ingredientId }.toSet()
 
     CRCard(icon = Icons.Default.ShoppingBasket, title = "Ingredients") {
         IngredientMultiSelectPicker(
@@ -56,7 +62,7 @@ fun RecipeIngredientsSection(
                         val catalogItem = ingredientCatalog.firstOrNull { it.id == id } ?: return@forEach
                         ingredients.add(
                             IngredientRow(
-                                id = onNextIngredientRowId(),
+                                id = allocateRowId(),
                                 ingredientId = catalogItem.id,
                                 name = catalogItem.name,
                             ),
@@ -66,12 +72,12 @@ fun RecipeIngredientsSection(
             },
         )
 
-        if (ingredients.isNotEmpty()) {
+        if (selectedRows.isNotEmpty()) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                ingredients.forEach { ingredient ->
+                selectedRows.forEach { ingredient ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -92,7 +98,7 @@ fun RecipeIngredientsSection(
                             BasicTextField(
                                 value = ingredient.amount,
                                 onValueChange = { value ->
-                                    val idx = ingredients.indexOf(ingredient)
+                                    val idx = ingredients.indexOfFirst { it.id == ingredient.id }
                                     if (idx >= 0) ingredients[idx] = ingredient.copy(amount = value)
                                 },
                                 singleLine = true,
@@ -112,6 +118,13 @@ fun RecipeIngredientsSection(
                                 },
                             )
                         }
+                        MeasurementUnitDropdown(
+                            selected = ingredient.measurement,
+                            onSelected = { measurement ->
+                                val idx = ingredients.indexOfFirst { it.id == ingredient.id }
+                                if (idx >= 0) ingredients[idx] = ingredient.copy(measurement = measurement)
+                            },
+                        )
                         Text(
                             text = ingredient.name,
                             fontSize = 14.sp,
@@ -121,7 +134,9 @@ fun RecipeIngredientsSection(
                             maxLines = 1,
                         )
                         IconButton(
-                            onClick = { ingredients.removeAll { it.id == ingredient.id } },
+                            onClick = {
+                                ingredients.removeAll { it.id == ingredient.id }
+                            },
                             modifier = Modifier.size(32.dp),
                         ) {
                             Icon(

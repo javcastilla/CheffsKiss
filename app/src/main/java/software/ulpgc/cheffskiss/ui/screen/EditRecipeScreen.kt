@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.domain.enum.Measurement
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.ui.theme.*
 
@@ -38,7 +39,7 @@ data class IngredientRow(
     val ingredientId: java.util.UUID? = null,
     val name: String = "",
     val amount: String = "",
-    val unit: String = "UNIT",
+    val measurement: Measurement = Measurement.UNIT,
 )
 
 data class StepRow(
@@ -48,8 +49,6 @@ data class StepRow(
     val imageUri: Uri? = null,
     val existingImageUrl: String? = null
 )
-
-val unitOptions = listOf("UNIT", "GRAM", "KG", "ML", "LITRE", "CUP", "TBSP", "TSP", "SLICE", "PINCH")
 
 // â”€â”€ Top Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

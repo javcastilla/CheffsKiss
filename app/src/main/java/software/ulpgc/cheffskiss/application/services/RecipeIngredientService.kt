@@ -12,7 +12,7 @@ data class IngredientDraft(
     val ingredientId: UUID?,
     val name: String,
     val amount: String,
-    val unit: String,
+    val measurement: Measurement = Measurement.UNIT,
 )
 
 class RecipeIngredientService(
@@ -26,14 +26,12 @@ class RecipeIngredientService(
         return drafts
             .filter { it.ingredientId != null || it.name.isNotBlank() }
             .map { draft ->
-                val measurement = runCatching { Measurement.valueOf(draft.unit.uppercase()) }
-                    .getOrDefault(Measurement.UNIT)
                 val ingredient = resolveIngredient(draft)
                 val line = RecipeLine(
                     id = UUID.randomUUID(),
                     amount = draft.amount.toIntOrNull()?.coerceAtLeast(1) ?: 1,
                     ingredient = ingredient,
-                    measurement = measurement,
+                    measurement = draft.measurement,
                 )
                 ingredientStore.ingredientOf(line)
                 line

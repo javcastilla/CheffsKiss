@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.datetime.Clock
 import software.ulpgc.cheffskiss.application.services.IngredientDraft
+import software.ulpgc.cheffskiss.domain.enum.Measurement
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
@@ -99,7 +100,7 @@ fun RecipeFormScreen(
                         ingredientId = line.ingredient?.id,
                         name = line.ingredient?.name ?: "",
                         amount = line.amount.toString(),
-                        unit = line.measurement?.name ?: "UNIT",
+                        measurement = line.measurement ?: Measurement.UNIT,
                     ),
                 )
             }
@@ -159,7 +160,7 @@ fun RecipeFormScreen(
                     ingredientId = it.ingredientId,
                     name = it.name,
                     amount = it.amount,
-                    unit = it.unit,
+                    measurement = it.measurement,
                 )
             }
         val mappedSteps = steps
@@ -369,7 +370,7 @@ fun RecipeFormScreen(
                 ingredients = ingredients,
                 ingredientCatalog = ingredientCatalog,
                 isCatalogLoading = ingredientCatalogLoading,
-                onNextIngredientRowId = { nextIngredId++ },
+                allocateRowId = { nextIngredId++ },
             )
 
             CRCard(icon = Icons.Default.FormatListNumbered, title = "Instructions") {
