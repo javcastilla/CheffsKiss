@@ -14,7 +14,9 @@ import software.ulpgc.cheffskiss.application.control.UpdateRecipeCommand
 import software.ulpgc.cheffskiss.application.port.ImageStorage
 import software.ulpgc.cheffskiss.application.services.IngredientDraft
 import software.ulpgc.cheffskiss.application.services.RecipeIngredientService
+import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.domain.model.Step
+import software.ulpgc.cheffskiss.domain.model.recipe.Ingredient
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.user.User
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
@@ -41,6 +43,9 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     val uiState = _uiState.asStateFlow()
 
     fun resetState() { _uiState.value = RecipeUiState.Idle }
+
+    suspend fun searchIngredients(query: String): List<Ingredient> =
+        recipeReader.searchIngredientsByPrefix(query.trim())
 
     fun createRecipe(
         authorId: String,
@@ -96,7 +101,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                     override fun steps() = steps
                     override fun tags() = tags
                     override fun image() = coverUrl
-                    override fun creator() = User(UUID.nameUUIDFromBytes(authorId.toByteArray(Charsets.UTF_8)))
+                    override fun creator() = User(UserIds.creatorIdFromFirebaseUid(authorId))
                 }
                 CreateRecipeCommand(recipeService, input).execute()
             }.fold(
@@ -154,7 +159,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                     override fun steps() = steps
                     override fun tags() = tags
                     override fun image() = coverUrl
-                    override fun creator() = User(UUID.nameUUIDFromBytes(authorId.toByteArray(Charsets.UTF_8)))
+                    override fun creator() = existing.creator
                 }
 
                 UpdateRecipeCommand(
