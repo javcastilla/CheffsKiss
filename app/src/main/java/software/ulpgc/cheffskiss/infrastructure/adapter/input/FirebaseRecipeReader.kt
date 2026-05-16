@@ -122,6 +122,18 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
         return ingredient
     }
 
+    suspend fun searchIngredientsByPrefix(prefix: String, limit: Int = 8): List<Ingredient> {
+        if (prefix.isBlank()) return emptyList()
+        val end = prefix + "\uf8ff"
+        val snapshot = ingredients
+            .whereGreaterThanOrEqualTo("name", prefix)
+            .whereLessThanOrEqualTo("name", end)
+            .limit(limit.toLong())
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { it.toIngredient() }
+    }
+
     suspend fun saveIngredient(ingredient: Ingredient) {
         ingredients.document(ingredient.id.toString()).set(
             mapOf(
