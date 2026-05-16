@@ -32,6 +32,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
+import software.ulpgc.cheffskiss.application.services.IngredientDraft
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.ui.RecipeUiState
 import software.ulpgc.cheffskiss.ui.RecipeViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -64,7 +66,7 @@ fun EditRecipeScreen(
 
     var coverImageUri by remember { mutableStateOf<Uri?>(null) }
     var title by remember { mutableStateOf(recipe.title) }
-    var description by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf(recipe.description) }
     var servings by remember { mutableIntStateOf(recipe.servings) }
 
     val totalMinutes = recipe.duration.inWholeMinutes
@@ -74,27 +76,7 @@ fun EditRecipeScreen(
     var tagInput by remember { mutableStateOf("") }
     val tags = remember { mutableStateListOf<String>().also { it.addAll(recipe.tags) } }
 
-    // ingredients — antes: recipe.ingredients.forEachIndexed
-    val ingredients = remember {
-        mutableStateListOf<IngredientRow>().also { list ->
-            initialLines.forEachIndexed { idx, line ->
-                // Reconstruimos texto legible desde RecipeLine
-                // El nombre del ingrediente no lo tenemos aquí (solo el UUID),
-                // así que mostramos amount + measurement como fallback
-                list.add(
-                    IngredientRow(
-                        id     = idx,
-                        amount = line.amount.toString(),
-                        unit   = line.measurement?.name ?: "",
-                        name   = ""   // se llenará cuando tengamos IngredientStore en el VM
-                    )
-                )
-            }
-            if (list.isEmpty()) list.add(IngredientRow(0))
-        }
-    }
-
-// steps — antes: recipe.steps.sortedBy
+    val ingredients = remember { mutableStateListOf<IngredientRow>() }
     val steps = remember {
         mutableStateListOf<StepRow>().also { list ->
             initialSteps.sortedBy { it.cardinal }.forEachIndexed { idx, step ->
@@ -107,11 +89,30 @@ fun EditRecipeScreen(
                     )
                 )
             }
-            if (list.isEmpty()) list.add(StepRow(0))
         }
     }
-    var nextIngredId by remember { mutableIntStateOf(ingredients.size) }
+    var nextIngredId by remember { mutableIntStateOf(0) }
     var nextStepId by remember { mutableIntStateOf(steps.size) }
+
+    val recipeReader = remember { FirebaseRecipeReader() }
+    LaunchedEffect(recipe.id) {
+        recipeReader.linesOf(recipe).collect { loaded ->
+            if (loaded.isNotEmpty()) {
+                ingredients.clear()
+                loaded.forEachIndexed { idx, line ->
+                    ingredients.add(
+                        IngredientRow(
+                            id     = idx,
+                            amount = line.amount.toString(),
+                            unit   = line.measurement?.name ?: "UNIT",
+                            name   = line.ingredient?.name ?: "",
+                        )
+                    )
+                }
+                nextIngredId = ingredients.size
+            }
+        }
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { coverImageUri = it }
@@ -125,7 +126,9 @@ fun EditRecipeScreen(
     }
 
     val handleUpdate = {
-        val mappedIngredients = ingredients.map { "${it.amount} ${it.unit} ${it.name}" }
+        val ingredientDrafts = ingredients
+            .filter { it.name.isNotBlank() }
+            .map { IngredientDraft(name = it.name, amount = it.amount, unit = it.unit) }
         val mappedSteps = steps.mapIndexed { index, stepRow ->
             Step(
                 id          = UUID.randomUUID(),
@@ -143,13 +146,14 @@ fun EditRecipeScreen(
             servings         = servings,
             hours            = hours,
             minutes          = minutes,
-            ingredients      = mappedIngredients,
+            ingredientDrafts = ingredientDrafts,
             steps            = mappedSteps,
             stepImageUris    = stepImageUris,
             tags             = tags.toList(),
             imageUri         = coverImageUri,
             existingImageUrl = recipe.image?.toString() ?: "",
-            createdAt        = recipe.timestamp
+            createdAt        = recipe.timestamp,
+            currentVersion   = recipe.version,
         )
     }
 
