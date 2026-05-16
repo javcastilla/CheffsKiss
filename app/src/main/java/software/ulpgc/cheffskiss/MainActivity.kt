@@ -26,6 +26,7 @@ import software.ulpgc.cheffskiss.ui.MealPlanDetailViewModel
 import software.ulpgc.cheffskiss.ui.MealPlanViewModel
 import software.ulpgc.cheffskiss.ui.RecipeDetailViewModel
 import software.ulpgc.cheffskiss.ui.ExploreViewModel
+import software.ulpgc.cheffskiss.ui.RecipeCollectionDetailViewModel
 import software.ulpgc.cheffskiss.ui.theme.CheffsKissTheme
 import software.ulpgc.cheffskiss.ui.theme.Primary
 import software.ulpgc.cheffskiss.ui.screen.AllRecipesScreen
@@ -38,6 +39,9 @@ import software.ulpgc.cheffskiss.ui.screen.LoginScreen
 import software.ulpgc.cheffskiss.ui.screen.MealPlanDetailScreen
 import software.ulpgc.cheffskiss.ui.screen.RecipeDetailScreen
 import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
+import software.ulpgc.cheffskiss.ui.RecipeCollectionViewModel
+import software.ulpgc.cheffskiss.ui.screen.CreateRecipeCollectionScreen
+import software.ulpgc.cheffskiss.ui.screen.RecipeCollectionDetailScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,7 +87,9 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("all_recipes") {
-                        val homeEntry = remember { navController.getBackStackEntry("home") }
+                        val homeEntry = remember(navController) {
+                            navController.getBackStackEntry("home")
+                        }
                         val homeViewModel: HomeViewModel = viewModel(homeEntry)
                         val state by homeViewModel.uiState.collectAsState()
                         val authorNames by homeViewModel.authorNames.collectAsState()
@@ -106,7 +112,30 @@ class MainActivity : ComponentActivity() {
                             onExploreClick    = { navController.navigate("explore") { launchSingleTop = true } },
                             onCreateRecipe    = { navController.navigate("create_recipe") },
                             onRecipeClick     = { recipe -> navController.navigate("recipe_detail/${recipe.id}") },
-                            onMealPlanClick   = { plan -> navController.navigate("meal_plan_detail/${plan.id}") }
+                            onMealPlanClick   = { plan -> navController.navigate("meal_plan_detail/${plan.id}") },
+                            onCreateCollection = { navController.navigate("create_collection") },
+                            onCollectionClick = { collection -> navController.navigate("collectiondetail/${collection.id}") }
+                        )
+                    }
+                    composable(
+                        route = "collectiondetail/{collectionId}",
+                        arguments = listOf(navArgument("collectionId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val collectionId = backStackEntry.arguments?.getString("collectionId") ?: return@composable
+                        val detailViewModel: RecipeCollectionDetailViewModel = viewModel()
+                        RecipeCollectionDetailScreen(
+                            collectionId = collectionId,
+                            viewModel = detailViewModel,
+                            onBack = { navController.popBackStack() },
+                            onRecipeClick = { recipeId -> navController.navigate("recipedetail/$recipeId") }
+                        )
+                    }
+                    composable("create_collection") {
+                        val collectionViewModel: RecipeCollectionViewModel = viewModel()
+                        CreateRecipeCollectionScreen(
+                            viewModel       = collectionViewModel,
+                            onBack          = { navController.popBackStack() },
+                            onCreateSuccess = { navController.popBackStack() }
                         )
                     }
 
@@ -171,7 +200,7 @@ class MainActivity : ComponentActivity() {
                     ) { backStackEntry ->
                         val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
                         val detailEntry = remember(recipeId) {
-                            navController.getBackStackEntry("recipe_detail/$recipeId")
+                            navController.getBackStackEntry("recipe_detail/{recipeId}")
                         }
                         val detailViewModel: RecipeDetailViewModel = viewModel(detailEntry)
                         val recipe by detailViewModel.recipe.collectAsState()
