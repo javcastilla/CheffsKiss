@@ -43,6 +43,7 @@ fun RecipeDetailScreen(
 ) {
     val scrollState = rememberScrollState()
     val checkedLines = remember { mutableStateListOf<Int>() }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Background,
@@ -166,7 +167,7 @@ fun RecipeDetailScreen(
                 }
                 if (isOwner) {
                     OutlinedButton(
-                        onClick = onDelete,
+                        onClick = { showDeleteDialog = true },
                         modifier = Modifier.fillMaxWidth().height(44.dp),
                         shape = CircleShape,
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBA1A1A).copy(alpha = 0.4f)),
@@ -315,6 +316,48 @@ fun RecipeDetailScreen(
 
             Spacer(Modifier.height(8.dp))
         }
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                containerColor = Surface,
+                shape = RoundedCornerShape(24.dp),
+                icon = {
+                    Icon(
+                        Icons.Default.Delete,
+                        null,
+                        tint = Color(0xFFBA1A1A),
+                        modifier = Modifier.size(28.dp)
+                    )
+                },
+                title = {
+                    Text("Delete recipe?", fontWeight = FontWeight.ExtraBold, color = OnSurface)
+                },
+                text = {
+                    Text(
+                        "Are you sure you want to permanently delete \"${recipe.title}\"? This action cannot be undone.",
+                        color = CKOnSurfaceVariant,
+                        fontSize = 14.sp
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showDeleteDialog = false
+                            onDelete()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBA1A1A))
+                    ) {
+                        Text("Delete", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel", color = CKOnSurfaceVariant)
+                    }
+                }
+            )
+        }
+
     }
 }
 
