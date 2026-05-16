@@ -2,6 +2,7 @@ package software.ulpgc.cheffskiss.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -118,6 +119,7 @@ fun RecipeDetailScreen(
                     Text(authorName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = OnSurface)
                 }
                 if (recipe.tags.isNotEmpty()) {
+                    @OptIn(ExperimentalLayoutApi::class)
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),

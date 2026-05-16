@@ -3,6 +3,7 @@ package software.ulpgc.cheffskiss.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +14,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.DeleteOutline
+import software.ulpgc.cheffskiss.domain.enum.MealType
+import software.ulpgc.cheffskiss.domain.enum.WeekDay
+import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,25 +36,20 @@ import software.ulpgc.cheffskiss.ui.MealPlanDetailViewModel
 import software.ulpgc.cheffskiss.ui.SlotFormState
 import software.ulpgc.cheffskiss.ui.theme.*
 
-private data class MealSuggestion(val name: String, val icon: ImageVector)
+private data class MealTypeOption(val mealType: MealType, val icon: ImageVector)
 
-private val SLOT_SUGGESTIONS = listOf(
-    MealSuggestion("Breakfast", Icons.Default.WbSunny),
-    MealSuggestion("Lunch",     Icons.Default.LightMode),
-    MealSuggestion("Dinner",    Icons.Default.Nightlight),
-    MealSuggestion("Snack",     Icons.Default.LocalCafe),
-    MealSuggestion("Brunch",    Icons.Default.Coffee),
-    MealSuggestion("Supper",    Icons.Default.DinnerDining)
+private val MEAL_TYPE_OPTIONS = listOf(
+    MealTypeOption(MealType.BREAKFAST, Icons.Default.WbSunny),
+    MealTypeOption(MealType.LUNCH, Icons.Default.LightMode),
+    MealTypeOption(MealType.DINNER, Icons.Default.Nightlight),
+    MealTypeOption(MealType.SNACK, Icons.Default.LocalCafe),
 )
 
-private fun slotIcon(name: String): ImageVector = when (name.trim().lowercase()) {
-    "breakfast"           -> Icons.Default.WbSunny
-    "lunch"               -> Icons.Default.LightMode
-    "dinner"              -> Icons.Default.Nightlight
-    "snack"               -> Icons.Default.LocalCafe
-    "brunch"              -> Icons.Default.Coffee
-    "supper"              -> Icons.Default.DinnerDining
-    else                  -> Icons.Default.Restaurant
+private fun mealTypeIcon(mealType: MealType): ImageVector = when (mealType) {
+    MealType.BREAKFAST -> Icons.Default.WbSunny
+    MealType.LUNCH -> Icons.Default.LightMode
+    MealType.DINNER -> Icons.Default.Nightlight
+    MealType.SNACK -> Icons.Default.LocalCafe
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,7 +79,7 @@ fun MealPlanDetailScreen(
                         )
                         if (plan != null) {
                             Text(
-                                "${plan.days.values.sumOf { it.size }} slots · 7 days",
+                                "${plan.mealSlots.size} slots · 7 days",
                                 fontSize = 12.sp,
                                 color = CKOnSurfaceVariant
                             )
@@ -89,20 +89,6 @@ fun MealPlanDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = OnBackground)
-                    }
-                },
-                actions = {
-                    if (plan != null) {
-                        IconButton(
-                            onClick = { if (!plan.isActive) viewModel.toggleActive() }
-                        ) {
-                            Icon(
-                                imageVector = if (plan.isActive) Icons.Default.Star else Icons.Default.StarBorder,
-                                contentDescription = if (plan.isActive) "Active plan" else "Activate plan",
-                                tint = if (plan.isActive) CKSecondary else CKOutlineVariant,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
@@ -136,13 +122,13 @@ fun MealPlanDetailScreen(
 
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             WeekStrip(
-                days        = Weekday.entries,
+                days        = WeekDay.entries,
                 selectedDay = state.selectedDay,
-                planDays    = plan.days,
+                plan        = plan,
                 onDaySelect = viewModel::selectDay
             )
 
-            val slotsForDay = plan.days[state.selectedDay] ?: emptyList()
+            val slotsForDay = plan.slotsFor(state.selectedDay)
 
             if (slotsForDay.isEmpty()) {
                 DayEmptyState(onAdd = viewModel::openAddSlot)
@@ -154,11 +140,12 @@ fun MealPlanDetailScreen(
                 ) {
                     items(slotsForDay, key = { it.id }) { slot ->
                         SlotCard(
-                            slot         = slot,
-                            recipeTitle  = slot.recipeId?.let { state.recipeTitles[it.toString()] },
-                            recipeId     = slot.recipeId?.toString(),
-                            onEdit       = { viewModel.openEditSlot(slot) },
-                            onDelete     = { viewModel.deleteSlot(slot) },
+                            slot          = slot,
+                            recipeTitle   = slot.recipe?.title
+                                ?: slot.recipe?.id?.let { state.recipeTitles[it.toString()] },
+                            recipeId      = slot.recipe?.id?.toString(),
+                            onEdit        = { viewModel.openEditSlot(slot) },
+                            onDelete      = { viewModel.deleteSlot(slot) },
                             onRecipeClick = onRecipeClick
                         )
                     }
@@ -171,10 +158,7 @@ fun MealPlanDetailScreen(
     if (state.slotForm.isVisible) {
         SlotFormSheet(
             form               = state.slotForm,
-            onNameChange       = viewModel::onSlotNameChange,
-            onStartChange      = viewModel::onSlotStartTimeChange,
-            onEndChange        = viewModel::onSlotEndTimeChange,
-            onColorChange      = viewModel::onSlotColorChange,
+            onMealTypeChange   = viewModel::onSlotMealTypeChange,
             onOpenRecipePicker = viewModel::openRecipePicker,
             onClearRecipe      = { viewModel.selectRecipe(null) },
             onSave             = viewModel::saveSlot,
@@ -197,10 +181,10 @@ fun MealPlanDetailScreen(
 // ── Week strip ────────────────────────────────────────────────────────────────
 @Composable
 private fun WeekStrip(
-    days: List<Weekday>,
-    selectedDay: Weekday,
-    planDays: Map<Weekday, List<MealSlot>>,
-    onDaySelect: (Weekday) -> Unit
+    days: List<WeekDay>,
+    selectedDay: WeekDay,
+    plan: MealPlan,
+    onDaySelect: (WeekDay) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -212,7 +196,7 @@ private fun WeekStrip(
     ) {
         days.forEach { day ->
             val isSelected = day == selectedDay
-            val hasSlots   = (planDays[day]?.size ?: 0) > 0
+            val hasSlots   = plan.slotsFor(day).isNotEmpty()
 
             Box(
                 modifier = Modifier
@@ -261,7 +245,7 @@ private fun SlotCard(
     onDelete: () -> Unit,
     onRecipeClick: (String) -> Unit
 ) {
-    val color = SLOT_COLORS.getOrElse(slot.colorIndex) { SLOT_COLORS[0] }
+    val color = mealSlotColor(slot)
 
     Column(
         modifier = Modifier
@@ -269,12 +253,10 @@ private fun SlotCard(
             .clip(RoundedCornerShape(12.dp))
             .background(Surface)
     ) {
-        // ── Header row ────────────────────────────────────────────────────────
         Row(
             modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Color bar stretches to full row height
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -282,39 +264,15 @@ private fun SlotCard(
                     .background(color, RoundedCornerShape(topStart = 12.dp))
             )
 
-            // Start / end times
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .widthIn(min = 40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                Text(
-                    slot.startTime.toString(),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = color,
-                    textAlign = TextAlign.Center
-                )
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .height(10.dp)
-                        .background(color.copy(alpha = 0.4f))
-                )
-                Text(
-                    slot.endTime.toString(),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = color.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center
-                )
-            }
+            Icon(
+                mealTypeIcon(slot.mealType),
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.padding(horizontal = 12.dp).size(22.dp)
+            )
 
-            // Name
             Text(
-                slot.name,
+                slot.mealType.label(),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
                 color = OnSurface,
@@ -341,7 +299,7 @@ private fun SlotCard(
                     .padding(end = 4.dp)
             ) {
                 Icon(
-                    Icons.Default.DeleteOutline,
+                    Icons.Outlined.DeleteOutline,
                     contentDescription = "Delete slot",
                     tint = CKOutlineVariant,
                     modifier = Modifier.size(18.dp)
@@ -430,10 +388,7 @@ private fun DayEmptyState(onAdd: () -> Unit) {
 @Composable
 private fun SlotFormSheet(
     form: SlotFormState,
-    onNameChange: (String) -> Unit,
-    onStartChange: (String) -> Unit,
-    onEndChange: (String) -> Unit,
-    onColorChange: (Int) -> Unit,
+    onMealTypeChange: (MealType) -> Unit,
     onOpenRecipePicker: () -> Unit,
     onClearRecipe: () -> Unit,
     onSave: () -> Unit,
@@ -459,93 +414,37 @@ private fun SlotFormSheet(
                 fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = OnSurface
             )
 
-            // Name + quick chips
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = form.name,
-                    onValueChange = onNameChange,
-                    label = { Text("Name") },
-                    isError = form.nameError != null,
-                    supportingText = form.nameError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primary, focusedLabelColor = Primary, cursorColor = Primary),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Text("Meal type", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = OnSurface)
                 @OptIn(ExperimentalLayoutApi::class)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SLOT_SUGGESTIONS.forEach { suggestion ->
-                        val active = form.name == suggestion.name
+                    MEAL_TYPE_OPTIONS.forEach { option ->
+                        val active = form.selectedMealType == option.mealType
                         Row(
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .background(if (active) CKPrimary else CKSurfaceVariant)
-                                .clickable { onNameChange(suggestion.name) }
+                                .clickable { onMealTypeChange(option.mealType) }
                                 .padding(horizontal = 10.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
                             Icon(
-                                imageVector = suggestion.icon,
+                                imageVector = option.icon,
                                 contentDescription = null,
                                 tint = if (active) Color.White else CKOnSurfaceVariant,
                                 modifier = Modifier.size(13.dp)
                             )
                             Text(
-                                suggestion.name,
+                                option.mealType.label(),
                                 fontSize = 12.sp,
                                 color = if (active) Color.White else CKOnSurfaceVariant,
                                 fontWeight = if (active) FontWeight.Bold else FontWeight.Normal
                             )
                         }
-                    }
-                }
-            }
-
-            // Times
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = form.startTime,
-                    onValueChange = onStartChange,
-                    label = { Text("Start") },
-                    placeholder = { Text("08:00") },
-                    singleLine = true,
-                    isError = form.timeError != null,
-                    leadingIcon = { Icon(Icons.Default.Schedule, null, tint = CKOutlineVariant, modifier = Modifier.size(18.dp)) },
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primary, focusedLabelColor = Primary, cursorColor = Primary),
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = form.endTime,
-                    onValueChange = onEndChange,
-                    label = { Text("End") },
-                    placeholder = { Text("09:00") },
-                    singleLine = true,
-                    isError = form.timeError != null,
-                    leadingIcon = { Icon(Icons.Default.Schedule, null, tint = CKOutlineVariant, modifier = Modifier.size(18.dp)) },
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primary, focusedLabelColor = Primary, cursorColor = Primary),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            if (form.timeError != null) {
-                Text(form.timeError, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-            }
-
-            // Color
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Color", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = OnSurface)
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SLOT_COLORS.forEachIndexed { i, c ->
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(CircleShape)
-                                .background(c)
-                                .border(if (form.colorIndex == i) 2.5.dp else 0.dp, OnSurface.copy(alpha = if (form.colorIndex == i) 0.8f else 0f), CircleShape)
-                                .clickable { onColorChange(i) }
-                        )
                     }
                 }
             }
