@@ -22,11 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import software.ulpgc.cheffskiss.domain.model.RecipeCollection
-import software.ulpgc.cheffskiss.ui.LibraryUiState
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
+import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.domain.model.RecipeCollection
 import software.ulpgc.cheffskiss.ui.LibraryViewModel
 import software.ulpgc.cheffskiss.ui.MealPlanViewModel
 import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
@@ -39,7 +38,6 @@ fun LibraryScreen(
     onGoHome: () -> Unit,
     onExploreClick: () -> Unit,
     onCreateRecipe: () -> Unit,
-
     onRecipeClick: (Recipe) -> Unit,
     onMealPlanClick: (MealPlan) -> Unit,
     onCreateCollection: () -> Unit,
@@ -81,13 +79,12 @@ fun LibraryScreen(
                 Icon(Icons.Default.Add, contentDescription = label, modifier = Modifier.size(28.dp))
             }
         }
-        ){ padding ->
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // ── Header ────────────────────────────────────────────────────────
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -98,7 +95,6 @@ fun LibraryScreen(
                 Text("Your recipes and meal plans.", fontSize = 13.sp, color = CKOnSurfaceVariant)
             }
 
-            // ── Tabs (pill style) ─────────────────────────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -130,7 +126,6 @@ fun LibraryScreen(
                 )
             }
 
-            // ── Filter chips (solo My recipes) ────────────────────────────────
             if (selectedTab == 0) {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 20.dp),
@@ -143,9 +138,7 @@ fun LibraryScreen(
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .background(if (active) CKPrimary else Surface)
-                                .clickable {
-                                    selectedFilter = tag.label
-                                }
+                                .clickable { selectedFilter = tag.label }
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -167,10 +160,9 @@ fun LibraryScreen(
                 }
             }
 
-            // ── Content ───────────────────────────────────────────────────────
             when (selectedTab) {
                 2 -> MealPlanScreen(
-                    viewModel  = mealPlanViewModel,
+                    viewModel   = mealPlanViewModel,
                     onPlanClick = onMealPlanClick
                 )
                 else -> when {
@@ -197,7 +189,6 @@ fun LibraryScreen(
                         val showCollections = selectedTab == 1 && state.collections.isNotEmpty()
 
                         if (recipes.isEmpty() && !showCollections) {
-                            // Solo muestra empty state si no hay nada que mostrar
                             LibraryEmptyState(icon = emptyIcon, title = emptyTitle, subtitle = emptySubtitle)
                         } else {
                             LazyColumn(
@@ -218,7 +209,7 @@ fun LibraryScreen(
                                     items(state.collections, key = { it.id }) { collection ->
                                         CollectionCard(
                                             collection = collection,
-                                            onClick = {onCollectionClick(collection) }
+                                            onClick = { onCollectionClick(collection) }
                                         )
                                     }
                                     item { Spacer(Modifier.height(8.dp)) }
@@ -236,6 +227,7 @@ fun LibraryScreen(
                                             )
                                         }
                                     }
+                                    // ✅ Un único bloque items — eliminado el duplicado con recipe.creator.id
                                     items(recipes, key = { it.id }) { recipe ->
                                         LibraryRecipeCard(
                                             recipe     = recipe,
@@ -253,7 +245,6 @@ fun LibraryScreen(
     }
 }
 
-// ── Pill tab ──────────────────────────────────────────────────────────────────
 @Composable
 private fun LibraryPillTab(
     label: String,
@@ -310,7 +301,6 @@ private fun LibraryPillTab(
     }
 }
 
-// ── Filter tags ───────────────────────────────────────────────────────────────
 private data class LibraryFilterTag(val label: String, val icon: ImageVector)
 
 private val libraryFilterTags = listOf(
@@ -322,7 +312,6 @@ private val libraryFilterTags = listOf(
     LibraryFilterTag("Artisanal", Icons.Default.AutoFixHigh)
 )
 
-// ── Recipe Card ───────────────────────────────────────────────────────────────
 @Composable
 private fun LibraryRecipeCard(
     recipe: Recipe,
@@ -341,7 +330,6 @@ private fun LibraryRecipeCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Thumbnail
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -351,8 +339,6 @@ private fun LibraryRecipeCard(
             ) {
                 Icon(Icons.Default.Restaurant, null, tint = Outline, modifier = Modifier.size(28.dp))
             }
-
-            // Info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     recipe.title,
@@ -377,13 +363,11 @@ private fun LibraryRecipeCard(
                     }
                 }
             }
-
             Icon(Icons.Default.ChevronRight, null, tint = CKOutlineVariant)
         }
     }
 }
 
-// ── Empty State ───────────────────────────────────────────────────────────────
 @Composable
 private fun LibraryEmptyState(icon: ImageVector, title: String, subtitle: String) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -406,7 +390,6 @@ private fun LibraryEmptyState(icon: ImageVector, title: String, subtitle: String
     }
 }
 
-// ── Error State ───────────────────────────────────────────────────────────────
 @Composable
 private fun LibraryErrorState(message: String, onRetry: () -> Unit) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -423,6 +406,7 @@ private fun LibraryErrorState(message: String, onRetry: () -> Unit) {
         }
     }
 }
+
 @Composable
 private fun CollectionCard(
     collection: RecipeCollection,
@@ -440,7 +424,6 @@ private fun CollectionCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Thumbnail
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -456,15 +439,9 @@ private fun CollectionCard(
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
-                    Icon(
-                        Icons.Default.CollectionsBookmark,
-                        null,
-                        tint = Outline,
-                        modifier = Modifier.size(28.dp)
-                    )
+                    Icon(Icons.Default.CollectionsBookmark, null, tint = Outline, modifier = Modifier.size(28.dp))
                 }
             }
-            // Info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     collection.name,
@@ -479,17 +456,8 @@ private fun CollectionCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    Icon(
-                        Icons.Default.MenuBook,
-                        null,
-                        tint = Outline,
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Text(
-                        "${collection.recipes.size} recipes",
-                        fontSize = 11.sp,
-                        color = Outline
-                    )
+                    Icon(Icons.Default.MenuBook, null, tint = Outline, modifier = Modifier.size(12.dp))
+                    Text("${collection.recipes.size} recipes", fontSize = 11.sp, color = Outline)
                 }
             }
             Icon(Icons.Default.ChevronRight, null, tint = CKOutlineVariant)

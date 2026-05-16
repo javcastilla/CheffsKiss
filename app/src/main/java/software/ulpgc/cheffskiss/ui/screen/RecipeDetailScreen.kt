@@ -40,7 +40,9 @@ fun RecipeDetailScreen(
     onBack: () -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
-    onEdit: () -> Unit = {}
+    onEdit: () -> Unit = {},
+    pickForMealSlot: Boolean = false,
+    onAddToMealSlot: () -> Unit = {},
 ) {
     val scrollState = rememberScrollState()
     val checkedLines = remember { mutableStateListOf<Int>() }
@@ -65,7 +67,17 @@ fun RecipeDetailScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Background.copy(alpha = 0.95f))
             )
-        }
+        },
+        bottomBar = {
+            if (pickForMealSlot) {
+                StickyBottomBar {
+                    StickyPrimaryButton(
+                        text = "Add to meal slot",
+                        onClick = onAddToMealSlot,
+                    )
+                }
+            }
+        },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -75,7 +87,6 @@ fun RecipeDetailScreen(
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ── Hero Image ────────────────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -109,7 +120,6 @@ fun RecipeDetailScreen(
                 }
             }
 
-            // ── Title, Author, Tags, Actions ──────────────────────────────────
             DetailCard(icon = Icons.Default.RestaurantMenu, title = recipe.title) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -132,7 +142,9 @@ fun RecipeDetailScreen(
                     ) {
                         recipe.tags.forEach { tag ->
                             Box(
-                                modifier = Modifier.background(Primary, CircleShape).padding(horizontal = 12.dp, vertical = 5.dp)
+                                modifier = Modifier
+                                    .background(Primary, CircleShape)
+                                    .padding(horizontal = 12.dp, vertical = 5.dp)
                             ) {
                                 Text(tag, fontSize = 12.sp, color = OnPrimary, fontWeight = FontWeight.SemiBold)
                             }
@@ -186,7 +198,6 @@ fun RecipeDetailScreen(
                 }
             }
 
-            // ── Metadata ──────────────────────────────────────────────────────
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -216,7 +227,6 @@ fun RecipeDetailScreen(
                 }
             }
 
-            // ── Ingredients ───────────────────────────────────────────────────
             DetailCard(icon = Icons.Default.ShoppingBasket, title = "Ingredients") {
                 if (lines.isEmpty()) {
                     Text("No ingredients added", fontSize = 13.sp, color = CKOnSurfaceVariant)
@@ -258,7 +268,6 @@ fun RecipeDetailScreen(
                 }
             }
 
-            // ── Steps ─────────────────────────────────────────────────────────
             DetailCard(icon = Icons.Default.FormatListNumbered, title = "Preparation") {
                 val sortedSteps = steps.sortedBy { it.cardinal }
                 if (sortedSteps.isEmpty()) {
@@ -315,18 +324,14 @@ fun RecipeDetailScreen(
 
             Spacer(Modifier.height(8.dp))
         }
+
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
                 containerColor = Surface,
                 shape = RoundedCornerShape(24.dp),
                 icon = {
-                    Icon(
-                        Icons.Default.Delete,
-                        null,
-                        tint = Color(0xFFBA1A1A),
-                        modifier = Modifier.size(28.dp)
-                    )
+                    Icon(Icons.Default.Delete, null, tint = Color(0xFFBA1A1A), modifier = Modifier.size(28.dp))
                 },
                 title = {
                     Text("Delete recipe?", fontWeight = FontWeight.ExtraBold, color = OnSurface)
@@ -340,10 +345,7 @@ fun RecipeDetailScreen(
                 },
                 confirmButton = {
                     Button(
-                        onClick = {
-                            showDeleteDialog = false
-                            onDelete()
-                        },
+                        onClick = { showDeleteDialog = false; onDelete() },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBA1A1A))
                     ) {
                         Text("Delete", color = Color.White, fontWeight = FontWeight.Bold)
@@ -356,7 +358,6 @@ fun RecipeDetailScreen(
                 }
             )
         }
-
     }
 }
 
@@ -383,7 +384,12 @@ private fun DetailCard(
 }
 
 @Composable
-private fun MetaStatItem(modifier: Modifier = Modifier, icon: ImageVector, label: String, value: String) {
+private fun MetaStatItem(
+    modifier: Modifier = Modifier,
+    icon: ImageVector,
+    label: String,
+    value: String
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,

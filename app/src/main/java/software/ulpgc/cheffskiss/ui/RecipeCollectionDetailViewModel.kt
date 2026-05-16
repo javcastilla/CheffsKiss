@@ -34,7 +34,8 @@ data class RecipeCollectionDetailUiState(
     val availableRecipes: List<Recipe> = emptyList(),
     val error: String? = null,
     val authorNames: Map<String, String> = emptyMap(),
-    val saveCompleted: Boolean = false
+    val saveCompleted: Boolean = false,
+    val deleteCompleted: Boolean = false
 )
 
 class RecipeCollectionDetailViewModel(

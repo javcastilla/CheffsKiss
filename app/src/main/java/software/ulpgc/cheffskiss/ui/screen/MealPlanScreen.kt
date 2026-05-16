@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -82,8 +81,8 @@ private fun MealPlanContent(
         return
     }
 
-    val activePlan = state.plans.firstOrNull()
     val otherPlans = state.plans.drop(1)
+    val activePlan = state.plans.firstOrNull()
     var planToDelete by remember { mutableStateOf<MealPlan?>(null) }
     val featuredPlan = state.plans.firstOrNull()
 

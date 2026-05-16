@@ -58,7 +58,8 @@ fun MealPlanDetailScreen(
     planId: String,
     viewModel: MealPlanDetailViewModel,
     onBack: () -> Unit,
-    onRecipeClick: (recipeId: String) -> Unit
+    onRecipeClick: (recipeId: String) -> Unit,
+    onPickerRecipeClick: (recipeId: String) -> Unit,
 ) {
     LaunchedEffect(planId) { viewModel.load(planId) }
 
@@ -176,6 +177,16 @@ fun MealPlanDetailScreen(
     }
 
     if (state.slotForm.isRecipePickerVisible) {
+        RecipePickerSheet(
+            recipes         = state.availableRecipes,
+            query           = state.slotForm.recipePickerQuery,
+            onQueryChange   = viewModel::onRecipePickerQueryChange,
+            onRecipeClick   = { recipe ->
+                viewModel.preparePickNavigation()
+                onPickerRecipeClick(recipe.id.toString())
+            },
+            onDismiss       = viewModel::closeRecipePicker,
+        )
         val preview = state.slotForm.previewRecipe
         if (preview != null) {
             MealSlotRecipePreviewSheet(
@@ -423,7 +434,8 @@ private fun SlotFormSheet(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
+                .padding(bottom = 32.dp)
+                .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(
@@ -583,7 +595,11 @@ private fun RecipePickerSheet(
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp)
+                .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text("Select recipe", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = OnSurface)

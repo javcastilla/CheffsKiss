@@ -63,7 +63,9 @@ class LibraryViewModel(
             recipeReader.getByAuthor(authorUuid)
                 .onStart { _uiState.update { it.copy(isLoading = true, error = null) } }
                 .catch { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message ?: "Error loading your recipes") }
+                    _uiState.update {
+                        it.copy(isLoading = false, error = e.message ?: "Error loading your recipes")
+                    }
                 }
                 .collect { recipes ->
                     _uiState.update { it.copy(myRecipes = recipes, isLoading = false) }
@@ -75,7 +77,7 @@ class LibraryViewModel(
     private fun observeSavedRecipes(uid: String) {
         viewModelScope.launch {
             GetSavedRecipesQuery(recipeRepository)(uid)
-                .catch {  }
+                .catch { }
                 .collect { savedList ->
                     val recipes = coroutineScope {
                         savedList.map { saved ->
@@ -90,19 +92,22 @@ class LibraryViewModel(
 
     private fun resolveAuthors(recipes: List<Recipe>) {
         recipes
-            .mapNotNull { it.creator?.id?.toString() }
+            .map { it.creator.id.toString() }
             .distinct()
             .forEach { authorId ->
                 if (!_uiState.value.authorNames.containsKey(authorId)) {
                     viewModelScope.launch {
                         val name = userDisplayService.displayNameFor(UUID.fromString(authorId))
                         if (!name.isNullOrBlank()) {
-                            _uiState.update { it.copy(authorNames = it.authorNames + (authorId to name)) }
+                            _uiState.update {
+                                it.copy(authorNames = it.authorNames + (authorId to name))
+                            }
                         }
                     }
                 }
             }
     }
+
     private fun loadCollections() {
         val uid = currentUserPort.getCurrentUser()
             ?.let { UUID.nameUUIDFromBytes(it.toByteArray()) } ?: return
