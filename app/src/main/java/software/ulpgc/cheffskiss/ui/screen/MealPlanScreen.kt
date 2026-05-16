@@ -56,15 +56,7 @@ fun MealPlanScreen(
             else -> MealPlanContent(state = state, onPlanClick = onPlanClick, viewModel = viewModel)
         }
 
-        FloatingActionButton(
-            onClick = viewModel::showCreateDialog,
-            containerColor = Primary,
-            contentColor = OnPrimary,
-            shape = CircleShape,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "New plan", modifier = Modifier.size(24.dp))
-        }
+
     }
 
     if (state.showCreateDialog) {
@@ -93,7 +85,7 @@ private fun MealPlanContent(
 
     val activePlan = state.plans.firstOrNull { it.isActive }
     val otherPlans = state.plans.filter { !it.isActive }
-
+    var planToDelete by remember { mutableStateOf<MealPlan?>(null) }
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp),
@@ -106,7 +98,7 @@ private fun MealPlanContent(
                 ActivePlanCard(
                     plan     = activePlan,
                     onClick  = { onPlanClick(activePlan) },
-                    onDelete = { viewModel.deletePlan(activePlan) }
+                    onDelete = { planToDelete = activePlan }
                 )
             }
             item { Spacer(Modifier.height(24.dp)) }
@@ -129,7 +121,7 @@ private fun MealPlanContent(
                                 plan        = plan,
                                 onClick     = { onPlanClick(plan) },
                                 onSetActive = { viewModel.setActive(plan) },
-                                onDelete    = { viewModel.deletePlan(plan) }
+                                onDelete    = { planToDelete = plan }
                             )
                             if (index < otherPlans.lastIndex) {
                                 HorizontalDivider(
@@ -145,6 +137,47 @@ private fun MealPlanContent(
         }
 
         item { Spacer(Modifier.height(88.dp)) }
+    }
+    planToDelete?.let { plan ->
+        AlertDialog(
+            onDismissRequest = { planToDelete = null },
+            containerColor = Surface,
+            shape = RoundedCornerShape(24.dp),
+            icon = {
+                Icon(
+                    Icons.Default.DeleteOutline,
+                    null,
+                    tint = Color(0xFFBA1A1A),
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            title = {
+                Text("Delete meal plan?", fontWeight = FontWeight.ExtraBold, color = OnSurface)
+            },
+            text = {
+                Text(
+                    "Are you sure you want to permanently delete \"${plan.name}\"? This action cannot be undone.",
+                    color = CKOnSurfaceVariant,
+                    fontSize = 14.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deletePlan(plan)
+                        planToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBA1A1A))
+                ) {
+                    Text("Delete", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { planToDelete = null }) {
+                    Text("Cancel", color = CKOnSurfaceVariant)
+                }
+            }
+        )
     }
 }
 
@@ -320,10 +353,10 @@ private fun PlanListRow(
 private fun SectionLabel(text: String) {
     Text(
         text,
-        fontSize = 11.sp,
         fontWeight = FontWeight.Bold,
+        fontSize = 13.sp,
         color = CKOnSurfaceVariant,
-        letterSpacing = 0.8.sp
+        modifier = Modifier.padding(bottom = 4.dp)
     )
 }
 
