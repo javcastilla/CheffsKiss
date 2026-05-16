@@ -23,7 +23,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.RecipeCollectionDetailViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
 
@@ -310,7 +310,9 @@ fun RecipeCollectionDetailScreen(
                             key = { it.toString() }
                         ) { recipeId ->
                             val recipe = state.recipeDetails[recipeId.toString()]
-                            val authorName = recipe?.let { state.authorNames[it.author] } ?: ""
+                            val authorName = if (recipe != null) {
+                                state.authorNames[recipeId.toString()] ?: ""
+                            } else ""
 
                             CollectionRecipeRow(
                                 recipe = recipe,
@@ -330,10 +332,7 @@ fun RecipeCollectionDetailScreen(
             RecipePickerSheet(
                 query = state.recipePicker.recipePickerQuery,
                 onQueryChange = viewModel::onRecipePickerQueryChange,
-                availableRecipes = state.availableRecipes.filter { r ->
-                    state.recipePicker.recipePickerQuery.isBlank() ||
-                            r.title.contains(state.recipePicker.recipePickerQuery, ignoreCase = true)
-                },
+                availableRecipes = state.availableRecipes,
                 alreadyAdded = state.collection?.recipes?.toSet() ?: emptySet(),
                 onAdd = viewModel::addRecipe,
                 onDismiss = viewModel::closeRecipePicker
@@ -410,7 +409,7 @@ private fun CollectionRecipeRow(
                         .background(CKSurfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (recipe?.image?.isNotBlank() == true) {
+                    if (recipe?.image != null) {
                         AsyncImage(
                             model = recipe.image,
                             contentDescription = recipe.title,

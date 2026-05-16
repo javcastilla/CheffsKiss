@@ -23,8 +23,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import software.ulpgc.cheffskiss.domain.model.MealPlan
-import software.ulpgc.cheffskiss.domain.model.Recipe
 import software.ulpgc.cheffskiss.domain.model.RecipeCollection
 import software.ulpgc.cheffskiss.ui.LibraryUiState
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
@@ -241,7 +239,7 @@ fun LibraryScreen(
                                     items(recipes, key = { it.id }) { recipe ->
                                         LibraryRecipeCard(
                                             recipe     = recipe,
-                                            authorName = state.authorNames[recipe.author] ?: "",
+                                            authorName = state.authorNames[recipe.id.toString()] ?: "",
                                             onClick    = { onRecipeClick(recipe) }
                                         )
                                     }

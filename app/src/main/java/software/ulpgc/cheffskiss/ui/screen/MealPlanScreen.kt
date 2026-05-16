@@ -82,11 +82,11 @@ private fun MealPlanContent(
         return
     }
 
-    val activePlan = state.plans.firstOrNull { it.isActive }
-    val otherPlans = state.plans.filter { !it.isActive }
+    val activePlan = state.plans.firstOrNull()
+    val otherPlans = state.plans.drop(1)
     var planToDelete by remember { mutableStateOf<MealPlan?>(null) }
     val featuredPlan = state.plans.firstOrNull()
-    val otherPlans = state.plans.drop(1)
+
 
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
@@ -326,15 +326,7 @@ private fun PlanListRow(
             )
         }
 
-        // Activate icon
-        IconButton(onClick = onSetActive, modifier = Modifier.size(32.dp)) {
-            Icon(
-                Icons.Default.StarBorder,
-                contentDescription = "Activate plan",
-                tint = CKOutlineVariant,
-                modifier = Modifier.size(20.dp)
-            )
-        }
+
 
         // Delete icon
         IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
@@ -353,9 +345,8 @@ private fun PlanListRow(
 private fun SectionLabel(text: String) {
     Text(
         text,
-        fontSize = 11.sp,
-        fontWeight = FontWeight.Bold,
         fontSize = 13.sp,
+        fontWeight = FontWeight.Bold,
         color = CKOnSurfaceVariant,
         modifier = Modifier.padding(bottom = 4.dp)
     )

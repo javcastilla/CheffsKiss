@@ -1,5 +1,7 @@
 package software.ulpgc.cheffskiss.ui.screen
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -60,6 +62,7 @@ private val filterTags = listOf(
 )
 
 // ──────────────────── Route ────────────────────
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeRoute(
     viewModel: HomeViewModel,

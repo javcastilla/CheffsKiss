@@ -10,7 +10,7 @@ import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.RecipeCollectionRepository
 import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
 import software.ulpgc.cheffskiss.application.services.GetRecipeCollectionQuery
-import software.ulpgc.cheffskiss.domain.model.Recipe
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.RecipeCollection
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
@@ -99,7 +99,7 @@ class RecipeCollectionDetailViewModel(
                 )
             }
 
-            recipes.map { it.author }.distinct().forEach { authorUid ->
+            recipes.map { it.creator.id.toString() }.distinct().forEach { authorUid ->
                 if (!_uiState.value.authorNames.containsKey(authorUid)) {
                     viewModelScope.launch {
                         val name = userNameReader.getUsernameByUid(authorUid)
