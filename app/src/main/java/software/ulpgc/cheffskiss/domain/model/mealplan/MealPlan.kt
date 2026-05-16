@@ -9,6 +9,7 @@ data class MealPlan(
     val name: String,
     val mealSlots: List<MealSlot> = emptyList(),
     val creator: User? = null,
+    val isPrimary: Boolean = false,
 ) {
     fun with(mealSlot: MealSlot): MealPlan = copy(mealSlots = mealSlots + mealSlot)
     fun named(name: String): MealPlan = copy(name = name)

@@ -81,10 +81,9 @@ private fun MealPlanContent(
         return
     }
 
-    val otherPlans = state.plans.drop(1)
-    val activePlan = state.plans.firstOrNull()
+    val featuredPlan = state.plans.firstOrNull { it.isPrimary } ?: state.plans.firstOrNull()
+    val otherPlans = state.plans.filter { it.id != featuredPlan?.id }
     var planToDelete by remember { mutableStateOf<MealPlan?>(null) }
-    val featuredPlan = state.plans.firstOrNull()
 
 
     LazyColumn(
@@ -99,7 +98,7 @@ private fun MealPlanContent(
                 ActivePlanCard(
                     plan     = featuredPlan,
                     onClick  = { onPlanClick(featuredPlan) },
-                    onDelete = { viewModel.deletePlan(featuredPlan) }
+                    onDelete = { planToDelete = featuredPlan },
                 )
             }
             item { Spacer(Modifier.height(24.dp)) }
@@ -119,9 +118,10 @@ private fun MealPlanContent(
                     Column {
                         otherPlans.forEachIndexed { index, plan ->
                             PlanListRow(
-                                plan     = plan,
-                                onClick  = { onPlanClick(plan) },
-                                onDelete = { viewModel.deletePlan(plan) }
+                                plan        = plan,
+                                onClick     = { onPlanClick(plan) },
+                                onDelete    = { planToDelete = plan },
+                                onSetPrimary = { viewModel.setAsPrimary(plan) },
                             )
                             if (index < otherPlans.lastIndex) {
                                 HorizontalDivider(
@@ -291,7 +291,8 @@ private fun StatChip(icon: androidx.compose.ui.graphics.vector.ImageVector, labe
 private fun PlanListRow(
     plan: MealPlan,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onSetPrimary: () -> Unit,
 ) {
     val totalSlots = plan.mealSlots.size
     val daysWithSlots = plan.daysWithSlotsCount()
@@ -325,9 +326,14 @@ private fun PlanListRow(
             )
         }
 
+        if (!plan.isPrimary) {
+            IconButton(onClick = onSetPrimary, modifier = Modifier.size(32.dp)) {
+                Icon(Icons.Default.StarOutline, contentDescription = "Set as current", tint = Primary, modifier = Modifier.size(18.dp))
+            }
+        } else {
+            Icon(Icons.Default.Star, contentDescription = "Current plan", tint = CKSecondary, modifier = Modifier.size(18.dp))
+        }
 
-
-        // Delete icon
         IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
             Icon(
                 Icons.Outlined.DeleteOutline,

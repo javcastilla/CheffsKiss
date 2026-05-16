@@ -88,7 +88,10 @@ fun MealPlanDetailScreen(
                         )
                         if (plan != null) {
                             Text(
-                                "${plan.mealSlots.size} slots · 7 days",
+                                buildString {
+                                    if (plan.isPrimary) append("Current · ")
+                                    append("${plan.mealSlots.size} slots · 7 days")
+                                },
                                 fontSize = 12.sp,
                                 color = CKOnSurfaceVariant
                             )
@@ -98,6 +101,13 @@ fun MealPlanDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = OnBackground)
+                    }
+                },
+                actions = {
+                    if (plan != null && !plan.isPrimary) {
+                        TextButton(onClick = viewModel::setAsPrimary) {
+                            Text("Set as current", color = Primary, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
@@ -151,8 +161,8 @@ fun MealPlanDetailScreen(
                         SlotCard(
                             slot          = slot,
                             recipeTitle   = slot.recipe?.title
-                                ?: slot.recipe?.id?.let { state.recipeTitles[it.toString()] },
-                            recipeId      = slot.recipe?.id?.toString(),
+                                ?: slot.resolvedRecipeId()?.let { state.recipeTitles[it.toString()] },
+                            recipeId      = slot.resolvedRecipeId()?.toString(),
                             onEdit        = { viewModel.openEditSlot(slot) },
                             onDelete      = { viewModel.deleteSlot(slot) },
                             onRecipeClick = onRecipeClick

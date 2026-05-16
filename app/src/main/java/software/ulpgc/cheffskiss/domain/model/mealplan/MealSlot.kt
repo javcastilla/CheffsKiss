@@ -10,4 +10,7 @@ data class MealSlot(
     val day: WeekDay,
     val mealType: MealType,
     val recipe: Recipe? = null,
-)
+    val recipeId: UUID? = null,
+) {
+    fun resolvedRecipeId(): UUID? = recipe?.id ?: recipeId
+}

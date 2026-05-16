@@ -8,7 +8,11 @@ import software.ulpgc.cheffskiss.application.control.UpdateMealPlanCommand
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.application.services.UserIds
+import software.ulpgc.cheffskiss.application.services.MealPlanRecipeHydrator
 import software.ulpgc.cheffskiss.application.services.UserRecipeCatalogService
+import software.ulpgc.cheffskiss.application.control.SetActiveMealPlanCommand
+import software.ulpgc.cheffskiss.domain.model.mealplan.sortedBySchedule
+import software.ulpgc.cheffskiss.domain.model.mealplan.sortedSlots
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
@@ -49,6 +53,7 @@ class MealPlanDetailViewModel(
     private val mealPlanRepository: MealPlanRepository = FirebaseMealPlanService(),
     private val recipeCatalog: UserRecipeCatalogService = UserRecipeCatalogService(),
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
+    private val mealPlanHydrator: MealPlanRecipeHydrator = MealPlanRecipeHydrator(recipeReader),
     private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
 ) : ViewModel() {
 
@@ -67,10 +72,14 @@ class MealPlanDetailViewModel(
             mealPlanRepository.getMealPlans(userUuid)
                 .catch { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
                 .collect { plans ->
-                    val plan = plans.firstOrNull { it.id == planUuid }
+                    val rawPlan = plans.firstOrNull { it.id == planUuid }
+                    val plan = rawPlan?.let { mealPlanHydrator.hydrate(it) }
                     _uiState.update { it.copy(plan = plan, isLoading = false) }
                     if (plan != null) {
-                        cacheRecipeTitles(plan)
+                        viewModelScope.launch {
+                            val titles = mealPlanHydrator.recipeTitles(plan)
+                            _uiState.update { it.copy(recipeTitles = it.recipeTitles + titles) }
+                        }
                         loadAvailableRecipes()
                     }
                 }
@@ -83,15 +92,6 @@ class MealPlanDetailViewModel(
                 .onSuccess { recipes ->
                     _uiState.update { it.copy(availableRecipes = recipes) }
                 }
-        }
-    }
-
-    private fun cacheRecipeTitles(plan: MealPlan) {
-        val titles = plan.mealSlots
-            .mapNotNull { slot -> slot.recipe?.let { it.id.toString() to it.title } }
-            .toMap()
-        if (titles.isNotEmpty()) {
-            _uiState.update { it.copy(recipeTitles = it.recipeTitles + titles) }
         }
     }
 
@@ -110,16 +110,20 @@ class MealPlanDetailViewModel(
     }
 
     fun openEditSlot(slot: MealSlot) {
+        val title = slot.recipe?.title
+            ?: slot.resolvedRecipeId()?.let { _uiState.value.recipeTitles[it.toString()] }
+            ?: ""
         _uiState.update {
             it.copy(
                 slotForm = SlotFormState(
                     isVisible = true,
+                    hasDraft = true,
                     editingSlotId = slot.id,
                     selectedDay = slot.day,
                     selectedMealType = slot.mealType,
-                    selectedRecipeId = slot.recipe?.id,
-                    selectedRecipeTitle = slot.recipe?.title ?: "",
-                )
+                    selectedRecipeId = slot.resolvedRecipeId(),
+                    selectedRecipeTitle = title,
+                ),
             )
         }
     }
@@ -248,29 +252,46 @@ class MealPlanDetailViewModel(
             day = form.selectedDay,
             mealType = form.selectedMealType,
             recipe = recipe,
+            recipeId = recipe.id,
         )
         val updatedSlots = if (form.editingSlotId != null) {
             plan.mealSlots.map { if (it.id == form.editingSlotId) newSlot else it }
         } else {
             plan.mealSlots + newSlot
         }
-        save(plan.copy(mealSlots = updatedSlots))
+        save(plan.copy(mealSlots = updatedSlots).sortedSlots())
     }
 
     fun deleteSlot(slot: MealSlot) {
         val plan = _uiState.value.plan ?: return
-        save(plan.copy(mealSlots = plan.mealSlots.filter { it.id != slot.id }))
+        save(plan.copy(mealSlots = plan.mealSlots.filter { it.id != slot.id }).sortedSlots())
+    }
+
+    fun setAsPrimary() {
+        val plan = _uiState.value.plan ?: return
+        val uid = currentUserPort.getCurrentUser() ?: return
+        viewModelScope.launch {
+            runCatching { SetActiveMealPlanCommand(mealPlanRepository, uid, plan.id).execute() }
+                .onFailure { e -> _uiState.update { it.copy(error = e.message) } }
+        }
     }
 
     private fun save(plan: MealPlan) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null) }
-            val versioned = plan.nextVersion()
+            val normalized = plan.sortedSlots()
+            val versioned = normalized.nextVersion()
             runCatching { UpdateMealPlanCommand(mealPlanRepository, versioned).execute() }
                 .onSuccess {
-                    cacheRecipeTitles(versioned)
+                    val hydrated = mealPlanHydrator.hydrate(versioned)
+                    val titles = mealPlanHydrator.recipeTitles(hydrated)
                     _uiState.update {
-                        it.copy(plan = versioned, isSaving = false, slotForm = SlotFormState())
+                        it.copy(
+                            plan = hydrated,
+                            isSaving = false,
+                            slotForm = SlotFormState(),
+                            recipeTitles = it.recipeTitles + titles,
+                        )
                     }
                 }
                 .onFailure { e ->

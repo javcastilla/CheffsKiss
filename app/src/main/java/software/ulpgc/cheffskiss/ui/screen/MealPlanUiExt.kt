@@ -4,6 +4,7 @@ import software.ulpgc.cheffskiss.domain.enum.MealType
 import software.ulpgc.cheffskiss.domain.enum.WeekDay
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
+import software.ulpgc.cheffskiss.domain.model.mealplan.slotsForDay
 
 val WeekDay.shortName: String
     get() = when (this) {
@@ -21,9 +22,9 @@ val WeekDay.displayName: String
 
 fun MealType.label(): String = name.lowercase().replaceFirstChar { it.uppercase() }
 
-fun MealPlan.slotsFor(day: WeekDay): List<MealSlot> = mealSlots.filter { it.day == day }
+fun MealPlan.slotsFor(day: WeekDay): List<MealSlot> = slotsForDay(day)
 
-fun MealPlan.daysWithSlotsCount(): Int = WeekDay.entries.count { slotsFor(it).isNotEmpty() }
+fun MealPlan.daysWithSlotsCount(): Int = WeekDay.entries.count { slotsForDay(it).isNotEmpty() }
 
 fun mealSlotColor(slot: MealSlot): androidx.compose.ui.graphics.Color =
     SLOT_COLORS[slot.mealType.ordinal % SLOT_COLORS.size]

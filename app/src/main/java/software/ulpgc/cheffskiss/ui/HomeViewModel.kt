@@ -19,6 +19,7 @@ import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
 import software.ulpgc.cheffskiss.application.services.GetMealPlansQuery
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
+import software.ulpgc.cheffskiss.domain.model.mealplan.sortedBySchedule
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.enum.WeekDay
 import software.ulpgc.cheffskiss.ui.screen.displayName
@@ -114,14 +115,15 @@ class HomeViewModel(
             GetMealPlansQuery(mealPlanRepository)(userUuid)
                 .catch { }
                 .collect { plans ->
-                    // Get the first meal plan (no isActive property)
-                    val active = plans.firstOrNull()
+                    val active = plans.firstOrNull { it.isPrimary } ?: plans.firstOrNull()
                     if (active == null) {
                         _uiState.update { it.copy(activePlanDay = null) }
                         return@collect
                     }
 
-                    val slots = active.mealSlots.filter { it.day == todayWeekday }
+                    val slots = active.mealSlots
+                        .filter { it.day == todayWeekday }
+                        .sortedBySchedule()
                     val planDay = ActivePlanDay(
                         planId    = active.id.toString(),
                         planName  = active.name,
@@ -131,7 +133,7 @@ class HomeViewModel(
                     _uiState.update { it.copy(activePlanDay = planDay) }
 
                     // Resolve recipe titles for today's slots
-                    val recipeIds = slots.mapNotNull { it.recipe?.id?.toString() }.distinct()
+                    val recipeIds = slots.mapNotNull { it.resolvedRecipeId()?.toString() }.distinct()
                     if (recipeIds.isNotEmpty()) {
                         val titles = coroutineScope {
                             recipeIds.map { id -> async { id to recipeReader.getById(id)?.title } }

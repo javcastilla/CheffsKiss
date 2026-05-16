@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.control.CreateMealPlanCommand
 import software.ulpgc.cheffskiss.application.control.DeleteMealPlanCommand
+import software.ulpgc.cheffskiss.application.control.SetActiveMealPlanCommand
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.application.services.GetMealPlansQuery
@@ -81,6 +82,14 @@ class MealPlanViewModel(
         val uid = userId ?: return
         viewModelScope.launch {
             runCatching { DeleteMealPlanCommand(port, uid, plan.id).execute() }
+                .onFailure { e -> _uiState.update { it.copy(error = e.message) } }
+        }
+    }
+
+    fun setAsPrimary(plan: MealPlan) {
+        val uid = userId ?: return
+        viewModelScope.launch {
+            runCatching { SetActiveMealPlanCommand(port, uid, plan.id).execute() }
                 .onFailure { e -> _uiState.update { it.copy(error = e.message) } }
         }
     }
