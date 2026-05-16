@@ -5,7 +5,9 @@ import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlanVersion
@@ -63,13 +65,16 @@ class FirebaseMealPlanService : MealPlanRepository {
     }
 
     override fun getMealPlans(userId: UUID): Flow<List<MealPlan>> = callbackFlow {
+        val recipeReader = FirebaseRecipeReader()
         val listener = plansCollection(userId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) { close(error); return@addSnapshotListener }
-                val plans = snapshot?.documents?.mapNotNull { doc ->
-                    runCatching { doc.toMealPlan(userId) }.getOrNull()
-                } ?: emptyList()
-                trySend(plans)
+                launch {
+                    val plans = snapshot?.documents?.mapNotNull { doc ->
+                        runCatching { doc.toMealPlan(userId, recipeReader) }.getOrNull()
+                    } ?: emptyList()
+                    trySend(plans)
+                }
             }
         awaitClose { listener.remove() }
     }
@@ -92,14 +97,17 @@ class FirebaseMealPlanService : MealPlanRepository {
     )
 
     @Suppress("UNCHECKED_CAST")
-    private fun com.google.firebase.firestore.DocumentSnapshot.toMealPlan(userId: UUID): MealPlan {
+    private suspend fun com.google.firebase.firestore.DocumentSnapshot.toMealPlan(
+        userId: UUID,
+        recipeReader: FirebaseRecipeReader,
+    ): MealPlan {
         val id        = UUID.fromString(getString("id") ?: id)
         val version   = getLong("version")?.toInt() ?: 0
         val name      = getString("name") ?: ""
         val creatorId = getString("creatorId")
 
         val rawSlots = get("mealSlots") as? List<Map<String, Any?>> ?: emptyList()
-        val mealSlots = rawSlots.mapNotNull { (it as? Map<*, *>)?.toMealSlot() }
+        val mealSlots = rawSlots.mapNotNull { (it as? Map<*, *>)?.toMealSlot(recipeReader) }
 
         val creator = creatorId?.let { User(UUID.fromString(it)) }
 
@@ -112,15 +120,17 @@ class FirebaseMealPlanService : MealPlanRepository {
         )
     }
 
-    private fun Map<*, *>.toMealSlot(): MealSlot? = runCatching {
+    private suspend fun Map<*, *>.toMealSlot(recipeReader: FirebaseRecipeReader): MealSlot? = runCatching {
         val dayStr = get("day") as? String ?: return null
         val mealTypeStr = get("mealType") as? String ?: return null
-        
+        val recipeId = get("recipeId") as? String
+        val recipe = recipeId?.let { recipeReader.getById(it) }
+
         MealSlot(
             id       = UUID.fromString(get("id") as? String ?: return null),
             day      = WeekDay.valueOf(dayStr),
             mealType = MealType.valueOf(mealTypeStr),
-            recipe   = null  // La receta se cargará si es necesario
+            recipe   = recipe,
         )
     }.getOrNull()
 }
