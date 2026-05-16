@@ -12,6 +12,7 @@ import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.SavedRecipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
+import software.ulpgc.cheffskiss.domain.model.recipe.RecipeVersion
 import java.util.UUID
 
 class FirebaseRecipeService : RecipeRepository {
@@ -27,11 +28,20 @@ class FirebaseRecipeService : RecipeRepository {
             .await()
     }
 
-    override suspend fun updateRecipe(recipe: Recipe, lines: List<RecipeLine>, steps: List<Step>) {
-        db.collection("Recipes")
-            .document(recipe.id.toString())
-            .set(recipe.toMap(lines, steps))
-            .await()
+    override suspend fun updateRecipe(
+        recipe: Recipe,
+        lines: List<RecipeLine>,
+        steps: List<Step>,
+        versionSnapshot: RecipeVersion?,
+    ) {
+        val doc = db.collection("Recipes").document(recipe.id.toString())
+        versionSnapshot?.let { snapshot ->
+            doc.collection("versions")
+                .document(recipe.version.toString())
+                .set(snapshot.toMap(lines, steps))
+                .await()
+        }
+        doc.set(recipe.toMap(lines, steps)).await()
     }
 
     override suspend fun deleteRecipe(recipeId: String) {
@@ -90,6 +100,7 @@ class FirebaseRecipeService : RecipeRepository {
         "id"          to id.toString(),
         "version"     to version,
         "title"       to title,
+        "description" to description,
         "duration"    to duration.inWholeSeconds,
         "tags"        to tags,
         "servings"    to servings,
@@ -119,4 +130,12 @@ class FirebaseRecipeService : RecipeRepository {
         "recipeId" to recipeId.toString(),
         "savedAt"  to savedAt.toString()
     )
+
+    private fun RecipeVersion.toMap(lines: List<RecipeLine>, steps: List<Step>): Map<String, Any?> =
+        mapOf(
+            "id"        to id.toString(),
+            "timestamp" to timestamp.toString(),
+            "status"    to status.name,
+            "recipe"    to recipe.toMap(lines, steps),
+        )
 }
