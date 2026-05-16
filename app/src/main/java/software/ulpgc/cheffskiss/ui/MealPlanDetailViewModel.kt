@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import software.ulpgc.cheffskiss.application.control.UpdateMealPlanCommand
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
@@ -171,22 +172,21 @@ class MealPlanDetailViewModel(
             plan.mealSlots + newSlot
         }
 
-        val updatedPlan = plan.copy(mealSlots = updatedSlots)
-        save(updatedPlan)
+        save(plan.copy(mealSlots = updatedSlots))
     }
 
     fun deleteSlot(slot: MealSlot) {
         val plan = _uiState.value.plan ?: return
-        val updatedSlots = plan.mealSlots.filter { it.id != slot.id }
-        val updatedPlan = plan.copy(mealSlots = updatedSlots)
-        save(updatedPlan)
+        save(plan.copy(mealSlots = plan.mealSlots.filter { it.id != slot.id }))
     }
 
     private fun save(plan: MealPlan) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
-            mealPlanRepository.updateMealPlan(plan)
-            _uiState.update { it.copy(plan = plan, isSaving = false, slotForm = SlotFormState()) }
+            val versioned = plan.nextVersion()
+            runCatching { UpdateMealPlanCommand(mealPlanRepository, versioned).execute() }
+                .onFailure { e -> _uiState.update { it.copy(error = e.message) } }
+            _uiState.update { it.copy(plan = versioned, isSaving = false, slotForm = SlotFormState()) }
         }
     }
 }
