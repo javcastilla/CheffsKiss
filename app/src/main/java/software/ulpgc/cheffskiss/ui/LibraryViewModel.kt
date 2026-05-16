@@ -16,6 +16,7 @@ import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeRead
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
+import java.util.UUID
 
 data class LibraryUiState(
     val isLoading: Boolean = true,
@@ -49,8 +50,9 @@ class LibraryViewModel(
     }
 
     private fun observeMyRecipes(uid: String) {
+        val authorUuid = UUID.nameUUIDFromBytes(uid.toByteArray()).toString()
         viewModelScope.launch {
-            recipeReader.getByAuthor(uid)
+            recipeReader.getByAuthor(authorUuid)
                 .onStart { _uiState.update { it.copy(isLoading = true, error = null) } }
                 .catch { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message ?: "Error loading your recipes") }
