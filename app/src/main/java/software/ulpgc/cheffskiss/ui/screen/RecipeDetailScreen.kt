@@ -118,6 +118,10 @@ fun RecipeDetailScreen(
                     Text("by ", fontSize = 13.sp, color = CKOnSurfaceVariant)
                     Text(authorName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = OnSurface)
                 }
+                if (recipe.description.isNotBlank()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(recipe.description, fontSize = 14.sp, color = CKOnSurfaceVariant, lineHeight = 20.sp)
+                }
                 if (recipe.tags.isNotEmpty()) {
                     @OptIn(ExperimentalLayoutApi::class)
                     FlowRow(
@@ -239,7 +243,11 @@ fun RecipeDetailScreen(
                                 )
                             )
                             Text(
-                                "${line.amount} ${line.measurement?.name?.lowercase() ?: ""}",
+                                buildString {
+                                    append(line.amount)
+                                    line.measurement?.let { append(" ${it.name.lowercase()}") }
+                                    line.ingredient?.name?.takeIf { it.isNotBlank() }?.let { append(" $it") }
+                                }.trim(),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = if (checked) CKOnSurfaceVariant else OnSurface
