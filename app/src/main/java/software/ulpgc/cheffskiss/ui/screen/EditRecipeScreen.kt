@@ -1,4 +1,4 @@
-package software.ulpgc.cheffskiss.ui.screen
+﻿package software.ulpgc.cheffskiss.ui.screen
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -28,14 +28,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import software.ulpgc.cheffskiss.application.services.IngredientDraft
-import software.ulpgc.cheffskiss.ui.components.IngredientPickerDropdown
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.ui.theme.*
-import kotlin.time.toDuration
 
-// ── Data models ───────────────────────────────────────────────────────────────
+// â”€â”€ Data models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 data class IngredientRow(
     val id: Int,
@@ -55,7 +51,7 @@ data class StepRow(
 
 val unitOptions = listOf("UNIT", "GRAM", "KG", "ML", "LITRE", "CUP", "TBSP", "TSP", "SLICE", "PINCH")
 
-// ── Top Bar ───────────────────────────────────────────────────────────────────
+// â”€â”€ Top Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,7 +79,7 @@ internal fun CRTopBar(
     )
 }
 
-// ── Bottom Bar ────────────────────────────────────────────────────────────────
+// â”€â”€ Bottom Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 internal fun CRBottomBar(
@@ -139,7 +135,7 @@ internal fun CRBottomBar(
     }
 }
 
-// ── Cover Photo Card ──────────────────────────────────────────────────────────
+// â”€â”€ Cover Photo Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 internal fun CoverPhotoCard(
@@ -200,7 +196,7 @@ internal fun CoverPhotoCard(
     }
 }
 
-// ── Section Card ──────────────────────────────────────────────────────────────
+// â”€â”€ Section Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 internal fun CRCard(
@@ -227,7 +223,7 @@ internal fun CRCard(
     }
 }
 
-// ── Field with Icon ───────────────────────────────────────────────────────────
+// â”€â”€ Field with Icon â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 internal fun CRFieldWithIcon(
@@ -241,7 +237,7 @@ internal fun CRFieldWithIcon(
     }
 }
 
-// ── Text Field ────────────────────────────────────────────────────────────────
+// â”€â”€ Text Field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 internal fun CRTextField(
@@ -278,7 +274,7 @@ internal fun CRTextField(
     )
 }
 
-// ── Small Circle Button ───────────────────────────────────────────────────────
+// â”€â”€ Small Circle Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 internal fun SmallCircleButton(icon: ImageVector, onClick: () -> Unit) {
@@ -290,7 +286,7 @@ internal fun SmallCircleButton(icon: ImageVector, onClick: () -> Unit) {
     }
 }
 
-// ── Tag Chip ──────────────────────────────────────────────────────────────────
+// â”€â”€ Tag Chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 internal fun CRTagChip(tag: String, onRemove: () -> Unit) {
@@ -311,7 +307,7 @@ internal fun CRTagChip(tag: String, onRemove: () -> Unit) {
     }
 }
 
-// ── Dashed Add Button ─────────────────────────────────────────────────────────
+// â”€â”€ Dashed Add Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 internal fun DashedAddButton(label: String, onClick: () -> Unit) {
@@ -328,7 +324,7 @@ internal fun DashedAddButton(label: String, onClick: () -> Unit) {
     }
 }
 
-// ── Step Item ─────────────────────────────────────────────────────────────────
+// â”€â”€ Step Item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 internal fun CRStepItem(
@@ -451,337 +447,25 @@ internal fun CRStepItem(
         }
     }
 }
-// ── EditRecipeScreen ──────────────────────────────────────────────────────────
-// Añadir al final de EditRecipeScreen.kt
+// â”€â”€ EditRecipeScreen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// AÃ±adir al final de EditRecipeScreen.kt
 
 @OptIn(ExperimentalMaterial3Api::class)
+
+// ── EditRecipeScreen ──────────────────────────────────────────────────────────
+
 @Composable
 fun EditRecipeScreen(
     recipe: software.ulpgc.cheffskiss.domain.model.recipe.Recipe,
     initialLines: List<software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine>,
     initialSteps: List<Step>,
     onBack: () -> Unit,
-    onUpdateSuccess: () -> Unit
+    onUpdateSuccess: () -> Unit,
 ) {
-    val viewModel: software.ulpgc.cheffskiss.ui.RecipeViewModel =
-        androidx.lifecycle.viewmodel.compose.viewModel()
-
-    val uiState by viewModel.uiState.collectAsState()
-    val ingredientCatalog by viewModel.ingredientCatalogState.collectAsStateWithLifecycle()
-    val ingredientCatalogLoading by viewModel.ingredientCatalogLoading.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(Unit) { viewModel.loadIngredientCatalog() }
-
-    // ── Estado local pre-poblado con los datos existentes ─────────────────
-    var coverImageUri   by remember { mutableStateOf<Uri?>(null) }
-    var title           by remember { mutableStateOf(recipe.title) }
-    var description     by remember { mutableStateOf(recipe.description) }
-    var servings        by remember { mutableIntStateOf(recipe.servings) }
-    var durationHours   by remember { mutableStateOf((recipe.duration.inWholeMinutes / 60).toString()) }
-    var durationMinutes by remember { mutableStateOf((recipe.duration.inWholeMinutes % 60).toString()) }
-    val tags            = remember { mutableStateListOf<String>().also { it.addAll(recipe.tags) } }
-    var tagInput        by remember { mutableStateOf("") }
-
-    val ingredients = remember {
-        mutableStateListOf<IngredientRow>().also { list ->
-            initialLines.forEachIndexed { i, line ->
-                list.add(
-                    IngredientRow(
-                        id           = i,
-                        ingredientId = line.ingredient?.id,
-                        name         = line.ingredient?.name ?: "",
-                        amount       = line.amount.toString(),
-                        unit         = line.measurement?.name ?: "UNIT",
-                    )
-                )
-            }
-        }
-    }
-
-    val steps = remember {
-        mutableStateListOf<StepRow>().also { list ->
-            initialSteps.sortedBy { it.cardinal }.forEachIndexed { i, step ->
-                list.add(
-                    StepRow(
-                        id          = i,
-                        description = step.description,
-                        duration    = step.duration?.inWholeMinutes?.toString() ?: "0"
-                    )
-                )
-            }
-        }
-    }
-
-    var nextIngredId by remember { mutableIntStateOf(initialLines.size) }
-    var nextStepId   by remember { mutableIntStateOf(initialSteps.size) }
-
-    // Escuchar resultado del ViewModel
-    LaunchedEffect(uiState) {
-        when (val s = uiState) {
-            is software.ulpgc.cheffskiss.ui.RecipeUiState.Success -> {
-                viewModel.resetState()
-                onUpdateSuccess()
-            }
-            is software.ulpgc.cheffskiss.ui.RecipeUiState.Error -> {
-                snackbarHostState.showSnackbar(s.message)
-                viewModel.resetState()
-            }
-            else -> Unit
-        }
-    }
-
-    val isFormComplete = title.isNotBlank() &&
-            servings >= 1 &&
-            (durationHours.isNotBlank() || durationMinutes.isNotBlank()) &&
-            ingredients.any { it.ingredientId != null } &&
-            steps.any { it.description.isNotBlank() }
-
-    val handleUpdate: () -> Unit = {
-        val mappedSteps = steps
-            .filter { it.description.isNotBlank() }
-            .mapIndexed { index, row ->
-                val stepDurationMinutes = row.duration.toLongOrNull() ?: 0L
-                Step(
-                    id          = java.util.UUID.randomUUID(),
-                    description = row.description.trim(),
-                    duration    = stepDurationMinutes.toDuration(kotlin.time.DurationUnit.MINUTES),
-                    cardinal    = index + 1
-                )
-            }
-        val drafts = ingredients
-            .filter { it.ingredientId != null }
-            .map {
-                IngredientDraft(
-                    ingredientId = it.ingredientId,
-                    name = it.name,
-                    amount = it.amount,
-                    unit = it.unit,
-                )
-            }
-
-        viewModel.updateRecipe(
-            recipeId        = recipe.id,
-            authorId        = recipe.creator.id.toString(),
-            title           = title,
-            description     = description,
-            servings        = servings,
-            hours           = durationHours,
-            minutes         = durationMinutes ,
-            ingredientDrafts= drafts,
-            steps           = mappedSteps,
-            stepImageUris   = steps.map { it.imageUri },
-            tags            = tags.toList(),
-            imageUri        = coverImageUri,
-            existingImageUrl= recipe.image?.toString() ?: "",
-            createdAt       = recipe.timestamp ?: kotlinx.datetime.Clock.System.now(),
-            currentVersion  = recipe.version
-        )
-    }
-
-    val imageLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri -> uri?.let { coverImageUri = it } }
-
-    Scaffold(
-        snackbarHost   = { SnackbarHost(snackbarHostState) },
-        containerColor = software.ulpgc.cheffskiss.ui.theme.Background,
-        topBar = {
-            CRTopBar(
-                title       = "Edit Recipe",
-                onBack      = onBack,
-                onSaveDraft = onBack
-            )
-        },
-        bottomBar = {
-            CRBottomBar(
-                onSaveDraft          = onBack,
-                onPublish            = handleUpdate,
-                isLoading            = uiState is software.ulpgc.cheffskiss.ui.RecipeUiState.Loading,
-                isPublishFormComplete= isFormComplete,
-                publishLabel         = "Save Changes"
-            )
-        }
-    ) { padding ->
-        androidx.compose.foundation.lazy.LazyColumn(
-            modifier            = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // ── Cover photo ───────────────────────────────────────────────
-            item {
-                CoverPhotoCard(
-                    imageUri    = coverImageUri,
-                    existingUrl = recipe.image?.toString(),
-                    onClick     = { imageLauncher.launch("image/*") }
-                )
-            }
-
-            // ── Basic details ─────────────────────────────────────────────
-            item {
-                CRCard(icon = Icons.Default.Info, title = "Basic Details") {
-                    CRFieldWithIcon(icon = Icons.Default.RestaurantMenu, label = "Recipe Title") {
-                        CRTextField(value = title, onValueChange = { title = it },
-                            placeholder = "e.g. Grandma's Apple Pie", singleLine = true)
-                    }
-                    CRFieldWithIcon(icon = Icons.Default.Description, label = "Description") {
-                        CRTextField(value = description, onValueChange = { description = it },
-                            placeholder = "Share a little story...", minLines = 3, maxLines = 5)
-                    }
-                    // Servings + Duration
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        CRFieldWithIcon(
-                            icon = Icons.Default.Group, label = "Servings",
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                SmallCircleButton(Icons.Default.Remove) {
-                                    if (servings > 1) servings--
-                                }
-                                Text(
-                                    "$servings",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    color = software.ulpgc.cheffskiss.ui.theme.OnSurface
-                                )
-                                SmallCircleButton(Icons.Default.Add) { servings++ }
-                            }
-                        }
-                        CRFieldWithIcon(
-                            icon = Icons.Default.Schedule, label = "Duration",
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                CRTextField(
-                                    value = durationHours   , onValueChange = { durationHours    = it },
-                                    placeholder = "0h", singleLine = true,
-                                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
-                                    fillWidth = false, modifier = Modifier.width(64.dp)
-                                )
-                                CRTextField(
-                                    value = durationMinutes , onValueChange = { durationMinutes  = it },
-                                    placeholder = "0m", singleLine = true,
-                                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
-                                    fillWidth = false, modifier = Modifier.width(64.dp)
-                                )
-                            }
-                        }
-                    }
-                    // Tags
-                    CRFieldWithIcon(icon = Icons.Default.Tag, label = "Tags") {
-                        androidx.compose.foundation.layout.FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            tags.forEach { tag ->
-                                CRTagChip(tag = tag, onRemove = { tags.remove(tag) })
-                            }
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            CRTextField(
-                                value = tagInput, onValueChange = { tagInput = it },
-                                placeholder = "Add tag...", singleLine = true,
-                                modifier = Modifier.weight(1f)
-                            )
-                            SmallCircleButton(Icons.Default.Add) {
-                                val t = tagInput.trim()
-                                if (t.isNotBlank() && !tags.contains(t)) tags.add(t)
-                                tagInput = ""
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ── Ingredients ───────────────────────────────────────────────
-            item {
-                CRCard(icon = Icons.Default.ShoppingBasket, title = "Ingredients") {
-                    ingredients.toList().forEach { row ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            IngredientPickerDropdown(
-                                selected = ingredientCatalog.firstOrNull { it.id == row.ingredientId },
-                                options = ingredientCatalog,
-                                isLoading = ingredientCatalogLoading,
-                                onSelected = { selected ->
-                                    val i = ingredients.indexOfFirst { it.id == row.id }
-                                    if (i != -1) {
-                                        ingredients[i] = row.copy(
-                                            ingredientId = selected.id,
-                                            name = selected.name,
-                                        )
-                                    }
-                                },
-                                modifier = Modifier.weight(2f),
-                            )
-                            CRTextField(
-                                value = row.amount,
-                                onValueChange = { v ->
-                                    val i = ingredients.indexOfFirst { it.id == row.id }
-                                    if (i != -1) ingredients[i] = row.copy(amount = v)
-                                },
-                                placeholder = "Qty",
-                                singleLine = true,
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
-                                fillWidth = false,
-                                modifier = Modifier.width(64.dp)
-                            )
-                            SmallCircleButton(Icons.Default.Remove) {
-                                ingredients.removeAll { it.id == row.id }
-                            }
-                        }
-                    }
-                    DashedAddButton(label = "Add Ingredient") {
-                        ingredients.add(IngredientRow(id = nextIngredId++))
-                    }
-                }
-            }
-
-            // ── Steps ─────────────────────────────────────────────────────
-            item {
-                CRCard(icon = Icons.Default.FormatListNumbered, title = "Instructions") {
-                    steps.toList().forEachIndexed { index, step ->
-                        CRStepItem(
-                            number   = index + 1,
-                            isFirst  = index == 0,
-                            step     = step,
-                            onChange = { updated ->
-                                val i = steps.indexOfFirst { it.id == step.id }
-                                if (i != -1) steps[i] = updated
-                            },
-                            onRemove = { steps.removeAll { it.id == step.id } }
-                        )
-                    }
-                    DashedAddButton(label = "Add Step") {
-                        steps.add(StepRow(nextStepId++, "", "0"))
-                    }
-                }
-            }
-
-            item { Spacer(Modifier.height(32.dp)) }
-        }
-    }
-}
-
-// Helper para CRFieldWithIcon con modifier extra (sobrecarga)
-@Composable
-private fun CRFieldWithIcon(
-    icon: ImageVector,
-    label: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-            color = software.ulpgc.cheffskiss.ui.theme.CKOnSurfaceVariant)
-        content()
-    }
+    RecipeFormScreen(
+        mode = RecipeFormMode.Edit(recipe, initialLines, initialSteps),
+        onBack = onBack,
+        onSuccess = onUpdateSuccess,
+        onSaveDraft = onBack,
+    )
 }

@@ -43,19 +43,22 @@ class FirebaseRecipeService : RecipeRepository {
     ) {
         val doc = db.collection("Recipes").document(recipe.id.toString())
         versionSnapshot?.let { snapshot ->
-            val existing = doc.get().await()
-            if (existing.exists()) {
-                doc.collection("versions")
-                    .document(snapshot.recipe.version.toString())
-                    .set(
-                        mapOf(
-                            "id"        to snapshot.id.toString(),
-                            "timestamp" to snapshot.timestamp.toString(),
-                            "status"    to snapshot.status.name,
-                            "recipe"    to existing.data,
+            val versionToArchive = snapshot.recipe.version
+            if (versionToArchive > 0) {
+                val existing = doc.get().await()
+                if (existing.exists()) {
+                    doc.collection("versions")
+                        .document(versionToArchive.toString())
+                        .set(
+                            mapOf(
+                                "id"        to snapshot.id.toString(),
+                                "timestamp" to snapshot.timestamp.toString(),
+                                "status"    to snapshot.status.name,
+                                "recipe"    to existing.data,
+                            ),
                         )
-                    )
-                    .await()
+                        .await()
+                }
             }
         }
         doc.set(recipe.toMap(lines, steps)).await()
