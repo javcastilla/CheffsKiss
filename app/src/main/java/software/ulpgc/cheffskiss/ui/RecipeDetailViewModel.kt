@@ -19,6 +19,7 @@ import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
 import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.application.services.UserDisplayService
+import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
 import java.util.UUID
@@ -52,9 +53,7 @@ class RecipeDetailViewModel(
         viewModelScope.launch {
             val r = recipeReader.getById(recipeId) ?: return@launch
             _recipe.value = r
-            val currentCreatorId = currentUid?.let {
-                UUID.nameUUIDFromBytes(it.toByteArray(Charsets.UTF_8))
-            }
+            val currentCreatorId = currentUid?.let { UserIds.creatorIdFromFirebaseUid(it) }
             _isOwner.value = currentCreatorId == r.creator.id
 
             val name = userDisplayService.displayNameFor(r.creator.id)
