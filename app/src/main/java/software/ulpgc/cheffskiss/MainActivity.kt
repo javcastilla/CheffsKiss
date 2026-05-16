@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                             onRecipeClick     = { recipe -> navController.navigate("recipe_detail/${recipe.id}") },
                             onMealPlanClick   = { plan -> navController.navigate("meal_plan_detail/${plan.id}") },
                             onCreateCollection = { navController.navigate("create_collection") },
-                            onCollectionClick = { collection -> navController.navigate("collectiondetail/${collection.id}") }
+                            onCollectionClick = { collection -> navController.navigate("collectiondetail/${collection.id}") },
                         )
                     }
                     composable(

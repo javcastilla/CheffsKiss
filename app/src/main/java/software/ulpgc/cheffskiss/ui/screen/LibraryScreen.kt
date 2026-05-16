@@ -41,6 +41,7 @@ fun LibraryScreen(
     onGoHome: () -> Unit,
     onExploreClick: () -> Unit,
     onCreateRecipe: () -> Unit,
+
     onRecipeClick: (Recipe) -> Unit,
     onMealPlanClick: (MealPlan) -> Unit,
     onCreateCollection: () -> Unit,
@@ -62,23 +63,27 @@ fun LibraryScreen(
             )
         },
         floatingActionButton = {
-            if (selectedTab == 1) {
-                FloatingActionButton(
-                    onClick        = onCreateCollection,
-                    containerColor = Primary,
-                    contentColor   = OnPrimary,
-                    shape          = CircleShape,
-                    modifier       = Modifier.size(56.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "New Collection",
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+            val onClick = when (selectedTab) {
+                0    -> onCreateRecipe
+                1    -> onCreateCollection
+                else -> mealPlanViewModel::showCreateDialog
+            }
+            val label = when (selectedTab) {
+                0    -> "New Recipe"
+                1    -> "New Collection"
+                else -> "New Meal Plan"
+            }
+            FloatingActionButton(
+                onClick        = onClick,
+                containerColor = Primary,
+                contentColor   = OnPrimary,
+                shape          = CircleShape,
+                modifier       = Modifier.size(56.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = label, modifier = Modifier.size(28.dp))
             }
         }
-    ){ padding ->
+        ){ padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
