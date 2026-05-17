@@ -93,7 +93,7 @@ fun AppBottomBar(
                 )
                 BottomNavTab(
                     icon = Icons.Default.Groups,
-                    label = "Perfil",
+                    label = "Profile",
                     selected = currentRoute == MainBottomNavigation.PROFILE,
                     onClick = onProfileClick,
                     modifier = Modifier.weight(1f),
@@ -202,7 +202,7 @@ private fun CreateNavButton(
         ) {
             Icon(
                 imageVector = if (expanded) Icons.Default.Close else Icons.Default.Add,
-                contentDescription = "Crear",
+                contentDescription = "Create",
                 tint = iconTint,
                 modifier = Modifier
                     .size(24.dp)
@@ -210,7 +210,7 @@ private fun CreateNavButton(
             )
         }
         Text(
-            text = "Crear",
+            text = "Create",
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             color = if (expanded) CKSecondary else Primary,

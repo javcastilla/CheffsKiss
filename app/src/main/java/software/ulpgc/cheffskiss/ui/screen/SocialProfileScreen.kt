@@ -102,7 +102,7 @@ fun SocialProfileScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    "Perfil",
+                    "Profile",
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 26.sp,
                     color = Primary,
@@ -158,7 +158,7 @@ fun SocialProfileScreen(
                 ) {
                     Icon(Icons.Default.Groups, null, tint = Primary, modifier = Modifier.size(18.dp))
                     Text(
-                        "Tu espacio social llegará pronto",
+                        "Your social space is coming soon",
                         fontSize = 14.sp,
                         color = CKOnSurfaceVariant,
                     )

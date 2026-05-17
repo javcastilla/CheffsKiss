@@ -127,7 +127,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "CheffsKiss",
+                text = "ChefKiss",
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 28.sp,
                 color = OnSurface,
