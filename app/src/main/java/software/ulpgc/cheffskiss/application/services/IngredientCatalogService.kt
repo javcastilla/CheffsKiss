@@ -1,6 +1,8 @@
 package software.ulpgc.cheffskiss.application.services
 
 import software.ulpgc.cheffskiss.domain.model.recipe.Ingredient
+import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
+import java.util.UUID
 import software.ulpgc.cheffskiss.domain.port.input.IngredientCatalogReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 
@@ -21,10 +23,25 @@ class IngredientCatalogService(
         }
     }
 
-    fun filterCatalog(catalog: List<Ingredient>, query: String): List<Ingredient> {
+    fun filterCatalog(
+        catalog: List<Ingredient>,
+        query: String,
+        mode: IngredientSearchMode = IngredientSearchMode.DIRECT,
+    ): List<Ingredient> {
         val normalized = query.trim().lowercase()
         if (normalized.isEmpty()) return catalog
-        return catalog.filter { ingredient -> ingredient.matchesQuery(normalized) }
+        return catalog.filter { ingredient ->
+            when (mode) {
+                IngredientSearchMode.DIRECT -> ingredient.matchesDirectQuery(normalized)
+                IngredientSearchMode.REVERSE -> ingredient.matchesReverseQuery(normalized)
+            }
+        }
+    }
+
+    fun recipeContainsAllIngredients(recipe: Recipe, ingredientIds: Set<UUID>): Boolean {
+        if (ingredientIds.isEmpty()) return true
+        val recipeIds = recipe.recipeLines.mapNotNull { it.ingredient?.id }.toSet()
+        return ingredientIds.all { it in recipeIds }
     }
 
     suspend fun searchRemote(query: String, limit: Int = 20): List<Ingredient> {
@@ -33,10 +50,30 @@ class IngredientCatalogService(
     }
 }
 
-private fun Ingredient.matchesQuery(query: String): Boolean =
+private fun Ingredient.searchableText(): String = buildString {
+    append(name.lowercase())
+    append(' ')
+    append(normalizedName)
+    append(' ')
+    append(category.lowercase())
+    append(' ')
+    append(subcategory.lowercase())
+    aliases.forEach { append(it.lowercase()).append(' ') }
+    tags.forEach { append(it.lowercase()).append(' ') }
+}
+
+private fun Ingredient.matchesDirectQuery(query: String): Boolean =
     name.lowercase().contains(query) ||
         normalizedName.contains(query) ||
         category.lowercase().contains(query) ||
         subcategory.lowercase().contains(query) ||
         aliases.any { it.lowercase().contains(query) } ||
         tags.any { it.lowercase().contains(query) }
+
+/** Every token in the query must appear somewhere in the ingredient fields (any order). */
+private fun Ingredient.matchesReverseQuery(query: String): Boolean {
+    val tokens = query.split(Regex("\\s+")).filter { it.isNotBlank() }
+    if (tokens.isEmpty()) return true
+    val haystack = searchableText()
+    return tokens.all { token -> haystack.contains(token) }
+}

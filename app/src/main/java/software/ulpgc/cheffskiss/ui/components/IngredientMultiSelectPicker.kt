@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -59,6 +60,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import software.ulpgc.cheffskiss.application.services.IngredientCatalogService
+import software.ulpgc.cheffskiss.application.services.IngredientSearchMode
 import software.ulpgc.cheffskiss.domain.model.recipe.Ingredient
 import software.ulpgc.cheffskiss.ui.screen.displayCategory
 import software.ulpgc.cheffskiss.ui.theme.Background
@@ -81,7 +84,9 @@ fun IngredientMultiSelectPicker(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var searchMode by remember { mutableStateOf(IngredientSearchMode.DIRECT) }
     var highlightedIndex by remember { mutableIntStateOf(0) }
+    val catalogFilter = remember { IngredientCatalogService() }
     var listTopInWindow by remember { mutableFloatStateOf(0f) }
     val searchFocusRequester = remember { FocusRequester() }
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
@@ -108,15 +113,8 @@ fun IngredientMultiSelectPicker(
             .filter { it.name.isNotBlank() }
             .sortedBy { it.name.lowercase() }
     }
-    val filteredOptions = remember(sortedOptions, searchQuery) {
-        val query = searchQuery.trim().lowercase()
-        if (query.isEmpty()) sortedOptions
-        else sortedOptions.filter { ingredient ->
-            ingredient.name.lowercase().contains(query) ||
-                ingredient.normalizedName.contains(query) ||
-                ingredient.displayCategory.lowercase().contains(query) ||
-                ingredient.aliases.any { it.lowercase().contains(query) }
-        }
+    val filteredOptions = remember(sortedOptions, searchQuery, searchMode) {
+        catalogFilter.filterCatalog(sortedOptions, searchQuery, searchMode)
     }
 
     LaunchedEffect(expanded) {
@@ -147,6 +145,10 @@ fun IngredientMultiSelectPicker(
         val next = selectedIds.toMutableSet()
         if (next.contains(ingredient.id)) next.remove(ingredient.id) else next.add(ingredient.id)
         onSelectionChange(next)
+    }
+
+    fun commitSearchAndClose() {
+        expanded = false
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -223,7 +225,7 @@ fun IngredientMultiSelectPicker(
                                     true
                                 }
                                 Key.Enter -> {
-                                    filteredOptions.getOrNull(highlightedIndex)?.let(::toggleIngredient)
+                                    commitSearchAndClose()
                                     true
                                 }
                                 Key.Escape -> {
@@ -241,21 +243,31 @@ fun IngredientMultiSelectPicker(
                         color = OnSurface,
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            filteredOptions.getOrNull(highlightedIndex)?.let(::toggleIngredient)
-                        },
-                    ),
+                    keyboardActions = KeyboardActions(onSearch = { commitSearchAndClose() }),
                     decorationBox = { inner ->
                         Box {
                             if (searchQuery.isEmpty()) {
-                                Text("Search ingredient", fontSize = 15.sp, color = CKOutlineVariant)
+                                Text(
+                                    text = if (searchMode == IngredientSearchMode.REVERSE) {
+                                        "e.g. pechuga pollo"
+                                    } else {
+                                        "Type to search…"
+                                    },
+                                    fontSize = 15.sp,
+                                    color = CKOutlineVariant,
+                                )
                             }
                             inner()
                         }
                     },
                 )
-                HorizontalDivider(color = CKSurfaceVariant, thickness = 0.5.dp)
+                IngredientSearchModeRow(
+                    mode = searchMode,
+                    onModeChange = {
+                        searchMode = it
+                        highlightedIndex = 0
+                    },
+                )
 
                 if (filteredOptions.isEmpty()) {
                     Box(
@@ -330,5 +342,53 @@ fun IngredientMultiSelectPicker(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun IngredientSearchModeRow(
+    mode: IngredientSearchMode,
+    onModeChange: (IngredientSearchMode) -> Unit,
+) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        IngredientSearchModeTab(
+            label = "Contains",
+            selected = mode == IngredientSearchMode.DIRECT,
+            onClick = { onModeChange(IngredientSearchMode.DIRECT) },
+            modifier = Modifier.weight(1f),
+        )
+        IngredientSearchModeTab(
+            label = "Has",
+            selected = mode == IngredientSearchMode.REVERSE,
+            onClick = { onModeChange(IngredientSearchMode.REVERSE) },
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun IngredientSearchModeTab(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            color = if (selected) Primary else CKOnSurfaceVariant,
+            modifier = Modifier.padding(top = 10.dp, bottom = 8.dp),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .background(if (selected) Primary else Color.Transparent),
+        )
     }
 }

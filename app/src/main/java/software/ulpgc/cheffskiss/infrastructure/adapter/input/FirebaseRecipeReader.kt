@@ -201,9 +201,28 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
                 },
                 timestamp   = getString("timestamp")?.let { Instant.parse(it) }
                     ?: Clock.System.now(),
+                recipeLines = parseEmbeddedLines(),
                 creator     = creator
             )
         }.getOrNull()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun DocumentSnapshot.parseEmbeddedLines(): List<RecipeLine> {
+        val raw = get("lines") as? List<Map<String, Any>> ?: return emptyList()
+        return raw.mapNotNull { map ->
+            runCatching {
+                val ingredientId = map["ingredientId"] as? String
+                RecipeLine(
+                    id = UUID.fromString(map["id"] as? String ?: return@mapNotNull null),
+                    amount = (map["amount"] as? Number)?.toInt() ?: 1,
+                    ingredient = ingredientId?.let { id ->
+                        Ingredient(id = UUID.fromString(id), name = "")
+                    },
+                    measurement = (map["measurement"] as? String)?.let { Measurement.valueOf(it) },
+                )
+            }.getOrNull()
+        }
     }
 
     private fun Any?.toStep(): Step? {

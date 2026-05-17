@@ -27,8 +27,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import software.ulpgc.cheffskiss.application.services.ExploreSearchMode
+import software.ulpgc.cheffskiss.ui.components.IngredientMultiSelectPicker
 import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
+import software.ulpgc.cheffskiss.domain.model.recipe.Ingredient
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
+import java.util.UUID
 import software.ulpgc.cheffskiss.ui.ExploreViewModel
 import software.ulpgc.cheffskiss.ui.components.TabScaffold
 import software.ulpgc.cheffskiss.ui.navigation.MainBottomNavigation
@@ -106,8 +110,14 @@ fun ExploreScreen(
                     .background(Background)
             ) {
                 ExploreHeader(
-                    query         = state.searchQuery,
-                    onQueryChange = viewModel::onSearchQueryChange
+                    searchMode = state.searchMode,
+                    onSearchModeChange = viewModel::onSearchModeChange,
+                    query = state.searchQuery,
+                    onQueryChange = viewModel::onSearchQueryChange,
+                    selectedIngredientIds = state.selectedIngredientIds,
+                    ingredientCatalog = state.ingredientCatalog,
+                    ingredientCatalogLoading = state.ingredientCatalogLoading,
+                    onSelectedIngredientsChange = viewModel::onSelectedIngredientsChange,
                 )
                 if (state.availableTags.isNotEmpty()) {
                     LazyRow(
@@ -191,9 +201,10 @@ fun ExploreScreen(
                 state.filteredRecipes.isEmpty() && state.hasActiveFilters -> {
                     item(span = StaggeredGridItemSpan.FullLine) {
                         ExploreEmptyResult(
-                            query   = state.searchQuery,
-                            tags    = state.selectedTags,
-                            onClear = viewModel::clearFilters
+                            searchMode = state.searchMode,
+                            query = state.searchQuery,
+                            tags = state.selectedTags,
+                            onClear = viewModel::clearFilters,
                         )
                     }
                 }
@@ -219,62 +230,144 @@ fun ExploreScreen(
 
 // ── Header with search ────────────────────────────────────────────────────────
 @Composable
-private fun ExploreHeader(query: String, onQueryChange: (String) -> Unit) {
+private fun ExploreHeader(
+    searchMode: ExploreSearchMode,
+    onSearchModeChange: (ExploreSearchMode) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    selectedIngredientIds: Set<UUID>,
+    ingredientCatalog: List<Ingredient>,
+    ingredientCatalogLoading: Boolean,
+    onSelectedIngredientsChange: (Set<UUID>) -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
-            .padding(top = 24.dp, bottom = 12.dp)
+            .padding(top = 24.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.Default.Explore,
                 contentDescription = null,
-                tint     = Primary,
-                modifier = Modifier.size(28.dp)
+                tint = Primary,
+                modifier = Modifier.size(28.dp),
             )
             Spacer(Modifier.width(8.dp))
             Text(
                 "Explore",
                 fontWeight = FontWeight.ExtraBold,
-                fontSize   = 28.sp,
-                color      = Primary
+                fontSize = 28.sp,
+                color = Primary,
             )
         }
-        Text(
-            "Discover recipes by name and tag",
-            fontSize = 13.sp,
-            color    = CKOnSurfaceVariant,
-            modifier = Modifier.padding(top = 2.dp, bottom = 16.dp)
+        if (searchMode == ExploreSearchMode.BY_TITLE) {
+            Text(
+                text = "Discover recipes by name and tag",
+                fontSize = 13.sp,
+                color = CKOnSurfaceVariant,
+            )
+        }
+
+        ExploreSearchModeRow(
+            mode = searchMode,
+            onModeChange = onSearchModeChange,
         )
 
-        OutlinedTextField(
-            value         = query,
-            onValueChange = onQueryChange,
-            placeholder   = { Text("Search recipes…", fontSize = 14.sp, color = CKOutlineVariant) },
-            leadingIcon   = { Icon(Icons.Default.Search, null, tint = CKOutlineVariant) },
-            trailingIcon  = {
-                AnimatedVisibility(query.isNotBlank(), enter = fadeIn(), exit = fadeOut()) {
-                    IconButton(onClick = { onQueryChange("") }) {
-                        Icon(Icons.Default.Close, null, tint = CKOutlineVariant, modifier = Modifier.size(18.dp))
-                    }
-                }
-            },
-            singleLine = true,
-            shape      = RoundedCornerShape(50.dp),
-            colors     = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor      = Primary,
-                unfocusedBorderColor    = Color.Transparent,
-                focusedContainerColor   = Surface,
-                unfocusedContainerColor = Surface,
-                focusedTextColor        = OnSurface,
-                unfocusedTextColor      = OnSurface,
-                cursorColor             = Primary
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
+        when (searchMode) {
+            ExploreSearchMode.BY_TITLE -> {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    placeholder = { Text("Search recipes…", fontSize = 14.sp, color = CKOutlineVariant) },
+                    leadingIcon = { Icon(Icons.Default.Search, null, tint = CKOutlineVariant) },
+                    trailingIcon = {
+                        AnimatedVisibility(query.isNotBlank(), enter = fadeIn(), exit = fadeOut()) {
+                            IconButton(onClick = { onQueryChange("") }) {
+                                Icon(Icons.Default.Close, null, tint = CKOutlineVariant, modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(50.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Primary,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Surface,
+                        unfocusedContainerColor = Surface,
+                        focusedTextColor = OnSurface,
+                        unfocusedTextColor = OnSurface,
+                        cursorColor = Primary,
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                )
+            }
+            ExploreSearchMode.BY_INGREDIENTS -> {
+                IngredientMultiSelectPicker(
+                    selectedIds = selectedIngredientIds,
+                    options = ingredientCatalog,
+                    isLoading = ingredientCatalogLoading,
+                    onSelectionChange = onSelectedIngredientsChange,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExploreSearchModeRow(
+    mode: ExploreSearchMode,
+    onModeChange: (ExploreSearchMode) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ExploreSearchModeChip(
+            label = "By name",
+            icon = Icons.Default.Search,
+            selected = mode == ExploreSearchMode.BY_TITLE,
+            onClick = { onModeChange(ExploreSearchMode.BY_TITLE) },
+            modifier = Modifier.weight(1f),
         )
+        ExploreSearchModeChip(
+            label = "By ingredients",
+            icon = Icons.Default.ShoppingBasket,
+            selected = mode == ExploreSearchMode.BY_INGREDIENTS,
+            onClick = { onModeChange(ExploreSearchMode.BY_INGREDIENTS) },
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun ExploreSearchModeChip(
+    label: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val bg = if (selected) Primary else Surface
+    val fg = if (selected) OnPrimary else CKOnSurfaceVariant
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(50.dp))
+            .background(bg)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = fg, maxLines = 1)
+        }
     }
 }
 
@@ -499,7 +592,12 @@ private fun ExploreErrorState(error: String, onRetry: () -> Unit) {
 
 // ── Empty result state ────────────────────────────────────────────────────────
 @Composable
-private fun ExploreEmptyResult(query: String, tags: Set<String>, onClear: () -> Unit) {
+private fun ExploreEmptyResult(
+    searchMode: ExploreSearchMode,
+    query: String,
+    tags: Set<String>,
+    onClear: () -> Unit,
+) {
     Box(
         modifier         = Modifier
             .fillMaxWidth()
@@ -520,17 +618,21 @@ private fun ExploreEmptyResult(query: String, tags: Set<String>, onClear: () -> 
                 Icon(Icons.Default.SearchOff, null, tint = Primary, modifier = Modifier.size(40.dp))
             }
             Text("No results", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Primary)
-            val detail = buildString {
-                if (query.isNotBlank()) append("\"$query\"")
-                if (query.isNotBlank() && tags.isNotEmpty()) append(" · ")
-                if (tags.isNotEmpty()) append(tags.joinToString(", "))
+            if (searchMode == ExploreSearchMode.BY_TITLE) {
+                val detail = buildString {
+                    if (query.isNotBlank()) append("\"$query\"")
+                    if (query.isNotBlank() && tags.isNotEmpty()) append(" · ")
+                    if (tags.isNotEmpty()) append(tags.joinToString(", "))
+                }
+                if (detail.isNotBlank()) {
+                    Text(
+                        text = "No recipes found for $detail.",
+                        fontSize = 13.sp,
+                        color = CKOnSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
-            Text(
-                "No recipes found for $detail.",
-                fontSize  = 13.sp,
-                color     = CKOnSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
             OutlinedButton(
                 onClick = onClear,
                 shape   = CircleShape,

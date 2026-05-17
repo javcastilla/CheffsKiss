@@ -14,6 +14,7 @@ import software.ulpgc.cheffskiss.application.control.UpdateRecipeCommand
 import software.ulpgc.cheffskiss.application.port.ImageStorage
 import software.ulpgc.cheffskiss.application.services.IngredientCatalogService
 import software.ulpgc.cheffskiss.application.services.IngredientDraft
+import software.ulpgc.cheffskiss.application.services.IngredientSearchMode
 import software.ulpgc.cheffskiss.application.services.RecipeIngredientService
 import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.domain.model.Step
@@ -67,8 +68,11 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun filterIngredients(query: String): List<Ingredient> =
-        ingredientCatalog.filterCatalog(_ingredientCatalog.value, query)
+    fun filterIngredients(
+        query: String,
+        mode: IngredientSearchMode = IngredientSearchMode.DIRECT,
+    ): List<Ingredient> =
+        ingredientCatalog.filterCatalog(_ingredientCatalog.value, query, mode)
 
     fun createRecipe(
         authorId: String,
