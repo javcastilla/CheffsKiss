@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CheffsKiss"
+rootProject.name = "ChefKiss"
 include(":app")
  
