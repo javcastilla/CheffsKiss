@@ -126,30 +126,30 @@ CheffsKiss is built with **Kotlin** and **Jetpack Compose**, following a Hexagon
 
 <table>
   <tr>
-    <td align="center"><b>Alejandro van Baumberghen</b></td>
-    <td align="center"><b>Daniel Gutiérrez</b></td>
-    <td align="center"><b>Asamé Ez Zaim</b></td>
     <td align="center"><b>Javier Castilla</b></td>
+    <td align="center"><b>Asmae Ez Zaim</b></td>
+    <td align="center"><b>Daniel Gutiérrez</b></td>
+    <td align="center"><b>Alejandro van Baumberghen</b></td>
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/alejandro-vb">
-        <img src="https://img.shields.io/badge/GitHub-@alejandro--vb-181717?logo=github" />
+      <a href="https://github.com/javcastilla">
+        <img src="https://img.shields.io/badge/GitHub-@javcastilla-181717?logo=github" />
       </a>
     </td>
     <td align="center">
-      <a href="https://github.com/danielgtz">
-        <img src="https://img.shields.io/badge/GitHub-@danielgtz-181717?logo=github" />
+      <a href="https://github.com/A-NullPointer">
+        <img src="https://img.shields.io/badge/GitHub-@A-NullPointer-181717?logo=github" />
       </a>
     </td>
     <td align="center">
-      <a href="https://github.com/asame-ez">
-        <img src="https://img.shields.io/badge/GitHub-@asame--ez-181717?logo=github" />
+      <a href="https://github.com/DanGutRec">
+        <img src="https://img.shields.io/badge/GitHub-@DanGutRec-181717?logo=github" />
       </a>
     </td>
     <td align="center">
-      <a href="https://github.com/javiercastilla">
-        <img src="https://img.shields.io/badge/GitHub-@javiercastilla-181717?logo=github" />
+      <a href="https://github.com/Alejandrovb01">
+        <img src="https://img.shields.io/badge/GitHub-@Alejandrovb01-181717?logo=github" />
       </a>
     </td>
   </tr>
