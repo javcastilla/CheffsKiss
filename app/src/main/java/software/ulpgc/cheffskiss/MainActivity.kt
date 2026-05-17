@@ -3,16 +3,20 @@ package software.ulpgc.cheffskiss
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import coil.Coil
+import coil.compose.LocalImageLoader
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,6 +54,7 @@ import software.ulpgc.cheffskiss.ui.screen.MealPlanDetailScreen
 import software.ulpgc.cheffskiss.ui.screen.RecipeCollectionDetailScreen
 import software.ulpgc.cheffskiss.ui.screen.RecipeDetailScreen
 import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
+import software.ulpgc.cheffskiss.infrastructure.coil.RecipePhotoImageLoaderFactory
 import software.ulpgc.cheffskiss.ui.theme.CheffsKissTheme
 import software.ulpgc.cheffskiss.ui.theme.Primary
 
@@ -59,6 +64,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val context = LocalContext.current
+            val imageLoader = remember(context) {
+                RecipePhotoImageLoaderFactory.create(context.applicationContext).also {
+                    Coil.setImageLoader(it)
+                }
+            }
+            CompositionLocalProvider(LocalImageLoader provides imageLoader) {
             CheffsKissTheme {
                 val navController = rememberNavController()
                 val startDestination =
@@ -464,6 +476,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+            }
             }
         }
     }

@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.RecipeCollectionDetailViewModel
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -148,8 +148,8 @@ fun RecipeCollectionDetailScreen(
                                 .border(2.dp, CKOutlineVariant.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
                         ) {
                             if (collection.image.isNotBlank()) {
-                                AsyncImage(
-                                    model = collection.image,
+                                RecipeAsyncImage(
+                                    url = collection.image,
                                     contentDescription = collection.name,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
@@ -410,8 +410,8 @@ private fun CollectionRecipeRow(
                     contentAlignment = Alignment.Center
                 ) {
                     if (recipe?.image != null) {
-                        AsyncImage(
-                            model = recipe.image,
+                        RecipeAsyncImage(
+                            url = recipe.image?.toString(),
                             contentDescription = recipe.title,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()

@@ -27,7 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.ExploreViewModel
 import software.ulpgc.cheffskiss.ui.components.TabScaffold
@@ -338,8 +338,8 @@ private fun PinCard(
                 contentAlignment = Alignment.Center
             ) {
                 if (recipe.image != null) {
-                    AsyncImage(
-                        model = recipe.image.toString(),
+                    RecipeAsyncImage(
+                        url = recipe.image.toString(),
                         contentDescription = recipe.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()

@@ -4,8 +4,7 @@ import android.net.Uri
 
 interface ImageStorage {
     /**
-     * Persists the image at [uri] under the given [name] and returns
-     * a stable URI string that Coil can load across sessions.
+     * Sube la imagen en [uri] y devuelve la URL remota para guardar en el modelo.
      */
     suspend fun save(uri: Uri, folder: String, name: String): String
 }

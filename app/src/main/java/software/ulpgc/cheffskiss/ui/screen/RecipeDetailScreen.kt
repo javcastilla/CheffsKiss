@@ -22,7 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
 import software.ulpgc.cheffskiss.domain.model.focus.FocusCapabilities
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
@@ -115,8 +115,8 @@ fun RecipeDetailScreen(
                     .border(2.dp, CKOutlineVariant.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
             ) {
                 if (recipe.image != null) {
-                    AsyncImage(
-                        model = recipe.image.toString(),
+                    RecipeAsyncImage(
+                        url = recipe.image.toString(),
                         contentDescription = recipe.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -333,8 +333,8 @@ fun RecipeDetailScreen(
                             ) {
                                 Text(step.description, fontSize = 14.sp, color = OnSurface, lineHeight = 22.sp)
                                 if (step.hasMedia()) {
-                                    AsyncImage(
-                                        model = step.imageUrl,
+                                    RecipeAsyncImage(
+                                        url = step.imageUrl,
                                         contentDescription = null,
                                         modifier = Modifier
                                             .fillMaxWidth()

@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
 import software.ulpgc.cheffskiss.domain.enum.Measurement
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.ui.theme.*
@@ -160,8 +161,8 @@ internal fun CoverPhotoCard(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            showExisting -> AsyncImage(
-                model = existingUrl,
+            showExisting -> RecipeAsyncImage(
+                url = existingUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -381,8 +382,8 @@ internal fun CRStepItem(
                 Box(
                     modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(12.dp))
                 ) {
-                    AsyncImage(
-                        model = displayImage,
+                    RecipeAsyncImage(
+                        url = displayImage,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()

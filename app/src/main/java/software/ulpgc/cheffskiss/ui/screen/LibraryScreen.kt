@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealPlan
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
-import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
 import software.ulpgc.cheffskiss.domain.model.RecipeCollection
 import software.ulpgc.cheffskiss.ui.LibraryViewModel
 import software.ulpgc.cheffskiss.ui.MealPlanViewModel
@@ -422,8 +422,8 @@ private fun CollectionCard(
                 contentAlignment = Alignment.Center
             ) {
                 if (collection.image.isNotBlank()) {
-                    AsyncImage(
-                        model = collection.image,
+                    RecipeAsyncImage(
+                        url = collection.image,
                         contentDescription = collection.name,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()

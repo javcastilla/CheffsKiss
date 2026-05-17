@@ -1,6 +1,7 @@
 package software.ulpgc.cheffskiss.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -9,16 +10,15 @@ import software.ulpgc.cheffskiss.application.control.CreateRecipeCollectionInput
 import software.ulpgc.cheffskiss.application.control.DeleteRecipeCollectionCommand
 import software.ulpgc.cheffskiss.application.control.DeleteRecipeCollectionCommandInput
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
+import software.ulpgc.cheffskiss.application.port.ImageStorage
 import software.ulpgc.cheffskiss.application.port.RecipeCollectionRepository
+import software.ulpgc.cheffskiss.application.services.ImagePersistence
 import software.ulpgc.cheffskiss.application.services.GetRecipeCollectionQuery
 import software.ulpgc.cheffskiss.domain.model.RecipeCollection
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeCollectionService
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.ImageStorageFactory
 import java.util.UUID
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.material3.ButtonDefaults.outlinedButtonColors
 data class RecipeCollectionUiState(
     val isLoading: Boolean = true,
     val collections: List<RecipeCollection> = emptyList(),
@@ -31,9 +31,12 @@ data class RecipeCollectionUiState(
 )
 
 class RecipeCollectionViewModel(
+    application: Application,
     private val port: RecipeCollectionRepository = FirebaseRecipeCollectionService(),
-    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
-) : ViewModel() {
+    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService(),
+) : AndroidViewModel(application) {
+
+    private val imageStorage: ImageStorage = ImageStorageFactory.create(application)
 
     private val _uiState = MutableStateFlow(RecipeCollectionUiState())
     val uiState: StateFlow<RecipeCollectionUiState> = _uiState.asStateFlow()
@@ -84,12 +87,18 @@ class RecipeCollectionViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isCreating = true) }
             runCatching {
+                val imageUrl = ImagePersistence.persistIfLocal(
+                    imageStorage = imageStorage,
+                    source = image,
+                    folder = uid.toString(),
+                    fileName = "collection_cover.jpg",
+                )
                 CreateRecipeCollectionCommand(
                     port  = port,
                     input = object : CreateRecipeCollectionInput {
                         override fun userId() = uid
                         override fun name()   = name
-                        override fun image() = image
+                        override fun image() = imageUrl
                     }
                 ).execute()
             }.onFailure { e -> _uiState.update { it.copy(error = e.message) } }

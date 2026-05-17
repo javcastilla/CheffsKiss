@@ -41,7 +41,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
 import software.ulpgc.cheffskiss.ui.components.TabScaffold
 import software.ulpgc.cheffskiss.ui.navigation.MainBottomNavigation
 
@@ -475,8 +475,8 @@ private fun RecipeItemCard(
                 contentAlignment = Alignment.Center
             ) {
                 if (recipe.image != null) {
-                    AsyncImage(
-                        model = recipe.image.toString(),
+                    RecipeAsyncImage(
+                        url = recipe.image.toString(),
                         contentDescription = recipe.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()

@@ -58,7 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.focus.FocusCapabilities
 import software.ulpgc.cheffskiss.domain.model.focus.FocusPhase
@@ -376,8 +376,8 @@ private fun FocusStepContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (step.hasMedia()) {
-                AsyncImage(
-                    model = step.imageUrl,
+                RecipeAsyncImage(
+                    url = step.imageUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()

@@ -1,13 +1,16 @@
 package software.ulpgc.cheffskiss.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.control.UpdateRecipeCollectionCommand
 import software.ulpgc.cheffskiss.application.control.UpdateRecipeCollectionInput
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
+import software.ulpgc.cheffskiss.application.port.ImageStorage
 import software.ulpgc.cheffskiss.application.port.RecipeCollectionRepository
+import software.ulpgc.cheffskiss.application.services.ImagePersistence
 import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
 import software.ulpgc.cheffskiss.application.services.GetRecipeCollectionQuery
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
@@ -16,6 +19,7 @@ import software.ulpgc.cheffskiss.domain.port.input.RecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeCollectionService
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.ImageStorageFactory
 import java.util.UUID
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseUserNameReader
 
@@ -39,11 +43,14 @@ data class RecipeCollectionDetailUiState(
 )
 
 class RecipeCollectionDetailViewModel(
+    application: Application,
     private val port: RecipeCollectionRepository = FirebaseRecipeCollectionService(),
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
     private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService(),
-    private val userNameReader: FirebaseUserNameReader = FirebaseUserNameReader()
-) : ViewModel() {
+    private val userNameReader: FirebaseUserNameReader = FirebaseUserNameReader(),
+) : AndroidViewModel(application) {
+
+    private val imageStorage: ImageStorage = ImageStorageFactory.create(application)
 
     private val _uiState = MutableStateFlow(RecipeCollectionDetailUiState())
     val uiState: StateFlow<RecipeCollectionDetailUiState> = _uiState.asStateFlow()
@@ -140,25 +147,52 @@ class RecipeCollectionDetailViewModel(
     }
     fun updateMetadata(newName: String, newImage: String) {
         val collection = uiState.value.collection ?: return
-        save(collection.copy(name = newName, image = newImage))
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true) }
+            runCatching {
+                val imageUrl = ImagePersistence.persistIfLocal(
+                    imageStorage = imageStorage,
+                    source = newImage,
+                    folder = collection.id.toString(),
+                    fileName = "cover.jpg",
+                )
+                persistToFirestore(collection.copy(name = newName, image = imageUrl))
+            }.onFailure { e ->
+                _uiState.update { it.copy(isSaving = false, error = e.message) }
+            }
+        }
     }
+
     private val _saved = MutableSharedFlow<Unit>()
     val saved: SharedFlow<Unit> = _saved.asSharedFlow()
+
     private fun save(updated: RecipeCollection) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
-            UpdateRecipeCollectionCommand(
-                port  = port,
-                input = object : UpdateRecipeCollectionInput {
-                    override fun id()        = updated.id
-                    override fun userId()    = updated.userId
-                    override fun name()      = updated.name
-                    override fun image()     = updated.image
-                    override fun createdAt() = updated.createdAt
-                    override fun recipes()   = updated.recipes
-                }
-            ).execute()
-            _uiState.update { it.copy(collection = updated, isSaving = false, saveCompleted = true, recipePicker = RecipePickerFormState()) }
+            runCatching { persistToFirestore(updated) }
+                .onFailure { e -> _uiState.update { it.copy(isSaving = false, error = e.message) } }
+        }
+    }
+
+    private suspend fun persistToFirestore(updated: RecipeCollection) {
+        UpdateRecipeCollectionCommand(
+            port  = port,
+            input = object : UpdateRecipeCollectionInput {
+                override fun id()        = updated.id
+                override fun userId()    = updated.userId
+                override fun name()      = updated.name
+                override fun image()     = updated.image
+                override fun createdAt() = updated.createdAt
+                override fun recipes()   = updated.recipes
+            },
+        ).execute()
+        _uiState.update {
+            it.copy(
+                collection = updated,
+                isSaving = false,
+                saveCompleted = true,
+                recipePicker = RecipePickerFormState(),
+            )
         }
     }
     fun resetSaveState() {

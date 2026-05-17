@@ -22,7 +22,7 @@ import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.user.User
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
-import software.ulpgc.cheffskiss.infrastructure.adapter.output.LocalImageStorage
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.ImageStorageFactory
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
@@ -37,7 +37,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
 
     private val recipeService = FirebaseRecipeService()
     private val recipeReader  = FirebaseRecipeReader()
-    private val imageStorage: ImageStorage = LocalImageStorage(application)
+    private val imageStorage: ImageStorage = ImageStorageFactory.create(application)
     private val ingredientCatalog = IngredientCatalogService(recipeReader)
     private val ingredientService = RecipeIngredientService(recipeReader, ingredientCatalog)
 
