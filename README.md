@@ -69,13 +69,13 @@ Sign up with email and password. Your recipes, collections and meal plans sync a
 ## 📱 Screenshots
 
 <p align="center">
-  <img src="docs/assets/home.jpg" alt="Home" width="200"/>
+  <img src="doc/assets/home.jpg" alt="Home" width="200"/>
   &nbsp;&nbsp;
-  <img src="docs/assets/explore.jpg" alt="Explore Recipes" width="200"/>
+  <img src="doc/assets/explore.jpg" alt="Explore Recipes" width="200"/>
   &nbsp;&nbsp;
-  <img src="docs/assets/focus.jpg" alt="Focus Mode" width="200"/>
+  <img src="doc/assets/focus.jpg" alt="Focus Mode" width="200"/>
   &nbsp;&nbsp;
-  <img src="docs/assets/plan.jpg" alt="Meal Planner" width="200"/>
+  <img src="doc/assets/plan.jpg" alt="Meal Planner" width="200"/>
 </p>
 
 <p align="center">
