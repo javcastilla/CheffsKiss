@@ -140,7 +140,8 @@ class FirebaseRecipeService : RecipeRepository {
                 "id"          to step.id.toString(),
                 "description" to step.description,
                 "duration"    to step.duration?.inWholeSeconds,
-                "cardinal"    to step.cardinal
+                "cardinal"    to step.cardinal,
+                "image"       to step.imageUrl?.takeIf { it.isNotBlank() },
             )
         }
     )

@@ -2,11 +2,6 @@ package software.ulpgc.cheffskiss.ui.screen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -29,7 +24,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.flow.distinctUntilChanged
 import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.ui.ActivePlanDay
 import software.ulpgc.cheffskiss.ui.HomeUiState
@@ -48,7 +42,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
-import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
+import software.ulpgc.cheffskiss.ui.components.TabScaffold
+import software.ulpgc.cheffskiss.ui.navigation.MainBottomNavigation
 
 private data class FilterTag(val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
 
@@ -68,8 +63,11 @@ fun HomeRoute(
     viewModel: HomeViewModel,
     authViewModel: AuthenticantionViewModel = viewModel(),
     onCreateRecipe: () -> Unit,
+    onCreateMealPlan: () -> Unit,
+    onCreateList: () -> Unit,
     onLibraryClick: () -> Unit,
     onExploreClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onLogout: () -> Unit,
     onRecipeClick: (Recipe) -> Unit,
     onViewAll: () -> Unit = {},
@@ -81,8 +79,11 @@ fun HomeRoute(
         state          = state,
         authorNames    = authorNames,
         onCreateRecipe = onCreateRecipe,
+        onCreateMealPlan = onCreateMealPlan,
+        onCreateList = onCreateList,
         onLibraryClick = onLibraryClick,
         onExploreClick = onExploreClick,
+        onProfileClick = onProfileClick,
         onLogout       = { authViewModel.logout(); onLogout() },
         onRecipeClick  = onRecipeClick,
         onToggleSave   = viewModel::toggleSave,
@@ -97,8 +98,11 @@ fun HomeScreen(
     state: HomeUiState,
     authorNames: Map<String, String>,
     onCreateRecipe: () -> Unit,
+    onCreateMealPlan: () -> Unit,
+    onCreateList: () -> Unit,
     onLibraryClick: () -> Unit,
     onExploreClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onLogout: () -> Unit,
     onRecipeClick: (Recipe) -> Unit,
     onToggleSave: (Recipe) -> Unit,
@@ -110,54 +114,23 @@ fun HomeScreen(
     var searchQuery by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    var fabVisible by remember { mutableStateOf(true) }
-    LaunchedEffect(listState) {
-        var prevIndex  = 0
-        var prevOffset = 0
-        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
-            .distinctUntilChanged()
-            .collect { (index, offset) ->
-                fabVisible = index < prevIndex || (index == prevIndex && offset <= prevOffset)
-                prevIndex  = index
-                prevOffset = offset
-            }
-    }
-
-    Scaffold(
+    TabScaffold(
+        currentRoute = MainBottomNavigation.HOME,
+        onHomeClick = {},
+        onExploreClick = onExploreClick,
+        onLibraryClick = onLibraryClick,
+        onProfileClick = onProfileClick,
+        onCreateRecipe = onCreateRecipe,
+        onCreateMealPlan = onCreateMealPlan,
+        onCreateList = onCreateList,
         containerColor = Background,
-        bottomBar = {
-            HomeBottomBar(
-                currentRoute  = "home",
-                onHomeClick   = {},
-                onExploreClick = onExploreClick,
-                onCreateClick = onCreateRecipe,
-                onSavedClick  = onLibraryClick
-            )
-        },
-        floatingActionButton = {
-            AnimatedVisibility(
-                visible = fabVisible,
-                enter   = scaleIn() + fadeIn(),
-                exit    = scaleOut() + fadeOut()
-            ) {
-                FloatingActionButton(
-                    onClick        = onCreateRecipe,
-                    containerColor = Primary,
-                    contentColor   = OnPrimary,
-                    shape          = CircleShape,
-                    modifier       = Modifier.size(56.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "New recipe", modifier = Modifier.size(28.dp))
-                }
-            }
-        }
     ) { padding ->
 
         if (state.isLoading) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = Primary)
             }
-            return@Scaffold
+            return@TabScaffold
         }
 
         if (state.error != null) {
@@ -171,7 +144,7 @@ fun HomeScreen(
                     ) { Text("Retry") }
                 }
             }
-            return@Scaffold
+            return@TabScaffold
         }
 
         val filtered = state.recipes.filter { recipe ->

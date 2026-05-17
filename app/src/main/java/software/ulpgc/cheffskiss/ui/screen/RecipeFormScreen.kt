@@ -117,6 +117,7 @@ fun RecipeFormScreen(
                             id = index,
                             description = step.description,
                             duration = step.duration?.inWholeMinutes?.toString() ?: "0",
+                            existingImageUrl = step.imageUrl,
                         ),
                     )
                 }

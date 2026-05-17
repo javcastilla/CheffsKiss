@@ -113,6 +113,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 val totalMinutes = ((hours.toIntOrNull() ?: 0) * 60 + (minutes.toIntOrNull() ?: 0)).toLong()
                 val coverUrl = imageUri?.let { imageStorage.save(it, recipeId.toString(), "cover.jpg") } ?: ""
                 val lines = ingredientService.resolveLines(ingredientDrafts)
+                val stepsWithMedia = attachStepImages(recipeId.toString(), steps, stepImageUris)
 
                 val input = object : RecipeInput {
                     override fun id() = recipeId
@@ -121,7 +122,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                     override fun servings() = servings
                     override fun duration() = totalMinutes.minutes
                     override fun lines() = lines
-                    override fun steps() = steps
+                    override fun steps() = stepsWithMedia
                     override fun tags() = tags
                     override fun image() = coverUrl
                     override fun creator() = User(UserIds.creatorIdFromFirebaseUid(authorId))
@@ -171,6 +172,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                     imageStorage.save(imageUri, recipeId.toString(), "cover.jpg")
                 } else existingImageUrl
                 val lines = ingredientService.resolveLines(ingredientDrafts)
+                val stepsWithMedia = attachStepImages(recipeId.toString(), steps, stepImageUris)
 
                 val input = object : RecipeInput {
                     override fun id() = recipeId
@@ -179,7 +181,7 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                     override fun servings() = servings
                     override fun duration() = totalMinutes.minutes
                     override fun lines() = lines
-                    override fun steps() = steps
+                    override fun steps() = stepsWithMedia
                     override fun tags() = tags
                     override fun image() = coverUrl
                     override fun creator() = existing.creator
@@ -195,5 +197,18 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
                 onFailure = { e -> _uiState.value = RecipeUiState.Error(e.message ?: "Error updating recipe") },
             )
         }
+    }
+
+    private suspend fun attachStepImages(
+        recipeFolder: String,
+        steps: List<Step>,
+        imageUris: List<Uri?>,
+    ): List<Step> = steps.mapIndexed { index, step ->
+        val uri = imageUris.getOrNull(index)
+        val imageUrl = when {
+            uri != null -> imageStorage.save(uri, recipeFolder, "step_${step.id}.jpg")
+            else -> step.imageUrl
+        }
+        step.withImageUrl(imageUrl?.takeIf { it.isNotBlank() })
     }
 }

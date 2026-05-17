@@ -31,7 +31,12 @@ import software.ulpgc.cheffskiss.ui.MealPlanViewModel
 import software.ulpgc.cheffskiss.ui.RecipeCollectionDetailViewModel
 import software.ulpgc.cheffskiss.ui.RecipeCollectionViewModel
 import software.ulpgc.cheffskiss.ui.RecipeDetailViewModel
+import software.ulpgc.cheffskiss.ui.FocusModeViewModel
+import software.ulpgc.cheffskiss.ui.navigation.FocusModeNavigation
+import software.ulpgc.cheffskiss.ui.navigation.MainBottomNavigation
 import software.ulpgc.cheffskiss.ui.navigation.MealPlanNavigation
+import software.ulpgc.cheffskiss.ui.screen.focus.FocusModeScreen
+import software.ulpgc.cheffskiss.ui.screen.SocialProfileScreen
 import software.ulpgc.cheffskiss.ui.screen.AllRecipesScreen
 import software.ulpgc.cheffskiss.ui.screen.CreateRecipeCollectionScreen
 import software.ulpgc.cheffskiss.ui.screen.CreateRecipeScreen
@@ -61,6 +66,34 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(navController = navController, startDestination = startDestination) {
 
+                    val navigateHome = {
+                        navController.navigate(MainBottomNavigation.HOME) {
+                            launchSingleTop = true
+                        }
+                    }
+                    val navigateExplore = {
+                        navController.navigate(MainBottomNavigation.EXPLORE) {
+                            launchSingleTop = true
+                        }
+                    }
+                    val navigateLibrary = {
+                        navController.navigate(MainBottomNavigation.libraryRoute()) {
+                            launchSingleTop = true
+                        }
+                    }
+                    val navigateProfile = {
+                        navController.navigate(MainBottomNavigation.PROFILE) {
+                            launchSingleTop = true
+                        }
+                    }
+                    val navigateCreateRecipe = { navController.navigate("create_recipe") }
+                    val navigateCreateList = { navController.navigate("create_collection") }
+                    val navigateCreateMealPlan = {
+                        navController.navigate(MainBottomNavigation.libraryRoute(tab = 2, createMealPlan = true)) {
+                            launchSingleTop = true
+                        }
+                    }
+
                     // ── Auth ──────────────────────────────────────────────────
                     composable("login") {
                         LoginScreen(
@@ -88,11 +121,14 @@ class MainActivity : ComponentActivity() {
                     composable("home") {
                         val homeViewModel: HomeViewModel = viewModel()
                         HomeRoute(
-                            viewModel       = homeViewModel,
-                            onCreateRecipe  = { navController.navigate("create_recipe") },
-                            onLibraryClick  = { navController.navigate("library") { launchSingleTop = true } },
-                            onExploreClick  = { navController.navigate("explore") { launchSingleTop = true } },
-                            onLogout        = { navController.navigate("login") { popUpTo(0) { inclusive = true } } },
+                            viewModel        = homeViewModel,
+                            onCreateRecipe   = navigateCreateRecipe,
+                            onCreateMealPlan = navigateCreateMealPlan,
+                            onCreateList     = navigateCreateList,
+                            onLibraryClick   = navigateLibrary,
+                            onExploreClick   = navigateExplore,
+                            onProfileClick   = navigateProfile,
+                            onLogout         = { navController.navigate("login") { popUpTo(0) { inclusive = true } } },
                             onRecipeClick   = { recipe -> navController.navigate("recipe_detail/${recipe.id}") },
                             onViewAll       = { navController.navigate("all_recipes") },
                             onMealPlanClick = { planId -> navController.navigate("meal_plan_detail/$planId") }
@@ -118,17 +154,36 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     // ── Library ───────────────────────────────────────────────
-                    composable("library") {
+                    composable(
+                        route = MainBottomNavigation.LIBRARY_ROUTE,
+                        arguments = listOf(
+                            navArgument("tab") {
+                                type = NavType.IntType
+                                defaultValue = 0
+                            },
+                            navArgument("createMealPlan") {
+                                type = NavType.BoolType
+                                defaultValue = false
+                            },
+                        ),
+                    ) { backStackEntry ->
+                        val tab = backStackEntry.arguments?.getInt("tab") ?: 0
+                        val openMealPlanCreate =
+                            backStackEntry.arguments?.getBoolean("createMealPlan") ?: false
                         LibraryScreen(
                             viewModel          = viewModel<LibraryViewModel>(),
                             mealPlanViewModel  = viewModel<MealPlanViewModel>(),
-                            onGoHome           = { navController.navigate("home") { launchSingleTop = true } },
-                            onExploreClick     = { navController.navigate("explore") { launchSingleTop = true } },
-                            onCreateRecipe     = { navController.navigate("create_recipe") },
+                            onGoHome           = navigateHome,
+                            onExploreClick     = navigateExplore,
+                            onProfileClick     = navigateProfile,
+                            onCreateRecipe     = navigateCreateRecipe,
+                            onCreateMealPlan   = navigateCreateMealPlan,
+                            onCreateList       = navigateCreateList,
                             onRecipeClick      = { recipe -> navController.navigate("recipe_detail/${recipe.id}") },
                             onMealPlanClick    = { plan -> navController.navigate("meal_plan_detail/${plan.id}") },
-                            onCreateCollection = { navController.navigate("create_collection") },
-                            onCollectionClick  = { collection -> navController.navigate("collectiondetail/${collection.id}") }
+                            onCollectionClick  = { collection -> navController.navigate("collectiondetail/${collection.id}") },
+                            initialTab         = tab,
+                            openMealPlanCreate = openMealPlanCreate,
                         )
                     }
 
@@ -191,11 +246,26 @@ class MainActivity : ComponentActivity() {
                     // ── Explore ───────────────────────────────────────────────
                     composable("explore") {
                         ExploreScreen(
-                            viewModel     = viewModel<ExploreViewModel>(),
-                            onRecipeClick = { recipe -> navController.navigate("recipe_detail/${recipe.id}") },
-                            onHomeClick   = { navController.navigate("home") { launchSingleTop = true } },
-                            onCreateClick = { navController.navigate("create_recipe") },
-                            onSavedClick  = { navController.navigate("library") { launchSingleTop = true } }
+                            viewModel        = viewModel<ExploreViewModel>(),
+                            onRecipeClick    = { recipe -> navController.navigate("recipe_detail/${recipe.id}") },
+                            onHomeClick      = navigateHome,
+                            onLibraryClick   = navigateLibrary,
+                            onProfileClick   = navigateProfile,
+                            onCreateRecipe   = navigateCreateRecipe,
+                            onCreateMealPlan = navigateCreateMealPlan,
+                            onCreateList     = navigateCreateList,
+                        )
+                    }
+
+                    composable(MainBottomNavigation.PROFILE) {
+                        SocialProfileScreen(
+                            onHomeClick      = navigateHome,
+                            onExploreClick   = navigateExplore,
+                            onLibraryClick   = navigateLibrary,
+                            onCreateRecipe   = navigateCreateRecipe,
+                            onCreateMealPlan = navigateCreateMealPlan,
+                            onCreateList     = navigateCreateList,
+                            onLogout         = { navController.navigate("login") { popUpTo(0) { inclusive = true } } },
                         )
                     }
 
@@ -260,6 +330,9 @@ class MainActivity : ComponentActivity() {
                                 onSave          = { detailViewModel.toggleSave() },
                                 onDelete        = { detailViewModel.deleteRecipe { navController.popBackStack() } },
                                 onEdit          = { navController.navigate("edit_recipe/${recipe!!.id}") },
+                                onStartFocus    = {
+                                    navController.navigate(FocusModeNavigation.route(recipeId))
+                                },
                                 pickForMealSlot = pickForMealSlot,
                                 onAddToMealSlot = {
                                     navController.previousBackStackEntry
@@ -267,6 +340,48 @@ class MainActivity : ComponentActivity() {
                                         ?.set(MealPlanNavigation.PICKED_RECIPE_ID_KEY, recipeId)
                                     navController.popBackStack()
                                 }
+                            )
+                        }
+                    }
+
+                    composable(
+                        route = FocusModeNavigation.ROUTE,
+                        arguments = listOf(navArgument("recipeId") { type = NavType.StringType }),
+                    ) { backStackEntry ->
+                        val focusRecipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
+                        LaunchedEffect(focusRecipeId) {
+                            backStackEntry.savedStateHandle[FocusModeViewModel.ARG_RECIPE_ID] = focusRecipeId
+                        }
+                        val focusViewModel: FocusModeViewModel = viewModel(backStackEntry)
+                        val detailEntry = remember(focusRecipeId) {
+                            runCatching {
+                                navController.getBackStackEntry(
+                                    "recipe_detail/$focusRecipeId?pickForMealSlot=false",
+                                )
+                            }.getOrNull()
+                        }
+                        val detailViewModel: RecipeDetailViewModel? = detailEntry?.let { viewModel(it) }
+
+                        if (detailViewModel != null) {
+                            val isSaved by detailViewModel.isSaved.collectAsState()
+                            val seedRecipe by detailViewModel.recipe.collectAsState()
+                            val seedLines by detailViewModel.lines.collectAsState()
+                            val seedSteps by detailViewModel.steps.collectAsState()
+                            FocusModeScreen(
+                                viewModel = focusViewModel,
+                                onExit = { navController.popBackStack() },
+                                onViewRecipeDetail = { navController.popBackStack() },
+                                seedRecipe = seedRecipe,
+                                seedLines = seedLines,
+                                seedSteps = seedSteps,
+                                isSaved = isSaved,
+                                onToggleSave = { detailViewModel.toggleSave() },
+                            )
+                        } else {
+                            FocusModeScreen(
+                                viewModel = focusViewModel,
+                                onExit = { navController.popBackStack() },
+                                onViewRecipeDetail = { navController.popBackStack() },
                             )
                         }
                     }

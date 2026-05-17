@@ -23,9 +23,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import software.ulpgc.cheffskiss.domain.model.focus.FocusCapabilities
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
+import software.ulpgc.cheffskiss.ui.theme.StickyBottomBar
+import software.ulpgc.cheffskiss.ui.theme.StickyPrimaryButton
 import software.ulpgc.cheffskiss.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,10 +46,20 @@ fun RecipeDetailScreen(
     onEdit: () -> Unit = {},
     pickForMealSlot: Boolean = false,
     onAddToMealSlot: () -> Unit = {},
+    onStartFocus: () -> Unit = {},
 ) {
     val scrollState = rememberScrollState()
     val checkedLines = remember { mutableStateListOf<Int>() }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val sortedSteps = remember(steps) { steps.sortedBy { it.cardinal } }
+    val focusCapabilities = remember(sortedSteps, recipe) {
+        FocusCapabilities.from(
+            stepCount = sortedSteps.size,
+            timedStepCount = sortedSteps.count { it.hasTimer() },
+            mediaStepCount = sortedSteps.count { it.hasMedia() },
+            totalDurationMinutes = recipe.duration.inWholeMinutes,
+        )
+    }
 
     Scaffold(
         containerColor = Background,
@@ -69,11 +82,17 @@ fun RecipeDetailScreen(
             )
         },
         bottomBar = {
-            if (pickForMealSlot) {
-                StickyBottomBar {
+            when {
+                pickForMealSlot -> StickyBottomBar {
                     StickyPrimaryButton(
                         text = "Add to meal slot",
                         onClick = onAddToMealSlot,
+                    )
+                }
+                sortedSteps.isNotEmpty() -> StickyBottomBar {
+                    StickyPrimaryButton(
+                        text = "Comenzar receta",
+                        onClick = onStartFocus,
                     )
                 }
             }
@@ -227,6 +246,14 @@ fun RecipeDetailScreen(
                 }
             }
 
+            if (!pickForMealSlot && sortedSteps.isNotEmpty()) {
+                FocusModePreviewCard(
+                    capabilities = focusCapabilities,
+                    steps = sortedSteps,
+                    onStartFocus = onStartFocus,
+                )
+            }
+
             DetailCard(icon = Icons.Default.ShoppingBasket, title = "Ingredients") {
                 if (lines.isEmpty()) {
                     Text("No ingredients added", fontSize = 13.sp, color = CKOnSurfaceVariant)
@@ -269,7 +296,6 @@ fun RecipeDetailScreen(
             }
 
             DetailCard(icon = Icons.Default.FormatListNumbered, title = "Preparation") {
-                val sortedSteps = steps.sortedBy { it.cardinal }
                 if (sortedSteps.isEmpty()) {
                     Text("No steps added", fontSize = 13.sp, color = CKOnSurfaceVariant)
                 } else {
@@ -306,6 +332,17 @@ fun RecipeDetailScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(step.description, fontSize = 14.sp, color = OnSurface, lineHeight = 22.sp)
+                                if (step.hasMedia()) {
+                                    AsyncImage(
+                                        model = step.imageUrl,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .aspectRatio(16f / 9f)
+                                            .clip(RoundedCornerShape(12.dp)),
+                                        contentScale = ContentScale.Crop,
+                                    )
+                                }
                                 if ((step.duration?.inWholeMinutes ?: 0) > 0) {
                                     HorizontalDivider(color = CKOutlineVariant.copy(alpha = 0.2f))
                                     Row(
@@ -398,5 +435,70 @@ private fun MetaStatItem(
         Icon(icon, null, tint = Primary, modifier = Modifier.size(26.dp))
         Text(label, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = CKOnSurfaceVariant, letterSpacing = 0.8.sp)
         Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Primary)
+    }
+}
+
+@Composable
+private fun FocusModePreviewCard(
+    capabilities: FocusCapabilities,
+    steps: List<Step>,
+    onStartFocus: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Primary),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        "Modo guiado",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 18.sp,
+                        color = OnPrimary,
+                    )
+                    Text(
+                        "Cocina paso a paso con temporizadores integrados",
+                        fontSize = 13.sp,
+                        color = OnPrimary.copy(alpha = 0.85f),
+                        lineHeight = 18.sp,
+                    )
+                }
+                Icon(Icons.Default.PlayArrow, null, tint = CKSecondary, modifier = Modifier.size(32.dp))
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("${capabilities.stepCount} pasos", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = OnPrimary.copy(alpha = 0.9f))
+                if (capabilities.timedStepCount > 0) {
+                    Text("${capabilities.timedStepCount} timers", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = OnPrimary.copy(alpha = 0.9f))
+                }
+                if (capabilities.mediaStepCount > 0) {
+                    Text("${capabilities.mediaStepCount} fotos", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = OnPrimary.copy(alpha = 0.9f))
+                }
+            }
+            steps.take(3).forEach { step ->
+                Text(
+                    "• Paso ${step.cardinal}: ${step.description.take(48)}${if (step.description.length > 48) "…" else ""}",
+                    fontSize = 12.sp,
+                    color = OnPrimary.copy(alpha = 0.8f),
+                )
+            }
+            Button(
+                onClick = onStartFocus,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = CKSecondary, contentColor = Primary),
+            ) {
+                Text("Comenzar receta", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            }
+        }
     }
 }

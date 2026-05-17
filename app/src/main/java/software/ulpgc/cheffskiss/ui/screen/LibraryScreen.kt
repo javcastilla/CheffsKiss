@@ -28,7 +28,8 @@ import coil.compose.AsyncImage
 import software.ulpgc.cheffskiss.domain.model.RecipeCollection
 import software.ulpgc.cheffskiss.ui.LibraryViewModel
 import software.ulpgc.cheffskiss.ui.MealPlanViewModel
-import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
+import software.ulpgc.cheffskiss.ui.components.TabScaffold
+import software.ulpgc.cheffskiss.ui.navigation.MainBottomNavigation
 import software.ulpgc.cheffskiss.ui.theme.*
 
 @Composable
@@ -37,48 +38,37 @@ fun LibraryScreen(
     mealPlanViewModel: MealPlanViewModel,
     onGoHome: () -> Unit,
     onExploreClick: () -> Unit,
+    onProfileClick: () -> Unit,
     onCreateRecipe: () -> Unit,
+    onCreateMealPlan: () -> Unit,
+    onCreateList: () -> Unit,
     onRecipeClick: (Recipe) -> Unit,
     onMealPlanClick: (MealPlan) -> Unit,
-    onCreateCollection: () -> Unit,
-    onCollectionClick: (RecipeCollection) -> Unit
+    onCollectionClick: (RecipeCollection) -> Unit,
+    initialTab: Int = 0,
+    openMealPlanCreate: Boolean = false,
 ) {
     val state by viewModel.uiState.collectAsState()
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(initialTab.coerceIn(0, 2)) }
     var selectedFilter by remember { mutableStateOf("All") }
 
-    Scaffold(
-        containerColor = Background,
-        bottomBar = {
-            HomeBottomBar(
-                currentRoute   = "library",
-                onHomeClick    = onGoHome,
-                onExploreClick = onExploreClick,
-                onCreateClick  = onCreateRecipe,
-                onSavedClick   = {}
-            )
-        },
-        floatingActionButton = {
-            val onClick = when (selectedTab) {
-                0    -> onCreateRecipe
-                1    -> onCreateCollection
-                else -> mealPlanViewModel::showCreateDialog
-            }
-            val label = when (selectedTab) {
-                0    -> "New Recipe"
-                1    -> "New Collection"
-                else -> "New Meal Plan"
-            }
-            FloatingActionButton(
-                onClick        = onClick,
-                containerColor = Primary,
-                contentColor   = OnPrimary,
-                shape          = CircleShape,
-                modifier       = Modifier.size(56.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = label, modifier = Modifier.size(28.dp))
-            }
+    LaunchedEffect(openMealPlanCreate) {
+        if (openMealPlanCreate) {
+            selectedTab = 2
+            mealPlanViewModel.showCreateDialog()
         }
+    }
+
+    TabScaffold(
+        currentRoute = MainBottomNavigation.LIBRARY,
+        onHomeClick = onGoHome,
+        onExploreClick = onExploreClick,
+        onLibraryClick = {},
+        onProfileClick = onProfileClick,
+        onCreateRecipe = onCreateRecipe,
+        onCreateMealPlan = onCreateMealPlan,
+        onCreateList = onCreateList,
+        containerColor = Background,
     ) { padding ->
         Column(
             modifier = Modifier

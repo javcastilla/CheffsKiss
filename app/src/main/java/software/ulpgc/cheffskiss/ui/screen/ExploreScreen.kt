@@ -3,8 +3,6 @@ package software.ulpgc.cheffskiss.ui.screen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,10 +28,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import kotlinx.coroutines.flow.distinctUntilChanged
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.ExploreViewModel
-import software.ulpgc.cheffskiss.ui.components.HomeBottomBar
+import software.ulpgc.cheffskiss.ui.components.TabScaffold
+import software.ulpgc.cheffskiss.ui.navigation.MainBottomNavigation
 import software.ulpgc.cheffskiss.ui.theme.*
 
 // ── Tag icon mapping ──────────────────────────────────────────────────────────
@@ -76,53 +74,25 @@ fun ExploreScreen(
     viewModel: ExploreViewModel,
     onRecipeClick: (Recipe) -> Unit,
     onHomeClick: () -> Unit,
-    onCreateClick: () -> Unit,
-    onSavedClick: () -> Unit
+    onLibraryClick: () -> Unit,
+    onProfileClick: () -> Unit,
+    onCreateRecipe: () -> Unit,
+    onCreateMealPlan: () -> Unit,
+    onCreateList: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
     val gridState = rememberLazyStaggeredGridState()
 
-    var fabVisible by remember { mutableStateOf(true) }
-    LaunchedEffect(gridState) {
-        var prevIndex  = 0
-        var prevOffset = 0
-        snapshotFlow { gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset }
-            .distinctUntilChanged()
-            .collect { (index, offset) ->
-                fabVisible = index < prevIndex || (index == prevIndex && offset <= prevOffset)
-                prevIndex  = index
-                prevOffset = offset
-            }
-    }
-
-    Scaffold(
+    TabScaffold(
+        currentRoute = MainBottomNavigation.EXPLORE,
+        onHomeClick = onHomeClick,
+        onExploreClick = {},
+        onLibraryClick = onLibraryClick,
+        onProfileClick = onProfileClick,
+        onCreateRecipe = onCreateRecipe,
+        onCreateMealPlan = onCreateMealPlan,
+        onCreateList = onCreateList,
         containerColor = Background,
-        floatingActionButton = {
-            AnimatedVisibility(
-                visible = fabVisible,
-                enter   = scaleIn() + fadeIn(),
-                exit    = scaleOut() + fadeOut()
-            ) {
-                FloatingActionButton(
-                    onClick        = onCreateClick,
-                    containerColor = Primary,
-                    contentColor   = OnPrimary,
-                    shape          = CircleShape,
-                    modifier       = Modifier.size(56.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "New recipe", modifier = Modifier.size(28.dp))
-                }
-            }
-        },
-        bottomBar = {
-            HomeBottomBar(
-                currentRoute   = "explore",
-                onHomeClick    = onHomeClick,
-                onExploreClick = {},
-                onCreateClick  = onCreateClick,
-                onSavedClick   = onSavedClick
-            )
-        }
     ) { padding ->
         Column(
             modifier = Modifier

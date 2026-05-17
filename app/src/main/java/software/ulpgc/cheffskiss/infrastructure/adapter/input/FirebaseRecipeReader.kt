@@ -213,7 +213,8 @@ class FirebaseRecipeReader : RecipeReader, RecipeLineStore, StepStore, Ingredien
                 id          = UUID.fromString(map["id"] as? String ?: return null),
                 description = map["description"] as? String ?: "",
                 duration    = ((map["duration"] as? Long) ?: 0L).takeIf { it > 0 }?.seconds,
-                cardinal    = ((map["cardinal"] as? Long) ?: 0L).toInt()
+                cardinal    = ((map["cardinal"] as? Long) ?: 0L).toInt(),
+                imageUrl    = (map["image"] as? String)?.takeIf { it.isNotBlank() },
             )
         }.getOrNull()
     }
