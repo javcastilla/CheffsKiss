@@ -55,6 +55,7 @@ import software.ulpgc.cheffskiss.ui.screen.RecipeCollectionDetailScreen
 import software.ulpgc.cheffskiss.ui.screen.RecipeDetailScreen
 import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
 import software.ulpgc.cheffskiss.infrastructure.coil.RecipePhotoImageLoaderFactory
+import software.ulpgc.cheffskiss.ui.components.SaveRecipeToListHost
 import software.ulpgc.cheffskiss.ui.theme.CheffsKissTheme
 import software.ulpgc.cheffskiss.ui.theme.Primary
 
@@ -154,16 +155,25 @@ class MainActivity : ComponentActivity() {
                         val homeViewModel: HomeViewModel = viewModel(homeEntry)
                         val state       by homeViewModel.uiState.collectAsState()
                         val authorNames by homeViewModel.authorNames.collectAsState()
+                        val savePickerState by homeViewModel.savePickerState.collectAsState()
 
-                        AllRecipesScreen(
-                            recipes        = state.recipes,
-                            savedRecipeIds = state.savedRecipeIds,
-                            authorNames    = authorNames,
-                            currentUserId  = state.currentUserId,
-                            onBack         = { navController.popBackStack() },
-                            onRecipeClick  = { recipe -> navController.navigate("recipe_detail/${recipe.id}") },
-                            onToggleSave   = homeViewModel::toggleSave
-                        )
+                        SaveRecipeToListHost(
+                            pickerState = savePickerState,
+                            onDismiss = homeViewModel::closeSavePicker,
+                            onSelect = homeViewModel::selectSaveDestination,
+                            onConfirm = homeViewModel::confirmSaveToList,
+                            onConsumeMessage = homeViewModel::consumeSavePickerMessage,
+                        ) {
+                            AllRecipesScreen(
+                                recipes        = state.recipes,
+                                savedRecipeIds = state.savedRecipeIds,
+                                authorNames    = authorNames,
+                                currentUserId  = state.currentUserId,
+                                onBack         = { navController.popBackStack() },
+                                onRecipeClick  = { recipe -> navController.navigate("recipe_detail/${recipe.id}") },
+                                onToggleSave   = homeViewModel::openSavePicker,
+                            )
+                        }
                     }
                     // ── Library ───────────────────────────────────────────────
                     composable(
@@ -314,6 +324,7 @@ class MainActivity : ComponentActivity() {
                         val isOwner    by detailViewModel.isOwner.collectAsState()
                         val lines      by detailViewModel.lines.collectAsState()
                         val steps      by detailViewModel.steps.collectAsState()
+                        val savePickerState by detailViewModel.savePickerState.collectAsState()
 
                         LaunchedEffect(recipeId) {
                             detailViewModel.load(recipeId)
@@ -324,35 +335,43 @@ class MainActivity : ComponentActivity() {
                                 CircularProgressIndicator(color = Primary)
                             }
                         } else {
-                            RecipeDetailScreen(
-                                recipe          = recipe!!,
-                                lines           = lines,
-                                steps           = steps,
-                                authorName      = authorName,
-                                isSaved         = isSaved,
-                                isOwner         = isOwner,
-                                onBack          = {
-                                    if (pickForMealSlot) {
+                            SaveRecipeToListHost(
+                                pickerState = savePickerState,
+                                onDismiss = detailViewModel::closeSavePicker,
+                                onSelect = detailViewModel::selectSaveDestination,
+                                onConfirm = detailViewModel::confirmSaveToList,
+                                onConsumeMessage = detailViewModel::consumeSavePickerMessage,
+                            ) {
+                                RecipeDetailScreen(
+                                    recipe          = recipe!!,
+                                    lines           = lines,
+                                    steps           = steps,
+                                    authorName      = authorName,
+                                    isSaved         = isSaved,
+                                    isOwner         = isOwner,
+                                    onBack          = {
+                                        if (pickForMealSlot) {
+                                            navController.previousBackStackEntry
+                                                ?.savedStateHandle
+                                                ?.set(MealPlanNavigation.PICK_FLOW_CANCELLED_KEY, true)
+                                        }
+                                        navController.popBackStack()
+                                    },
+                                    onSave          = { detailViewModel.openSavePicker() },
+                                    onDelete        = { detailViewModel.deleteRecipe { navController.popBackStack() } },
+                                    onEdit          = { navController.navigate("edit_recipe/${recipe!!.id}") },
+                                    onStartFocus    = {
+                                        navController.navigate(FocusModeNavigation.route(recipeId))
+                                    },
+                                    pickForMealSlot = pickForMealSlot,
+                                    onAddToMealSlot = {
                                         navController.previousBackStackEntry
                                             ?.savedStateHandle
-                                            ?.set(MealPlanNavigation.PICK_FLOW_CANCELLED_KEY, true)
-                                    }
-                                    navController.popBackStack()
-                                },
-                                onSave          = { detailViewModel.toggleSave() },
-                                onDelete        = { detailViewModel.deleteRecipe { navController.popBackStack() } },
-                                onEdit          = { navController.navigate("edit_recipe/${recipe!!.id}") },
-                                onStartFocus    = {
-                                    navController.navigate(FocusModeNavigation.route(recipeId))
-                                },
-                                pickForMealSlot = pickForMealSlot,
-                                onAddToMealSlot = {
-                                    navController.previousBackStackEntry
-                                        ?.savedStateHandle
-                                        ?.set(MealPlanNavigation.PICKED_RECIPE_ID_KEY, recipeId)
-                                    navController.popBackStack()
-                                }
-                            )
+                                            ?.set(MealPlanNavigation.PICKED_RECIPE_ID_KEY, recipeId)
+                                        navController.popBackStack()
+                                    },
+                                )
+                            }
                         }
                     }
 
@@ -387,7 +406,7 @@ class MainActivity : ComponentActivity() {
                                 seedLines = seedLines,
                                 seedSteps = seedSteps,
                                 isSaved = isSaved,
-                                onToggleSave = { detailViewModel.toggleSave() },
+                                onToggleSave = { detailViewModel.openSavePicker() },
                             )
                         } else {
                             FocusModeScreen(

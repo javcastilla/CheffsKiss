@@ -9,12 +9,12 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.control.SaveRecipeCommand
-import software.ulpgc.cheffskiss.application.control.SaveRecipeInput
-import software.ulpgc.cheffskiss.application.control.UnsaveRecipeCommand
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
 import software.ulpgc.cheffskiss.application.port.MealPlanRepository
+import software.ulpgc.cheffskiss.application.port.RecipeCollectionRepository
 import software.ulpgc.cheffskiss.application.port.RecipeRepository
+import software.ulpgc.cheffskiss.application.services.RecipeLibraryService
+import software.ulpgc.cheffskiss.domain.model.RecipeLibraryDestination
 import software.ulpgc.cheffskiss.application.services.GetAllRecipesQuery
 import software.ulpgc.cheffskiss.application.services.GetMealPlansQuery
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
@@ -29,6 +29,7 @@ import software.ulpgc.cheffskiss.application.services.UserDisplayService
 import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseMealPlanService
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeCollectionService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -55,9 +56,10 @@ data class HomeUiState(
 class HomeViewModel(
     private val getAllRecipesQuery: GetAllRecipesQuery = GetAllRecipesQuery(FirebaseRecipeReader()),
     private val recipeRepository: RecipeRepository = FirebaseRecipeService(),
+    private val collectionRepository: RecipeCollectionRepository = FirebaseRecipeCollectionService(),
     private val mealPlanRepository: MealPlanRepository = FirebaseMealPlanService(),
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
-    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
+    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService(),
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -67,6 +69,12 @@ class HomeViewModel(
     val authorNames: StateFlow<Map<String, String>> = _authorNames.asStateFlow()
 
     private val userDisplayService = UserDisplayService()
+    private val savePickerController = SaveRecipePickerController(
+        libraryService = RecipeLibraryService(recipeRepository, collectionRepository),
+        currentUserPort = currentUserPort,
+        scope = viewModelScope,
+    )
+    val savePickerState = savePickerController.state
 
     init {
         _uiState.update { it.copy(currentUserId = currentUserPort.getCurrentUser()) }
@@ -149,33 +157,20 @@ class HomeViewModel(
         }
     }
 
-    fun toggleSave(recipe: Recipe) {
+    fun openSavePicker(recipe: Recipe) {
         val uid = currentUserPort.getCurrentUser() ?: return
         if (recipe.creator.id == UserIds.creatorIdFromFirebaseUid(uid)) return
-        val recipeIdStr = recipe.id.toString()
-        val currentlySaved = _uiState.value.savedRecipeIds.contains(recipeIdStr)
-
-        _uiState.update {
-            it.copy(savedRecipeIds = if (currentlySaved) it.savedRecipeIds - recipeIdStr else it.savedRecipeIds + recipeIdStr)
-        }
-
-        viewModelScope.launch {
-            runCatching {
-                if (currentlySaved) {
-                    UnsaveRecipeCommand(recipeRepository, uid, recipe.id).execute()
-                } else {
-                    SaveRecipeCommand(recipeRepository, object : SaveRecipeInput {
-                        override fun recipeId() = recipe.id
-                        override fun userId()   = uid
-                    }).execute()
-                }
-            }.onFailure {
-                _uiState.update { s ->
-                    s.copy(savedRecipeIds = if (currentlySaved) s.savedRecipeIds + recipeIdStr else s.savedRecipeIds - recipeIdStr)
-                }
-            }
-        }
+        savePickerController.open(recipe)
     }
+
+    fun closeSavePicker() = savePickerController.close()
+
+    fun selectSaveDestination(destination: RecipeLibraryDestination) =
+        savePickerController.selectDestination(destination)
+
+    fun confirmSaveToList() = savePickerController.confirm()
+
+    fun consumeSavePickerMessage() = savePickerController.consumeMessage()
 
     private fun resolveAllAuthors(recipes: List<Recipe>) {
         recipes.map { it.creator.id.toString() }.distinct().forEach { uid ->

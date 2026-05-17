@@ -59,17 +59,32 @@ class FirebaseRecipeCollectionService: RecipeCollectionRepository {
         val name      = getString("name") ?: ""
         val image      = getString("image") ?: ""
         val createdAt = getString("createdAt")?.let { Instant.parse(it) } ?: Clock.System.now()
-        val recipes = get("recipes") as? List<String> ?: emptyList()
+        val recipes = parseRecipeIds(get("recipes"))
         return RecipeCollection(
             id        = id,
             userId    = userId,
             name      = name,
             image = image,
             createdAt = createdAt,
-            recipes = recipes.map { UUID.fromString(it) }
+            recipes = recipes,
         )
 
     }
+    private fun parseRecipeIds(raw: Any?): List<UUID> {
+        val entries = when (raw) {
+            is List<*> -> raw
+            null -> emptyList()
+            else -> listOf(raw)
+        }
+        return entries.mapNotNull { entry ->
+            val idString = when (entry) {
+                is String -> entry
+                else -> entry?.toString()
+            }?.trim()?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+            runCatching { UUID.fromString(idString) }.getOrNull()
+        }
+    }
+
     private fun RecipeCollection.toMap(): Map<String, Any?> = mapOf(
         "id" to id.toString(),
         "userId" to userId.toString(),

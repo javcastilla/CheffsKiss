@@ -7,12 +7,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import software.ulpgc.cheffskiss.application.control.SaveRecipeCommand
-import software.ulpgc.cheffskiss.application.control.SaveRecipeInput
-import software.ulpgc.cheffskiss.application.control.UnsaveRecipeCommand
 import software.ulpgc.cheffskiss.application.port.CurrentUserPort
+import software.ulpgc.cheffskiss.application.port.RecipeCollectionRepository
 import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.application.services.GetSavedRecipesQuery
+import software.ulpgc.cheffskiss.application.services.RecipeLibraryService
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
@@ -21,17 +20,25 @@ import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeRead
 import software.ulpgc.cheffskiss.application.services.UserDisplayService
 import software.ulpgc.cheffskiss.application.services.UserIds
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeCollectionService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
+import software.ulpgc.cheffskiss.domain.model.RecipeLibraryDestination
 import java.util.UUID
 
 class RecipeDetailViewModel(
     private val recipeReader: RecipeReader = FirebaseRecipeReader(),
     private val recipeRepository: RecipeRepository = FirebaseRecipeService(),
-    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService()
+    private val collectionRepository: RecipeCollectionRepository = FirebaseRecipeCollectionService(),
+    private val currentUserPort: CurrentUserPort = FirebaseAuthenticationService(),
 ) : ViewModel() {
 
     private val firebaseReader = recipeReader as FirebaseRecipeReader
     private val userDisplayService = UserDisplayService()
+    private val savePickerController = SaveRecipePickerController(
+        libraryService = RecipeLibraryService(recipeRepository, collectionRepository),
+        currentUserPort = currentUserPort,
+        scope = viewModelScope,
+    )
 
     private val _recipe     = MutableStateFlow<Recipe?>(null)
     private val _authorName = MutableStateFlow("")
@@ -46,6 +53,7 @@ class RecipeDetailViewModel(
     val isOwner:    StateFlow<Boolean>          = _isOwner.asStateFlow()
     val lines:      StateFlow<List<RecipeLine>> = _lines.asStateFlow()
     val steps:      StateFlow<List<Step>>       = _steps.asStateFlow()
+    val savePickerState = savePickerController.state
 
     private val currentUid: String? get() = currentUserPort.getCurrentUser()
 
@@ -83,25 +91,19 @@ class RecipeDetailViewModel(
         }
     }
 
-    fun toggleSave() {
+    fun openSavePicker() {
         if (_isOwner.value) return
-        val r = _recipe.value ?: return
-        val uid = currentUid ?: return
-        val currentlySaved = _isSaved.value
-        _isSaved.value = !currentlySaved
-        viewModelScope.launch {
-            runCatching {
-                if (currentlySaved) {
-                    UnsaveRecipeCommand(recipeRepository, uid, r.id).execute()
-                } else {
-                    SaveRecipeCommand(recipeRepository, object : SaveRecipeInput {
-                        override fun recipeId() = r.id
-                        override fun userId() = uid
-                    }).execute()
-                }
-            }.onFailure { _isSaved.value = currentlySaved }
-        }
+        _recipe.value?.let { savePickerController.open(it) }
     }
+
+    fun closeSavePicker() = savePickerController.close()
+
+    fun selectSaveDestination(destination: RecipeLibraryDestination) =
+        savePickerController.selectDestination(destination)
+
+    fun confirmSaveToList() = savePickerController.confirm()
+
+    fun consumeSavePickerMessage() = savePickerController.consumeMessage()
 
     fun deleteRecipe(onDone: () -> Unit) {
         val r = _recipe.value ?: return

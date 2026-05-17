@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import software.ulpgc.cheffskiss.ui.AuthenticantionViewModel
 import androidx.compose.ui.layout.ContentScale
 import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
+import software.ulpgc.cheffskiss.ui.components.SaveRecipeToListHost
 import software.ulpgc.cheffskiss.ui.components.TabScaffold
 import software.ulpgc.cheffskiss.ui.navigation.MainBottomNavigation
 
@@ -75,22 +76,31 @@ fun HomeRoute(
 ) {
     val state by viewModel.uiState.collectAsState()
     val authorNames by viewModel.authorNames.collectAsState()
-    HomeScreen(
-        state          = state,
-        authorNames    = authorNames,
-        onCreateRecipe = onCreateRecipe,
-        onCreateMealPlan = onCreateMealPlan,
-        onCreateList = onCreateList,
-        onLibraryClick = onLibraryClick,
-        onExploreClick = onExploreClick,
-        onProfileClick = onProfileClick,
-        onLogout       = { authViewModel.logout(); onLogout() },
-        onRecipeClick  = onRecipeClick,
-        onToggleSave   = viewModel::toggleSave,
-        onRetry        = viewModel::retryLoad,
-        onViewAll      = onViewAll,
-        onMealPlanClick = onMealPlanClick
-    )
+    val savePickerState by viewModel.savePickerState.collectAsState()
+    SaveRecipeToListHost(
+        pickerState = savePickerState,
+        onDismiss = viewModel::closeSavePicker,
+        onSelect = viewModel::selectSaveDestination,
+        onConfirm = viewModel::confirmSaveToList,
+        onConsumeMessage = viewModel::consumeSavePickerMessage,
+    ) {
+        HomeScreen(
+            state          = state,
+            authorNames    = authorNames,
+            onCreateRecipe = onCreateRecipe,
+            onCreateMealPlan = onCreateMealPlan,
+            onCreateList = onCreateList,
+            onLibraryClick = onLibraryClick,
+            onExploreClick = onExploreClick,
+            onProfileClick = onProfileClick,
+            onLogout       = { authViewModel.logout(); onLogout() },
+            onRecipeClick  = onRecipeClick,
+            onToggleSave   = viewModel::openSavePicker,
+            onRetry        = viewModel::retryLoad,
+            onViewAll      = onViewAll,
+            onMealPlanClick = onMealPlanClick,
+        )
+    }
 }
 
 @Composable

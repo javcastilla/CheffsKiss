@@ -1,6 +1,5 @@
 package software.ulpgc.cheffskiss.ui.screen
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +38,7 @@ fun RecipeCollectionDetailScreen(
 ) {
 
     val state by viewModel.uiState.collectAsState()
-    var showDeleteDialog by remember { mutableStateOf(false) }  // ← AÑADE ESTO
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(collectionId) {
         viewModel.load(collectionId)
@@ -55,7 +54,9 @@ fun RecipeCollectionDetailScreen(
                         state.collection?.name ?: "Collection",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = OnSurface
+                        color = OnSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 },
                 navigationIcon = {
@@ -64,20 +65,38 @@ fun RecipeCollectionDetailScreen(
                             modifier = Modifier
                                 .size(36.dp)
                                 .background(Surface, CircleShape),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Icon(
                                 Icons.Default.ArrowBack,
-                                contentDescription = null,
+                                contentDescription = "Back",
                                 tint = OnSurface,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    if (state.collection != null) {
+                        IconButton(onClick = onEdit) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Edit collection",
+                                tint = OnSurface,
+                            )
+                        }
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete collection",
+                                tint = Color(0xFFBA1A1A),
                             )
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Background.copy(alpha = 0.95f)
-                )
+                    containerColor = Background.copy(alpha = 0.95f),
+                ),
             )
         },
         floatingActionButton = {
@@ -136,118 +155,30 @@ fun RecipeCollectionDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
 
-                    // ── Hero de la colección ───────────────────────────────────
-                    item {
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(4f / 3f)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(Surface)
-                                .border(2.dp, CKOutlineVariant.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
-                        ) {
-                            if (collection.image.isNotBlank()) {
+                    if (collection.image.isNotBlank()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(4f / 3f)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(Surface)
+                                    .border(
+                                        2.dp,
+                                        CKOutlineVariant.copy(alpha = 0.5f),
+                                        RoundedCornerShape(24.dp),
+                                    ),
+                            ) {
                                 RecipeAsyncImage(
                                     url = collection.image,
                                     contentDescription = collection.name,
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize(),
                                 )
-                            } else {
-
-                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(56.dp)
-                                                .background(CKSurfaceVariant, CircleShape),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                Icons.Default.CollectionsBookmark,
-                                                null,
-                                                tint = Primary,
-                                                modifier = Modifier.size(26.dp)
-                                            )
-                                        }
-                                        Text("No cover photo", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface)
-                                    }
-                                }
                             }
                         }
                     }
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            colors = CardDefaults.cardColors(containerColor = Surface),
-                            elevation = CardDefaults.cardElevation(1.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ){Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                OutlinedButton(
-                                    onClick = onEdit,
-                                    modifier = Modifier.weight(1f).height(48.dp),
-                                    shape = CircleShape,
-                                    border = BorderStroke(1.dp, Primary.copy(alpha = 0.5f)),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = Primary,
-                                        containerColor = Color.Transparent
-                                    )
-                                ) {
-                                    Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Edit", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                }
-                            }
 
-                                // Botón Delete
-                                OutlinedButton(
-                                    onClick = { showDeleteDialog = true },
-                                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                                    shape = CircleShape,
-                                    border = BorderStroke(1.dp, Color(0xFFBA1A1A).copy(alpha = 0.4f)),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = Color(0xFFBA1A1A),
-                                        containerColor = Color.Transparent
-                                    )
-                                ) {
-                                    Icon(Icons.Default.Delete, null, modifier = Modifier.size(15.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Delete Collection", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                }}
-                        }
-                    }
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            colors = CardDefaults.cardColors(containerColor = Surface),
-                            elevation = CardDefaults.cardElevation(1.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                horizontalArrangement = Arrangement.SpaceEvenly
-                            ) {
-                                CollectionStatItem(
-                                    icon = Icons.Default.MenuBook,
-                                    label = "RECIPES",
-                                    value = "${collection.recipes.size}"
-                                )
-
-                            }
-                        }
-                    }
                     item {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -310,9 +241,9 @@ fun RecipeCollectionDetailScreen(
                             key = { it.toString() }
                         ) { recipeId ->
                             val recipe = state.recipeDetails[recipeId.toString()]
-                            val authorName = if (recipe != null) {
-                                state.authorNames[recipeId.toString()] ?: ""
-                            } else ""
+                            val authorName = recipe?.creator?.id?.toString()
+                                ?.let { state.authorNames[it] }
+                                .orEmpty()
 
                             CollectionRecipeRow(
                                 recipe = recipe,
@@ -384,23 +315,15 @@ private fun CollectionRecipeRow(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Surface),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(2.dp),
     ) {
-        Row(modifier = Modifier.padding(0.dp)) {
-            Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .height(88.dp)
-                    .background(Primary, RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
-            )
-
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
                 // Thumbnail
                 Box(
                     modifier = Modifier
@@ -462,14 +385,13 @@ private fun CollectionRecipeRow(
                     }
                 }
 
-                IconButton(onClick = { showRemoveDialog = true }, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        Icons.Default.RemoveCircleOutline,
-                        contentDescription = "Remove from collection",
-                        tint = CKOutlineVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+            IconButton(onClick = { showRemoveDialog = true }, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    Icons.Default.RemoveCircleOutline,
+                    contentDescription = "Remove from collection",
+                    tint = CKOutlineVariant,
+                    modifier = Modifier.size(20.dp),
+                )
             }
         }
     }
@@ -515,25 +437,6 @@ private fun CollectionRecipeRow(
         )
     }
 }
-// ── Stat item (igual que RecipeDetailScreen) ─────────────────────────────────
-@Composable
-private fun CollectionStatItem(
-    modifier: Modifier = Modifier,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    value: String
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Icon(icon, null, tint = Primary, modifier = Modifier.size(22.dp))
-        Text(value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = OnSurface)
-        Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CKOnSurfaceVariant, letterSpacing = 0.8.sp)
-    }
-}
-
 // ── Dialog para añadir recetas ────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
