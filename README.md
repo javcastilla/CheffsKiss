@@ -1,7 +1,7 @@
-# 🍽️ CheffsKiss
+# 🍽️ ChefsKiss
 
 <p align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" alt="CheffsKiss Logo" width="120"/>
+  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" alt="ChefsKiss Logo" width="120"/>
 </p>
 
 <p align="center">
@@ -19,9 +19,9 @@
 
 ---
 
-## What is CheffsKiss?
+## What is ChefsKiss?
 
-CheffsKiss is an Android app for cooking enthusiasts. You can explore a recipe catalogue, create your own recipes, plan what you'll eat each day of the week, and follow any recipe's steps in a cooking mode specially designed so you barely need to touch your phone.
+ChefsKiss is an Android app for cooking enthusiasts. You can explore a recipe catalogue, create your own recipes, plan what you'll eat each day of the week, and follow any recipe's steps in a cooking mode specially designed so you barely need to touch your phone.
 
 The app is built to be **fast, visual and friction-free**: from the moment you open it to the moment the dish is on the table, everything flows naturally.
 
@@ -40,7 +40,7 @@ Add your own recipes with:
 - Recipe status (draft or published)
 
 ### 🎯 Focus Mode — Hands-Free Cooking
-**Focus Mode** is CheffsKiss's flagship feature. When activated, the app transforms into an immersive cooking assistant:
+**Focus Mode** is ChefsKiss's flagship feature. When activated, the app transforms into an immersive cooking assistant:
 
 - Navigate between steps with a simple **swipe** or on-screen buttons
 - A **circular timer** counts down the estimated time for each step
@@ -101,8 +101,8 @@ Sign up with email and password. Your recipes, collections and meal plans sync a
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/cheffskiss.git
-   cd cheffskiss
+   git clone https://github.com/your-username/chefskiss.git
+   cd chefskiss
    ```
 
 2. **Set up Firebase**
@@ -128,7 +128,7 @@ Sign up with email and password. Your recipes, collections and meal plans sync a
 
 ## 🛠️ Tech Stack
 
-CheffsKiss is built with **Kotlin** and **Jetpack Compose**, following a Hexagonal Architecture (Ports & Adapters) that cleanly separates business logic from the UI and infrastructure. The backend runs entirely on **Firebase** (authentication, real-time database with Firestore, and image storage). Recipe images are loaded with **Coil** and all navigation uses Navigation Compose.
+ChefsKiss is built with **Kotlin** and **Jetpack Compose**, following a Hexagonal Architecture (Ports & Adapters) that cleanly separates business logic from the UI and infrastructure. The backend runs entirely on **Firebase** (authentication, real-time database with Firestore, and image storage). Recipe images are loaded with **Coil** and all navigation uses Navigation Compose.
 
 | Layer | Responsibility |
 |---|---|
