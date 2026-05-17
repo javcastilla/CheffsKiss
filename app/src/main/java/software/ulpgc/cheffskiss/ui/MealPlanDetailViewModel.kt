@@ -200,8 +200,8 @@ class MealPlanDetailViewModel(
                 it.copy(slotForm = it.slotForm.copy(
                     selectedRecipeId = recipe.id,
                     selectedRecipeTitle = recipe.title,
-                    isVisible = false,
-                    isRecipePickerVisible = true,
+                    isVisible = it.slotForm.hasDraft,
+                    isRecipePickerVisible = false,
                     recipePickerQuery = "",
                 ))
             }
