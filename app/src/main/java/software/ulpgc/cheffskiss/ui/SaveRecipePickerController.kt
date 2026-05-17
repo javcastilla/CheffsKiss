@@ -73,18 +73,24 @@ class SaveRecipePickerController(
         val recipeId = snapshot.recipeId ?: return
         val destination = snapshot.selected ?: return
         val uid = currentUserPort.getCurrentUser() ?: return
+        val alreadyPresent = isRecipeInDestination(snapshot, destination)
 
         scope.launch {
             _state.update { it.copy(isWorking = true) }
-            runCatching {
-                libraryService.addRecipeTo(destination, recipeId, uid)
-            }.fold(
-                onSuccess = { result ->
+            val result = runCatching {
+                if (alreadyPresent) {
+                    libraryService.removeRecipeFrom(destination, recipeId, uid).message
+                } else {
+                    libraryService.addRecipeTo(destination, recipeId, uid).message
+                }
+            }
+            result.fold(
+                onSuccess = { message ->
                     _state.update {
                         it.copy(
                             isWorking = false,
                             visible = false,
-                            resultMessage = result.message,
+                            resultMessage = message,
                         )
                     }
                     observeJob?.cancel()
@@ -93,12 +99,21 @@ class SaveRecipePickerController(
                     _state.update {
                         it.copy(
                             isWorking = false,
-                            resultMessage = error.message ?: "Could not save recipe",
+                            resultMessage = error.message ?: "Could not update list",
                         )
                     }
                 },
             )
         }
+    }
+
+    private fun isRecipeInDestination(
+        state: SaveRecipePickerUiState,
+        destination: RecipeLibraryDestination,
+    ): Boolean = when (destination) {
+        RecipeLibraryDestination.Saved -> state.isInSaved
+        is RecipeLibraryDestination.Collection ->
+            destination.collectionId in state.collectionIdsContainingRecipe
     }
 
     fun consumeMessage() {

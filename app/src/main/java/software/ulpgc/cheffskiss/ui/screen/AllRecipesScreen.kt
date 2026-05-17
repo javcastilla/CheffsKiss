@@ -22,7 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -230,35 +232,30 @@ private fun AnimatedRecipeMenuCard(
         colors = CardDefaults.cardColors(containerColor = Surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(modifier = Modifier.padding(0.dp)) {
-            // Accent bar
-            Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .height(88.dp)
-                    .background(
-                        if (isSaved) CKSecondary else CKPrimary,
-                        RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp)
-                    )
-            )
-
-            // Content
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                // Thumbnail
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
                 Box(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(CKSurfaceVariant),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Default.Restaurant, null, tint = CKOutlineVariant, modifier = Modifier.size(26.dp))
+                    if (recipe.image != null) {
+                        RecipeAsyncImage(
+                            url = recipe.image.toString(),
+                            contentDescription = recipe.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        Icon(Icons.Default.Restaurant, null, tint = CKOutlineVariant, modifier = Modifier.size(26.dp))
+                    }
                 }
 
                 // Info
@@ -299,7 +296,6 @@ private fun AnimatedRecipeMenuCard(
             }
         }
     }
-}
 
 @Composable
 private fun MetaChip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String) {

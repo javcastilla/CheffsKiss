@@ -347,7 +347,6 @@ class MainActivity : ComponentActivity() {
                         val detailViewModel: RecipeDetailViewModel? = detailEntry?.let { viewModel(it) }
 
                         if (detailViewModel != null) {
-                            val isSaved by detailViewModel.isSaved.collectAsState()
                             val seedRecipe by detailViewModel.recipe.collectAsState()
                             val seedLines by detailViewModel.lines.collectAsState()
                             val seedSteps by detailViewModel.steps.collectAsState()
@@ -358,8 +357,6 @@ class MainActivity : ComponentActivity() {
                                 seedRecipe = seedRecipe,
                                 seedLines = seedLines,
                                 seedSteps = seedSteps,
-                                isSaved = isSaved,
-                                onToggleSave = { detailViewModel.openSavePicker() },
                             )
                         } else {
                             FocusModeScreen(

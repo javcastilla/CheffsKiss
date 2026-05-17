@@ -325,9 +325,18 @@ private fun LibraryRecipeCard(
                     .size(64.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(CKSurfaceVariant),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Default.Restaurant, null, tint = Outline, modifier = Modifier.size(28.dp))
+                if (recipe.image != null) {
+                    RecipeAsyncImage(
+                        url = recipe.image.toString(),
+                        contentDescription = recipe.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Icon(Icons.Default.Restaurant, null, tint = Outline, modifier = Modifier.size(28.dp))
+                }
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(

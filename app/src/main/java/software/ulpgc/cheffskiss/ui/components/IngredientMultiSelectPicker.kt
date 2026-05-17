@@ -8,11 +8,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,15 +26,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,21 +46,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import software.ulpgc.cheffskiss.domain.model.recipe.Ingredient
 import software.ulpgc.cheffskiss.ui.screen.displayCategory
 import software.ulpgc.cheffskiss.ui.theme.Background
@@ -78,10 +82,26 @@ fun IngredientMultiSelectPicker(
     var expanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var highlightedIndex by remember { mutableIntStateOf(0) }
-    var anchorWidthPx by remember { mutableIntStateOf(0) }
+    var listTopInWindow by remember { mutableFloatStateOf(0f) }
     val searchFocusRequester = remember { FocusRequester() }
-    val keyboardController = LocalSoftwareKeyboardController.current
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val density = LocalDensity.current
+    val configuration = LocalConfiguration.current
+    val imeBottomPx = WindowInsets.ime.getBottom(density)
+    val listMaxHeight by remember(expanded, listTopInWindow, imeBottomPx, density, configuration) {
+        derivedStateOf {
+            if (!expanded || listTopInWindow <= 0f) {
+                220.dp
+            } else {
+                with(density) {
+                    val screenHeightPx = configuration.screenHeightDp.dp.toPx()
+                    val bottomLimit = screenHeightPx - imeBottomPx - 8.dp.toPx()
+                    val availablePx = (bottomLimit - listTopInWindow).coerceAtLeast(48.dp.toPx())
+                    availablePx.toDp().coerceIn(48.dp, 280.dp)
+                }
+            }
+        }
+    }
 
     val sortedOptions = remember(options) {
         options
@@ -103,11 +123,11 @@ fun IngredientMultiSelectPicker(
         if (expanded) {
             highlightedIndex = 0
             searchFocusRequester.requestFocus()
-            keyboardController?.show()
+            bringIntoViewRequester.bringIntoView()
         } else {
             searchQuery = ""
             highlightedIndex = 0
-            keyboardController?.hide()
+            listTopInWindow = 0f
         }
     }
 
@@ -118,9 +138,9 @@ fun IngredientMultiSelectPicker(
     }
 
     val summaryText = when (selectedIds.size) {
-        0 -> "Buscar ingrediente"
-        1 -> "Un ingrediente seleccionado"
-        else -> "${selectedIds.size} ingredientes seleccionados"
+        0 -> "Search ingredient"
+        1 -> "1 ingredient selected"
+        else -> "${selectedIds.size} ingredients selected"
     }
 
     fun toggleIngredient(ingredient: Ingredient) {
@@ -129,11 +149,7 @@ fun IngredientMultiSelectPicker(
         onSelectionChange(next)
     }
 
-    Box(
-        modifier = modifier.onGloballyPositioned { coords ->
-            anchorWidthPx = coords.size.width
-        },
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -141,17 +157,11 @@ fun IngredientMultiSelectPicker(
                 .clip(RoundedCornerShape(12.dp))
                 .border(1.dp, CKOutlineVariant.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
                 .background(Surface)
-                .then(
-                    if (!expanded) {
-                        Modifier.clickable(
-                            enabled = enabled && !isLoading,
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() },
-                        ) { expanded = true }
-                    } else {
-                        Modifier
-                    },
-                )
+                .clickable(
+                    enabled = enabled && !isLoading,
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                ) { expanded = !expanded }
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -169,7 +179,7 @@ fun IngredientMultiSelectPicker(
                 CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = Primary)
             } else {
                 Icon(
-                    Icons.Default.KeyboardArrowDown,
+                    if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     tint = CKOutlineVariant,
                     modifier = Modifier.size(22.dp),
@@ -178,156 +188,142 @@ fun IngredientMultiSelectPicker(
         }
 
         if (expanded) {
-            Popup(
-                alignment = Alignment.TopStart,
-                offset = IntOffset(0, with(density) { 48.dp.roundToPx() }),
-                onDismissRequest = { expanded = false },
-                properties = PopupProperties(focusable = true),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bringIntoViewRequester(bringIntoViewRequester)
+                    .padding(top = 8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, CKOutlineVariant.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
+                    .background(Surface),
             ) {
-                Surface(
+                BasicTextField(
+                    value = searchQuery,
+                    onValueChange = {
+                        searchQuery = it
+                        highlightedIndex = 0
+                    },
                     modifier = Modifier
-                        .then(
-                            if (anchorWidthPx > 0) {
-                                Modifier.size(
-                                    width = with(density) { anchorWidthPx.toDp() },
-                                    height = androidx.compose.ui.unit.Dp.Unspecified,
-                                )
-                            } else {
-                                Modifier.fillMaxWidth()
-                            },
-                        )
-                        .border(1.dp, CKOutlineVariant.copy(alpha = 0.45f), RoundedCornerShape(12.dp)),
-                    shape = RoundedCornerShape(12.dp),
-                    color = Surface,
-                    shadowElevation = 6.dp,
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        BasicTextField(
-                            value = searchQuery,
-                            onValueChange = {
-                                searchQuery = it
-                                highlightedIndex = 0
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .focusRequester(searchFocusRequester)
-                                .onPreviewKeyEvent { event ->
-                                    if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                                    when (event.key) {
-                                        Key.DirectionDown -> {
-                                            if (filteredOptions.isNotEmpty()) {
-                                                highlightedIndex = (highlightedIndex + 1)
-                                                    .coerceAtMost(filteredOptions.lastIndex)
-                                            }
-                                            true
-                                        }
-                                        Key.DirectionUp -> {
-                                            if (filteredOptions.isNotEmpty()) {
-                                                highlightedIndex = (highlightedIndex - 1).coerceAtLeast(0)
-                                            }
-                                            true
-                                        }
-                                        Key.Enter -> {
-                                            filteredOptions.getOrNull(highlightedIndex)?.let(::toggleIngredient)
-                                            true
-                                        }
-                                        Key.Escape -> {
-                                            expanded = false
-                                            true
-                                        }
-                                        else -> false
+                        .fillMaxWidth()
+                        .focusRequester(searchFocusRequester)
+                        .onPreviewKeyEvent { event ->
+                            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                            when (event.key) {
+                                Key.DirectionDown -> {
+                                    if (filteredOptions.isNotEmpty()) {
+                                        highlightedIndex = (highlightedIndex + 1)
+                                            .coerceAtMost(filteredOptions.lastIndex)
                                     }
+                                    true
                                 }
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
-                            singleLine = true,
-                            textStyle = androidx.compose.ui.text.TextStyle(
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = OnSurface,
-                            ),
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(
-                                onSearch = {
+                                Key.DirectionUp -> {
+                                    if (filteredOptions.isNotEmpty()) {
+                                        highlightedIndex = (highlightedIndex - 1).coerceAtLeast(0)
+                                    }
+                                    true
+                                }
+                                Key.Enter -> {
                                     filteredOptions.getOrNull(highlightedIndex)?.let(::toggleIngredient)
-                                },
-                            ),
-                            decorationBox = { inner ->
-                                Box {
-                                    if (searchQuery.isEmpty()) {
-                                        Text("Buscar ingrediente", fontSize = 15.sp, color = CKOutlineVariant)
-                                    }
-                                    inner()
+                                    true
                                 }
-                            },
-                        )
-                        HorizontalDivider(color = CKSurfaceVariant, thickness = 0.5.dp)
-
-                        if (filteredOptions.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp)
-                                    .padding(horizontal = 14.dp),
-                                contentAlignment = Alignment.CenterStart,
-                            ) {
-                                Text("Sin resultados", fontSize = 14.sp, color = CKOnSurfaceVariant)
+                                Key.Escape -> {
+                                    expanded = false
+                                    true
+                                }
+                                else -> false
                             }
-                        } else {
-                            LazyColumn(
+                        }
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    singleLine = true,
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = OnSurface,
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            filteredOptions.getOrNull(highlightedIndex)?.let(::toggleIngredient)
+                        },
+                    ),
+                    decorationBox = { inner ->
+                        Box {
+                            if (searchQuery.isEmpty()) {
+                                Text("Search ingredient", fontSize = 15.sp, color = CKOutlineVariant)
+                            }
+                            inner()
+                        }
+                    },
+                )
+                HorizontalDivider(color = CKSurfaceVariant, thickness = 0.5.dp)
+
+                if (filteredOptions.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .padding(horizontal = 14.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        Text("No results", fontSize = 14.sp, color = CKOnSurfaceVariant)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onGloballyPositioned { coordinates ->
+                                listTopInWindow = coordinates.positionInWindow().y
+                            }
+                            .heightIn(max = listMaxHeight),
+                    ) {
+                        itemsIndexed(filteredOptions, key = { _, item -> item.id }) { index, ingredient ->
+                            val isSelected = selectedIds.contains(ingredient.id)
+                            val isHighlighted = index == highlightedIndex
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .heightIn(max = 280.dp),
+                                    .height(44.dp)
+                                    .background(
+                                        when {
+                                            isSelected -> CKSurfaceVariant.copy(alpha = 0.65f)
+                                            isHighlighted -> Background.copy(alpha = 0.7f)
+                                            else -> Surface
+                                        },
+                                    )
+                                    .clickable { toggleIngredient(ingredient) }
+                                    .padding(horizontal = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
-                                itemsIndexed(filteredOptions, key = { _, item -> item.id }) { index, ingredient ->
-                                    val isSelected = selectedIds.contains(ingredient.id)
-                                    val isHighlighted = index == highlightedIndex
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(44.dp)
-                                            .background(
-                                                when {
-                                                    isSelected -> CKSurfaceVariant.copy(alpha = 0.65f)
-                                                    isHighlighted -> Background.copy(alpha = 0.7f)
-                                                    else -> Surface
-                                                },
-                                            )
-                                            .clickable { toggleIngredient(ingredient) }
-                                            .padding(horizontal = 14.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                ingredient.name,
-                                                fontSize = 15.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = OnSurface,
-                                                maxLines = 1,
-                                            )
-                                            val subtitle = ingredient.displayCategory.takeIf { it.isNotBlank() }
-                                            if (subtitle != null) {
-                                                Text(
-                                                    subtitle,
-                                                    fontSize = 12.sp,
-                                                    color = CKOnSurfaceVariant,
-                                                    maxLines = 1,
-                                                )
-                                            }
-                                        }
-                                        if (isSelected) {
-                                            Icon(
-                                                Icons.Default.Check,
-                                                contentDescription = null,
-                                                tint = Primary,
-                                                modifier = Modifier.size(18.dp),
-                                            )
-                                        }
-                                    }
-                                    if (index < filteredOptions.lastIndex) {
-                                        HorizontalDivider(color = CKSurfaceVariant, thickness = 0.5.dp)
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        ingredient.name,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = OnSurface,
+                                        maxLines = 1,
+                                    )
+                                    val subtitle = ingredient.displayCategory.takeIf { it.isNotBlank() }
+                                    if (subtitle != null) {
+                                        Text(
+                                            subtitle,
+                                            fontSize = 12.sp,
+                                            color = CKOnSurfaceVariant,
+                                            maxLines = 1,
+                                        )
                                     }
                                 }
+                                if (isSelected) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = Primary,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
+                            }
+                            if (index < filteredOptions.lastIndex) {
+                                HorizontalDivider(color = CKSurfaceVariant, thickness = 0.5.dp)
                             }
                         }
                     }

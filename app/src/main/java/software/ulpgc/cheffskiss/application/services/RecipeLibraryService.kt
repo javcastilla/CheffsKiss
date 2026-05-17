@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.first
 import software.ulpgc.cheffskiss.application.control.AddRecipeToCollectionCommand
 import software.ulpgc.cheffskiss.application.control.SaveRecipeCommand
 import software.ulpgc.cheffskiss.application.control.SaveRecipeInput
+import software.ulpgc.cheffskiss.application.control.UnsaveRecipeCommand
+import software.ulpgc.cheffskiss.application.control.UpdateRecipeCollectionCommand
+import software.ulpgc.cheffskiss.application.control.UpdateRecipeCollectionInput
 import software.ulpgc.cheffskiss.application.port.RecipeCollectionRepository
 import software.ulpgc.cheffskiss.application.port.RecipeRepository
 import software.ulpgc.cheffskiss.domain.model.RecipeCollection
@@ -21,6 +24,10 @@ data class RecipeLibraryPickerContext(
 data class RecipeLibraryAddResult(
     val message: String,
     val alreadyPresent: Boolean = false,
+)
+
+data class RecipeLibraryRemoveResult(
+    val message: String,
 )
 
 class RecipeLibraryService(
@@ -103,5 +110,59 @@ class RecipeLibraryService(
         ).execute()
 
         return RecipeLibraryAddResult("Added to \"${collection.name}\"")
+    }
+
+    suspend fun removeRecipeFrom(
+        destination: RecipeLibraryDestination,
+        recipeId: UUID,
+        firebaseUid: String,
+    ): RecipeLibraryRemoveResult {
+        val userUuid = UserIds.creatorIdFromFirebaseUid(firebaseUid)
+        return when (destination) {
+            RecipeLibraryDestination.Saved -> removeFromSaved(recipeId, firebaseUid)
+            is RecipeLibraryDestination.Collection -> removeFromCollection(
+                collectionId = destination.collectionId,
+                recipeId = recipeId,
+                userUuid = userUuid,
+            )
+        }
+    }
+
+    private suspend fun removeFromSaved(recipeId: UUID, firebaseUid: String): RecipeLibraryRemoveResult {
+        val saved = GetSavedRecipesQuery(recipeRepository)(firebaseUid).first()
+        if (saved.none { it.recipeId == recipeId }) {
+            return RecipeLibraryRemoveResult("This recipe is not in Guardados")
+        }
+        UnsaveRecipeCommand(recipeRepository, firebaseUid, recipeId).execute()
+        return RecipeLibraryRemoveResult("Removed from Guardados")
+    }
+
+    private suspend fun removeFromCollection(
+        collectionId: UUID,
+        recipeId: UUID,
+        userUuid: UUID,
+    ): RecipeLibraryRemoveResult {
+        val collection = GetRecipeCollectionQuery(collectionRepository)(userUuid)
+            .first()
+            .firstOrNull { it.id == collectionId }
+            ?: return RecipeLibraryRemoveResult("List not found")
+
+        if (recipeId !in collection.recipes) {
+            return RecipeLibraryRemoveResult("Recipe is not in \"${collection.name}\"")
+        }
+
+        UpdateRecipeCollectionCommand(
+            port = collectionRepository,
+            input = object : UpdateRecipeCollectionInput {
+                override fun id() = collection.id
+                override fun userId() = collection.userId
+                override fun name() = collection.name
+                override fun image() = collection.image
+                override fun createdAt() = collection.createdAt
+                override fun recipes() = collection.recipes - recipeId
+            },
+        ).execute()
+
+        return RecipeLibraryRemoveResult("Removed from \"${collection.name}\"")
     }
 }

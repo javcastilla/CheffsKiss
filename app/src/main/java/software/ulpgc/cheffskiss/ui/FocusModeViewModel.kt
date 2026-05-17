@@ -14,6 +14,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import software.ulpgc.cheffskiss.application.port.FocusSessionRepository
+import software.ulpgc.cheffskiss.application.port.RecipeCollectionRepository
+import software.ulpgc.cheffskiss.application.port.RecipeRepository
+import software.ulpgc.cheffskiss.application.services.RecipeLibraryService
+import software.ulpgc.cheffskiss.domain.model.RecipeLibraryDestination
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.focus.FocusCapabilities
 import software.ulpgc.cheffskiss.domain.model.focus.FocusPhase
@@ -22,6 +26,9 @@ import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.port.input.RecipeLineStore
 import software.ulpgc.cheffskiss.domain.port.input.StepStore
 import software.ulpgc.cheffskiss.infrastructure.adapter.input.FirebaseRecipeReader
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseAuthenticationService
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeCollectionService
+import software.ulpgc.cheffskiss.infrastructure.adapter.output.FirebaseRecipeService
 import software.ulpgc.cheffskiss.infrastructure.adapter.output.LocalFocusSessionRepository
 import java.util.UUID
 
@@ -42,13 +49,26 @@ data class FocusModeUiState(
     val phase: FocusPhase = FocusPhase.INTRO,
     val currentStepIndex: Int = 0,
     val completedStepIds: Set<UUID> = emptySet(),
+    val checkedIngredientIndices: Set<Int> = emptySet(),
+    val checkedPrepKeys: Set<String> = emptySet(),
     val keepScreenOn: Boolean = true,
+    val largeTextMode: Boolean = false,
+    val autoAdvanceAfterTimer: Boolean = false,
     val timer: FocusTimerState = FocusTimerState(),
-    val showExitDialog: Boolean = false,
+    val showTimerCompleteOverlay: Boolean = false,
+    val stepNavDirection: Int = 1,
+    val showExitSheet: Boolean = false,
+    val showPrepCelebration: Boolean = false,
     val elapsedMs: Long = 0L,
     val error: String? = null,
     val resumedSession: Boolean = false,
     val usingCachedData: Boolean = false,
+)
+
+val FocusPrepChecklistItems = listOf(
+    "prep_ingredients" to "Ingredients gathered",
+    "prep_tools" to "Tools ready",
+    "prep_space" to "Workspace clear",
 )
 
 class FocusModeViewModel(
@@ -60,8 +80,18 @@ class FocusModeViewModel(
     private val lineStore: RecipeLineStore = recipeStore
     private val stepStore: StepStore = recipeStore
     private val focusSessionRepository: FocusSessionRepository = LocalFocusSessionRepository(application)
+    private val savePickerController = SaveRecipePickerController(
+        libraryService = RecipeLibraryService(
+            recipeRepository = FirebaseRecipeService(),
+            collectionRepository = FirebaseRecipeCollectionService(),
+        ),
+        currentUserPort = FirebaseAuthenticationService(),
+        scope = viewModelScope,
+    )
 
     private var recipeId: UUID? = null
+
+    val savePickerState = savePickerController.state
 
     private val _uiState = MutableStateFlow(FocusModeUiState())
     val uiState: StateFlow<FocusModeUiState> = _uiState.asStateFlow()
@@ -193,6 +223,19 @@ class FocusModeViewModel(
         }
     }
 
+    fun openSavePicker() {
+        _uiState.value.recipe?.let { savePickerController.open(it) }
+    }
+
+    fun closeSavePicker() = savePickerController.close()
+
+    fun selectSaveDestination(destination: RecipeLibraryDestination) =
+        savePickerController.selectDestination(destination)
+
+    fun confirmSaveToList() = savePickerController.confirm()
+
+    fun consumeSavePickerMessage() = savePickerController.consumeMessage()
+
     private fun restoredPhase(saved: FocusSession?): FocusPhase =
         if (saved != null && saved.currentStepIndex > 0) FocusPhase.STEP else FocusPhase.INTRO
 
@@ -229,12 +272,53 @@ class FocusModeViewModel(
         _uiState.update { it.copy(keepScreenOn = enabled) }
     }
 
+    fun toggleLargeTextMode() {
+        _uiState.update { it.copy(largeTextMode = !it.largeTextMode) }
+    }
+
+    fun toggleAutoAdvanceAfterTimer() {
+        _uiState.update { it.copy(autoAdvanceAfterTimer = !it.autoAdvanceAfterTimer) }
+    }
+
+    fun setAutoAdvanceAfterTimer(enabled: Boolean) {
+        _uiState.update { it.copy(autoAdvanceAfterTimer = enabled) }
+    }
+
+    fun toggleIngredient(index: Int) {
+        _uiState.update { state ->
+            val next = state.checkedIngredientIndices.toMutableSet()
+            if (index in next) next.remove(index) else next.add(index)
+            state.copy(checkedIngredientIndices = next)
+        }
+    }
+
+    fun togglePrepItem(key: String) {
+        _uiState.update { state ->
+            val next = state.checkedPrepKeys.toMutableSet()
+            if (key in next) next.remove(key) else next.add(key)
+            val allDone = FocusPrepChecklistItems.all { (k, _) -> k in next }
+            state.copy(
+                checkedPrepKeys = next,
+                showPrepCelebration = allDone && next.size == FocusPrepChecklistItems.size,
+            )
+        }
+    }
+
+    fun dismissPrepCelebration() {
+        _uiState.update { it.copy(showPrepCelebration = false) }
+    }
+
+    fun dismissTimerOverlay() {
+        _uiState.update { it.copy(showTimerCompleteOverlay = false) }
+    }
+
     fun startCooking() {
         val steps = _uiState.value.steps
         if (steps.isEmpty()) return
         _uiState.update {
             it.copy(
                 phase = FocusPhase.STEP,
+                stepNavDirection = 1,
                 currentStepIndex = it.currentStepIndex.coerceIn(0, steps.lastIndex),
             )
         }
@@ -251,38 +335,43 @@ class FocusModeViewModel(
         val index = _uiState.value.currentStepIndex
         if (index <= 0) return
         cancelTimer()
-        _uiState.update { it.copy(currentStepIndex = index - 1, timer = FocusTimerState()) }
+        _uiState.update {
+            it.copy(
+                currentStepIndex = index - 1,
+                stepNavDirection = -1,
+                timer = FocusTimerState(),
+            )
+        }
         resetTimerForCurrentStep()
         persistSession()
     }
 
     fun nextStep() {
-        val steps = _uiState.value.steps
-        if (steps.isEmpty()) return
-        val index = _uiState.value.currentStepIndex
-        val step = steps.getOrNull(index) ?: return
-        markStepCompleted(step.id)
-        if (index >= steps.lastIndex) {
-            finishRecipe()
-        } else {
-            cancelTimer()
-            _uiState.update { it.copy(currentStepIndex = index + 1, timer = FocusTimerState()) }
-            resetTimerForCurrentStep()
-            persistSession()
-        }
+        completeCurrentStepAndAdvance()
     }
 
     fun markCurrentStepCompleted() {
+        completeCurrentStepAndAdvance()
+    }
+
+    private fun completeCurrentStepAndAdvance() {
         val steps = _uiState.value.steps
         if (steps.isEmpty()) return
         val index = _uiState.value.currentStepIndex
         val step = steps.getOrNull(index) ?: return
+
         markStepCompleted(step.id)
         if (index >= steps.lastIndex) {
             finishRecipe()
         } else {
             cancelTimer()
-            _uiState.update { it.copy(currentStepIndex = index + 1, timer = FocusTimerState()) }
+            _uiState.update {
+                it.copy(
+                    currentStepIndex = index + 1,
+                    timer = FocusTimerState(),
+                    stepNavDirection = 1,
+                )
+            }
             resetTimerForCurrentStep()
             persistSession()
         }
@@ -310,20 +399,20 @@ class FocusModeViewModel(
     }
 
     fun requestExit() {
-        _uiState.update { it.copy(showExitDialog = true) }
+        _uiState.update { it.copy(showExitSheet = true) }
     }
 
-    fun dismissExitDialog() {
-        _uiState.update { it.copy(showExitDialog = false) }
+    fun dismissExitSheet() {
+        _uiState.update { it.copy(showExitSheet = false) }
     }
 
     fun continueCooking() {
-        dismissExitDialog()
+        dismissExitSheet()
     }
 
     fun exitAndSaveProgress() {
         val elapsed = _uiState.value.elapsedMs + (System.currentTimeMillis() - sessionStartedAt)
-        _uiState.update { it.copy(elapsedMs = elapsed, showExitDialog = false) }
+        _uiState.update { it.copy(elapsedMs = elapsed, showExitSheet = false) }
         cancelTimer()
         persistSession()
     }
@@ -379,7 +468,10 @@ class FocusModeViewModel(
             }
             if (left <= 0) {
                 _uiState.update { s ->
-                    s.copy(timer = s.timer.copy(isRunning = false, isFinished = true, remainingSeconds = 0))
+                    s.copy(
+                        timer = s.timer.copy(isRunning = false, isFinished = true, remainingSeconds = 0),
+                        showTimerCompleteOverlay = true,
+                    )
                 }
             }
         }

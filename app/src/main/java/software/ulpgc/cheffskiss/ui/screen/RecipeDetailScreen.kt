@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
-import software.ulpgc.cheffskiss.domain.model.focus.FocusCapabilities
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.domain.model.Step
 import software.ulpgc.cheffskiss.domain.model.recipe.RecipeLine
@@ -52,15 +51,6 @@ fun RecipeDetailScreen(
     val checkedLines = remember { mutableStateListOf<Int>() }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val sortedSteps = remember(steps) { steps.sortedBy { it.cardinal } }
-    val focusCapabilities = remember(sortedSteps, recipe) {
-        FocusCapabilities.from(
-            stepCount = sortedSteps.size,
-            timedStepCount = sortedSteps.count { it.hasTimer() },
-            mediaStepCount = sortedSteps.count { it.hasMedia() },
-            totalDurationMinutes = recipe.duration.inWholeMinutes,
-        )
-    }
-
     Scaffold(
         containerColor = Background,
         topBar = {
@@ -78,6 +68,24 @@ fun RecipeDetailScreen(
                         }
                     }
                 },
+                actions = {
+                    if (isOwner) {
+                        IconButton(onClick = onEdit) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Edit recipe",
+                                tint = OnSurface,
+                            )
+                        }
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete recipe",
+                                tint = Color(0xFFBA1A1A),
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Background.copy(alpha = 0.95f))
             )
         },
@@ -91,7 +99,7 @@ fun RecipeDetailScreen(
                 }
                 sortedSteps.isNotEmpty() -> StickyBottomBar {
                     StickyPrimaryButton(
-                        text = "Comenzar receta",
+                        text = "Start cooking",
                         onClick = onStartFocus,
                     )
                 }
@@ -170,49 +178,22 @@ fun RecipeDetailScreen(
                         }
                     }
                 }
-                HorizontalDivider(color = CKOutlineVariant.copy(alpha = 0.3f))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (!isOwner) {
-                        Button(
-                            onClick = onSave,
-                            modifier = Modifier.weight(1f).height(48.dp),
-                            shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = Primary, contentColor = OnPrimary),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                        ) {
-                            Icon(
-                                if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                null, modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(if (isSaved) "Saved" else "Save", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        }
-                    }
-                    if (isOwner) {
-                        OutlinedButton(
-                            onClick = onEdit,
-                            modifier = Modifier.weight(1f).height(48.dp),
-                            shape = CircleShape,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Primary.copy(alpha = 0.5f)),
-                            colors = outlinedButtonColors(contentColor = Primary, containerColor = Color.Transparent)
-                        ) {
-                            Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Edit", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        }
-                    }
-                }
-                if (isOwner) {
-                    OutlinedButton(
-                        onClick = { showDeleteDialog = true },
-                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                if (!isOwner) {
+                    HorizontalDivider(color = CKOutlineVariant.copy(alpha = 0.3f))
+                    Button(
+                        onClick = onSave,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = CircleShape,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBA1A1A).copy(alpha = 0.4f)),
-                        colors = outlinedButtonColors(contentColor = Color(0xFFBA1A1A), containerColor = Color.Transparent)
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary, contentColor = OnPrimary),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
                     ) {
-                        Icon(Icons.Default.Delete, null, modifier = Modifier.size(15.dp))
+                        Icon(
+                            if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            null,
+                            modifier = Modifier.size(16.dp),
+                        )
                         Spacer(Modifier.width(6.dp))
-                        Text("Delete Recipe", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(if (isSaved) "Saved" else "Save", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                 }
             }
@@ -244,14 +225,6 @@ fun RecipeDetailScreen(
                         value = "${recipe.duration.inWholeMinutes} min"
                     )
                 }
-            }
-
-            if (!pickForMealSlot && sortedSteps.isNotEmpty()) {
-                FocusModePreviewCard(
-                    capabilities = focusCapabilities,
-                    steps = sortedSteps,
-                    onStartFocus = onStartFocus,
-                )
             }
 
             DetailCard(icon = Icons.Default.ShoppingBasket, title = "Ingredients") {
@@ -435,70 +408,5 @@ private fun MetaStatItem(
         Icon(icon, null, tint = Primary, modifier = Modifier.size(26.dp))
         Text(label, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = CKOnSurfaceVariant, letterSpacing = 0.8.sp)
         Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Primary)
-    }
-}
-
-@Composable
-private fun FocusModePreviewCard(
-    capabilities: FocusCapabilities,
-    steps: List<Step>,
-    onStartFocus: () -> Unit,
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Primary),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        "Modo guiado",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 18.sp,
-                        color = OnPrimary,
-                    )
-                    Text(
-                        "Cocina paso a paso con temporizadores integrados",
-                        fontSize = 13.sp,
-                        color = OnPrimary.copy(alpha = 0.85f),
-                        lineHeight = 18.sp,
-                    )
-                }
-                Icon(Icons.Default.PlayArrow, null, tint = CKSecondary, modifier = Modifier.size(32.dp))
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("${capabilities.stepCount} pasos", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = OnPrimary.copy(alpha = 0.9f))
-                if (capabilities.timedStepCount > 0) {
-                    Text("${capabilities.timedStepCount} timers", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = OnPrimary.copy(alpha = 0.9f))
-                }
-                if (capabilities.mediaStepCount > 0) {
-                    Text("${capabilities.mediaStepCount} fotos", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = OnPrimary.copy(alpha = 0.9f))
-                }
-            }
-            steps.take(3).forEach { step ->
-                Text(
-                    "• Paso ${step.cardinal}: ${step.description.take(48)}${if (step.description.length > 48) "…" else ""}",
-                    fontSize = 12.sp,
-                    color = OnPrimary.copy(alpha = 0.8f),
-                )
-            }
-            Button(
-                onClick = onStartFocus,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = CKSecondary, contentColor = Primary),
-            ) {
-                Text("Comenzar receta", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-            }
-        }
     }
 }

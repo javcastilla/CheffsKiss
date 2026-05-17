@@ -65,6 +65,12 @@ fun SaveRecipeToListSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val selected = state.selected
+    val selectedAlreadyPresent = when (selected) {
+        RecipeLibraryDestination.Saved -> state.isInSaved
+        is RecipeLibraryDestination.Collection ->
+            selected.collectionId in state.collectionIdsContainingRecipe
+        null -> false
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -154,7 +160,11 @@ fun SaveRecipeToListSheet(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Text("Add to list", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(
+                        if (selectedAlreadyPresent) "Remove from list" else "Add to list",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                    )
                 }
             }
         }
