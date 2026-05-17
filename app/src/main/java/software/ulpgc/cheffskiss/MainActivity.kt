@@ -39,6 +39,7 @@ import software.ulpgc.cheffskiss.ui.FocusModeViewModel
 import software.ulpgc.cheffskiss.ui.navigation.FocusModeNavigation
 import software.ulpgc.cheffskiss.ui.navigation.MainBottomNavigation
 import software.ulpgc.cheffskiss.ui.navigation.MealPlanNavigation
+import software.ulpgc.cheffskiss.ui.navigation.RecipeDetailRoute
 import software.ulpgc.cheffskiss.ui.screen.focus.FocusModeScreen
 import software.ulpgc.cheffskiss.ui.screen.SocialProfileScreen
 import software.ulpgc.cheffskiss.ui.screen.AllRecipesScreen
@@ -52,7 +53,6 @@ import software.ulpgc.cheffskiss.ui.screen.LibraryScreen
 import software.ulpgc.cheffskiss.ui.screen.LoginScreen
 import software.ulpgc.cheffskiss.ui.screen.MealPlanDetailScreen
 import software.ulpgc.cheffskiss.ui.screen.RecipeCollectionDetailScreen
-import software.ulpgc.cheffskiss.ui.screen.RecipeDetailScreen
 import software.ulpgc.cheffskiss.ui.screen.RegisterScreen
 import software.ulpgc.cheffskiss.infrastructure.coil.RecipePhotoImageLoaderFactory
 import software.ulpgc.cheffskiss.ui.components.SaveRecipeToListHost
@@ -305,74 +305,27 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(
-                        route = "recipe_detail/{recipeId}?pickForMealSlot={pickForMealSlot}",
-                        arguments = listOf(
-                            navArgument("recipeId") { type = NavType.StringType },
-                            navArgument("pickForMealSlot") {
-                                type         = NavType.BoolType
-                                defaultValue = false
-                            }
-                        )
+                        route = "recipe_detail/{recipeId}",
+                        arguments = listOf(navArgument("recipeId") { type = NavType.StringType }),
                     ) { backStackEntry ->
-                        val recipeId        = backStackEntry.arguments?.getString("recipeId") ?: return@composable
-                        val pickForMealSlot = backStackEntry.arguments?.getBoolean("pickForMealSlot") ?: false
-                        val detailViewModel: RecipeDetailViewModel = viewModel()
+                        val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
+                        RecipeDetailRoute(
+                            recipeId = recipeId,
+                            pickForMealSlot = false,
+                            navController = navController,
+                        )
+                    }
 
-                        val recipe     by detailViewModel.recipe.collectAsState()
-                        val authorName by detailViewModel.authorName.collectAsState()
-                        val isSaved    by detailViewModel.isSaved.collectAsState()
-                        val isOwner    by detailViewModel.isOwner.collectAsState()
-                        val lines      by detailViewModel.lines.collectAsState()
-                        val steps      by detailViewModel.steps.collectAsState()
-                        val savePickerState by detailViewModel.savePickerState.collectAsState()
-
-                        LaunchedEffect(recipeId) {
-                            detailViewModel.load(recipeId)
-                        }
-
-                        if (recipe == null) {
-                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(color = Primary)
-                            }
-                        } else {
-                            SaveRecipeToListHost(
-                                pickerState = savePickerState,
-                                onDismiss = detailViewModel::closeSavePicker,
-                                onSelect = detailViewModel::selectSaveDestination,
-                                onConfirm = detailViewModel::confirmSaveToList,
-                                onConsumeMessage = detailViewModel::consumeSavePickerMessage,
-                            ) {
-                                RecipeDetailScreen(
-                                    recipe          = recipe!!,
-                                    lines           = lines,
-                                    steps           = steps,
-                                    authorName      = authorName,
-                                    isSaved         = isSaved,
-                                    isOwner         = isOwner,
-                                    onBack          = {
-                                        if (pickForMealSlot) {
-                                            navController.previousBackStackEntry
-                                                ?.savedStateHandle
-                                                ?.set(MealPlanNavigation.PICK_FLOW_CANCELLED_KEY, true)
-                                        }
-                                        navController.popBackStack()
-                                    },
-                                    onSave          = { detailViewModel.openSavePicker() },
-                                    onDelete        = { detailViewModel.deleteRecipe { navController.popBackStack() } },
-                                    onEdit          = { navController.navigate("edit_recipe/${recipe!!.id}") },
-                                    onStartFocus    = {
-                                        navController.navigate(FocusModeNavigation.route(recipeId))
-                                    },
-                                    pickForMealSlot = pickForMealSlot,
-                                    onAddToMealSlot = {
-                                        navController.previousBackStackEntry
-                                            ?.savedStateHandle
-                                            ?.set(MealPlanNavigation.PICKED_RECIPE_ID_KEY, recipeId)
-                                        navController.popBackStack()
-                                    },
-                                )
-                            }
-                        }
+                    composable(
+                        route = MealPlanNavigation.RECIPE_DETAIL_PICK_ROUTE,
+                        arguments = listOf(navArgument("recipeId") { type = NavType.StringType }),
+                    ) { backStackEntry ->
+                        val recipeId = backStackEntry.arguments?.getString("recipeId") ?: return@composable
+                        RecipeDetailRoute(
+                            recipeId = recipeId,
+                            pickForMealSlot = true,
+                            navController = navController,
+                        )
                     }
 
                     composable(
@@ -387,7 +340,7 @@ class MainActivity : ComponentActivity() {
                         val detailEntry = remember(focusRecipeId) {
                             runCatching {
                                 navController.getBackStackEntry(
-                                    "recipe_detail/$focusRecipeId?pickForMealSlot=false",
+                                    "recipe_detail/$focusRecipeId",
                                 )
                             }.getOrNull()
                         }
@@ -425,7 +378,7 @@ class MainActivity : ComponentActivity() {
 
                         val detailEntry = remember(recipeId) {
                             navController.getBackStackEntry(
-                                "recipe_detail/{recipeId}?pickForMealSlot={pickForMealSlot}"
+                                "recipe_detail/{recipeId}"
                             )
                         }
                         val detailViewModel: RecipeDetailViewModel = viewModel(detailEntry)
@@ -488,9 +441,7 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate(MealPlanNavigation.recipeDetailRoute(recipeId))
                             },
                             onPickerRecipeClick = { recipeId ->
-                                navController.navigate(
-                                    MealPlanNavigation.recipeDetailRoute(recipeId, pickForMealSlot = true)
-                                )
+                                navController.navigate(MealPlanNavigation.recipeDetailPickRoute(recipeId))
                             }
                         )
                     }

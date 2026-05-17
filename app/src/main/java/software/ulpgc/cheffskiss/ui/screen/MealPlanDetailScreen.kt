@@ -27,9 +27,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import software.ulpgc.cheffskiss.ui.components.RecipeAsyncImage
 import software.ulpgc.cheffskiss.domain.model.mealplan.MealSlot
 import software.ulpgc.cheffskiss.domain.model.recipe.Recipe
 import software.ulpgc.cheffskiss.ui.MealPlanDetailViewModel
@@ -67,9 +69,18 @@ fun MealPlanDetailScreen(
     val plan = state.plan
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val pendingPickRecipeId by viewModel.pendingPickRecipeId.collectAsState()
+
     LaunchedEffect(state.error) {
         state.error?.let { message ->
             snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    LaunchedEffect(pendingPickRecipeId) {
+        pendingPickRecipeId?.let { recipeId ->
+            onPickerRecipeClick(recipeId)
+            viewModel.consumePendingPickRecipe()
         }
     }
 
@@ -179,6 +190,9 @@ fun MealPlanDetailScreen(
             form               = state.slotForm,
             onMealTypeChange   = viewModel::onSlotMealTypeChange,
             onOpenRecipePicker = viewModel::openRecipePicker,
+            onViewSelectedRecipe = { recipeId ->
+                viewModel.requestPickRecipeDetail(recipeId)
+            },
             onClearRecipe      = { viewModel.selectRecipe(null) },
             onSave             = viewModel::saveSlot,
             onDismiss          = viewModel::closeSlotForm,
@@ -192,27 +206,10 @@ fun MealPlanDetailScreen(
             query           = state.slotForm.recipePickerQuery,
             onQueryChange   = viewModel::onRecipePickerQueryChange,
             onRecipeClick   = { recipe ->
-                viewModel.preparePickNavigation()
-                onPickerRecipeClick(recipe.id.toString())
+                viewModel.requestPickRecipeDetail(recipe.id.toString())
             },
             onDismiss       = viewModel::closeRecipePicker,
         )
-        val preview = state.slotForm.previewRecipe
-        if (preview != null) {
-            MealSlotRecipePreviewSheet(
-                recipe  = preview,
-                onBack  = viewModel::closeRecipePreview,
-                onAdd   = { viewModel.selectRecipe(preview) },
-            )
-        } else {
-            RecipePickerSheet(
-                recipes         = state.availableRecipes,
-                query           = state.slotForm.recipePickerQuery,
-                onQueryChange   = viewModel::onRecipePickerQueryChange,
-                onRecipeClick   = viewModel::openRecipePreview,
-                onDismiss       = viewModel::closeRecipePicker,
-            )
-        }
     }
 }
 
@@ -428,6 +425,7 @@ private fun SlotFormSheet(
     form: SlotFormState,
     onMealTypeChange: (MealType) -> Unit,
     onOpenRecipePicker: () -> Unit,
+    onViewSelectedRecipe: (String) -> Unit,
     onClearRecipe: () -> Unit,
     onSave: () -> Unit,
     onDismiss: () -> Unit,
@@ -497,12 +495,16 @@ private fun SlotFormSheet(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
                             .background(CKSurfaceVariant)
+                            .clickable {
+                                form.selectedRecipeId?.let { onViewSelectedRecipe(it.toString()) }
+                            }
                             .padding(horizontal = 14.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(Icons.Default.Restaurant, null, tint = Primary, modifier = Modifier.size(16.dp))
                         Text(form.selectedRecipeTitle, fontSize = 14.sp, color = OnSurface, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Icon(Icons.Default.ChevronRight, null, tint = CKOutlineVariant, modifier = Modifier.size(16.dp))
                         IconButton(onClick = onClearRecipe, modifier = Modifier.size(22.dp)) {
                             Icon(Icons.Default.Close, null, tint = CKOutlineVariant, modifier = Modifier.size(14.dp))
                         }
@@ -537,56 +539,6 @@ private fun SlotFormSheet(
 }
 
 // ── Recipe picker ─────────────────────────────────────────────────────────────
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun MealSlotRecipePreviewSheet(
-    recipe: Recipe,
-    onBack: () -> Unit,
-    onAdd: () -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onBack,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Surface,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-    ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 8.dp, bottom = 88.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(recipe.title, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = OnSurface)
-                Text(
-                    "${recipe.duration.inWholeMinutes} min · ${recipe.servings} servings",
-                    fontSize = 13.sp,
-                    color = CKOnSurfaceVariant,
-                )
-                if (recipe.description.isNotBlank()) {
-                    Text(recipe.description, fontSize = 14.sp, color = OnSurface, lineHeight = 20.sp)
-                }
-                if (recipe.tags.isNotEmpty()) {
-                    Text(recipe.tags.joinToString(" · "), fontSize = 12.sp, color = CKOnSurfaceVariant)
-                }
-            }
-            Button(
-                onClick = onAdd,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                shape = RoundedCornerShape(14.dp),
-            ) {
-                Text("Add to meal slot", fontWeight = FontWeight.Bold, color = OnPrimary)
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RecipePickerSheet(
@@ -645,8 +597,23 @@ private fun RecipePickerSheet(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)).background(CKSurfaceVariant), contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.Restaurant, null, tint = Primary, modifier = Modifier.size(18.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(CKSurfaceVariant),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                if (recipe.image != null) {
+                                    RecipeAsyncImage(
+                                        url = recipe.image.toString(),
+                                        contentDescription = recipe.title,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                } else {
+                                    Icon(Icons.Default.Restaurant, null, tint = Primary, modifier = Modifier.size(20.dp))
+                                }
                             }
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(recipe.title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)

@@ -35,7 +35,6 @@ data class SlotFormState(
     val selectedRecipeTitle: String = "",
     val isRecipePickerVisible: Boolean = false,
     val recipePickerQuery: String = "",
-    val previewRecipe: Recipe? = null,
 )
 
 data class MealPlanDetailUiState(
@@ -59,6 +58,9 @@ class MealPlanDetailViewModel(
 
     private val _uiState = MutableStateFlow(MealPlanDetailUiState())
     val uiState: StateFlow<MealPlanDetailUiState> = _uiState.asStateFlow()
+
+    private val _pendingPickRecipeId = MutableStateFlow<String?>(null)
+    val pendingPickRecipeId: StateFlow<String?> = _pendingPickRecipeId.asStateFlow()
 
     fun load(planId: String) {
         viewModelScope.launch {
@@ -138,32 +140,35 @@ class MealPlanDetailViewModel(
 
     fun openRecipePicker() {
         _uiState.update {
-            it.copy(slotForm = it.slotForm.copy(isRecipePickerVisible = true, previewRecipe = null))
-        }
-    }
-
-    // ✅ Una sola declaración — cierra el picker y limpia query
-    fun closeRecipePicker() {
-        _uiState.update {
             it.copy(slotForm = it.slotForm.copy(
-                isRecipePickerVisible = false,
-                recipePickerQuery = "",
-                previewRecipe = null,
+                isVisible = false,
+                isRecipePickerVisible = true,
             ))
         }
     }
 
+    fun closeRecipePicker() {
+        _uiState.update {
+            val form = it.slotForm
+            it.copy(slotForm = form.copy(
+                isVisible = form.hasDraft,
+                isRecipePickerVisible = false,
+                recipePickerQuery = "",
+            ))
+        }
+    }
+
+    fun requestPickRecipeDetail(recipeId: String) {
+        preparePickNavigation()
+        _pendingPickRecipeId.value = recipeId
+    }
+
+    fun consumePendingPickRecipe() {
+        _pendingPickRecipeId.value = null
+    }
+
     fun onRecipePickerQueryChange(query: String) {
         _uiState.update { it.copy(slotForm = it.slotForm.copy(recipePickerQuery = query)) }
-    }
-
-    // ✅ Llave de cierre correcta — función independiente
-    fun closeRecipePreview() {
-        _uiState.update { it.copy(slotForm = it.slotForm.copy(previewRecipe = null)) }
-    }
-
-    fun openRecipePreview(recipe: Recipe) {
-        _uiState.update { it.copy(slotForm = it.slotForm.copy(previewRecipe = recipe)) }
     }
 
     fun preparePickNavigation() {
@@ -181,8 +186,8 @@ class MealPlanDetailViewModel(
             val form = it.slotForm
             if (!form.hasDraft) return@update it
             it.copy(slotForm = form.copy(
-                isVisible = true,
-                isRecipePickerVisible = false,
+                isVisible = false,
+                isRecipePickerVisible = true,
                 recipePickerQuery = "",
             ))
         }
@@ -191,11 +196,18 @@ class MealPlanDetailViewModel(
     fun applyPickedRecipe(recipeId: String) {
         viewModelScope.launch {
             val recipe = resolveRecipe(recipeId) ?: return@launch
-            selectRecipe(recipe)
+            _uiState.update {
+                it.copy(slotForm = it.slotForm.copy(
+                    selectedRecipeId = recipe.id,
+                    selectedRecipeTitle = recipe.title,
+                    isVisible = false,
+                    isRecipePickerVisible = true,
+                    recipePickerQuery = "",
+                ))
+            }
         }
     }
 
-    // ✅ Una sola declaración — restaura visibilidad según hasDraft
     fun selectRecipe(recipe: Recipe?) {
         _uiState.update {
             it.copy(slotForm = it.slotForm.copy(
@@ -204,7 +216,6 @@ class MealPlanDetailViewModel(
                 isVisible = it.slotForm.hasDraft,
                 isRecipePickerVisible = false,
                 recipePickerQuery = "",
-                previewRecipe = null,
             ))
         }
     }
