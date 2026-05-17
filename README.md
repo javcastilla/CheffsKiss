@@ -155,7 +155,7 @@ CheffsKiss is built with **Kotlin** and **Jetpack Compose**, following a Hexagon
   </tr>
 </table>
 
-> Final Year Project at the **University of Las Palmas de Gran Canaria (ULPGC)** — Bachelor's Degree in Computer Engineering.
+> (PDIGS) Course Project at the **University of Las Palmas de Gran Canaria (ULPGC)** — Bachelor's Degree in Computer Engineering.
 
 ---
 
