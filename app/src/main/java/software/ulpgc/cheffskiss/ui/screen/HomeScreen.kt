@@ -235,7 +235,7 @@ private fun HomeHeader(onLogout: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text("ChefKiss", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = Primary, letterSpacing = (-0.5).sp)
+            Text("ChefsKiss", fontWeight = FontWeight.ExtraBold, fontSize = 22.sp, color = Primary, letterSpacing = (-0.5).sp)
             Text("Good evening, Chef 👋", fontSize = 13.sp, color = CKOnSurfaceVariant)
         }
         IconButton(onClick = onLogout) {

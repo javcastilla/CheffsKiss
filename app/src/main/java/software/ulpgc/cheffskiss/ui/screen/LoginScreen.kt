@@ -146,7 +146,7 @@ fun LoginScreen(
             }
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                "ChefKiss",
+                "ChefsKiss",
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 32.sp,
                 color = Primary,
